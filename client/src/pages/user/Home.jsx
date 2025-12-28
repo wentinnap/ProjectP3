@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { newsAPI } from "../../services/api";
+// ✅ 1. นำเข้า toAssetUrl มาใช้งาน
+import { newsAPI, toAssetUrl } from "../../services/api";
 import { Calendar, Newspaper, ArrowRight, Clock, Sparkles } from "lucide-react";
 import Navbar from "../../components/layout/Navbar";
 import Footer from "../../components/layout/Footer";
@@ -9,15 +10,15 @@ const Home = () => {
   const [latestNews, setLatestNews] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Backend base url
+  // ❌ ลบส่วนนี้ออกครับ เพราะเราจะใช้ toAssetUrl แทน
+  /*
   const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
-
-  // Helper to handle image URL
   const getImageSrc = (url) => {
     if (!url) return "";
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
     return `${SERVER_URL}${url}`;
   };
+  */
 
   useEffect(() => {
     fetchLatestNews();
@@ -52,17 +53,15 @@ const Home = () => {
         {/* --- Hero Section --- */}
         <section className="relative h-[600px] md:h-[700px] flex items-center justify-center text-white overflow-hidden">
           
-          {/* Background Image: เรียกใช้จาก public folder */}
+          {/* Background Image */}
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed z-0 scale-105 animate-pulse-slow"
             style={{ 
-                // ตรวจสอบชื่อไฟล์ให้ตรงกับในโฟลเดอร์ public เป๊ะๆ นะครับ
-                // จากรูปที่ส่งมาชื่อไฟล์ดูเหมือนจะเป็น Herolimage.png
                 backgroundImage: "url('/hero.png')" 
             }}
           ></div>
           
-          {/* Gradient Overlay: ปรับให้สว่างขึ้นและเอาแสงสีส้มออก */}
+          {/* Gradient Overlay */}
           <div className="absolute inset-0 bg-linear-to-b from-gray-900/40 via-gray-900/20 to-gray-900/40 z-1"></div>
 
           {/* Content */}
@@ -219,7 +218,8 @@ const Home = () => {
             ) : latestNews.length > 0 ? (
               <div className="grid md:grid-cols-3 gap-8">
                 {latestNews.map((n) => {
-                  const imgSrc = getImageSrc(n.image_url);
+                  // ✅ 2. เรียกใช้ toAssetUrl ตรงนี้แทน
+                  const imgSrc = toAssetUrl(n.image_url);
 
                   return (
                     <Link
