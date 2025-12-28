@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { newsAPI } from "../../services/api";
+// ✅ 1. นำเข้า toAssetUrl จากไฟล์ api
+import { newsAPI, toAssetUrl } from "../../services/api";
 import { Clock, Eye, User, ArrowLeft, Share2, Sparkles } from "lucide-react";
 import Navbar from "../../components/layout/Navbar";
 
@@ -10,18 +11,15 @@ const NewsDetail = () => {
   const [news, setNews] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ backend base url (ปรับได้จาก .env)
+  // ❌ ลบส่วนที่เขียนเองออกให้หมดเลยครับ เพราะเราจะใช้ toAssetUrl แทน
+  /*
   const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
-
-  // ✅ ทำให้รองรับทั้ง 3 แบบ:
-  // 1) /uploads/news/xxx.jpg  -> ต่อ SERVER_URL
-  // 2) http(s)://...          -> ใช้ตรงๆ
-  // 3) "" / null              -> ไม่มีรูป
   const getImageSrc = (url) => {
     if (!url) return "";
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
     return `${SERVER_URL}${url}`;
   };
+  */
 
   useEffect(() => {
     fetchNewsDetail();
@@ -67,7 +65,8 @@ const NewsDetail = () => {
 
   if (!news) return null;
 
-  const heroImg = getImageSrc(news.image_url);
+  // ✅ 2. เรียกใช้ toAssetUrl แทน
+  const heroImg = toAssetUrl(news.image_url);
 
   return (
     <>
