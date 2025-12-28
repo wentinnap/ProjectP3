@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom"; // Import Link
-import { newsAPI } from "../../services/api";
+import { Link } from "react-router-dom";
+// ✅ 1. นำเข้า toAssetUrl จาก api.js
+import { newsAPI, toAssetUrl } from "../../services/api";
 import { toast } from "react-toastify";
 import {
   Plus,
@@ -14,7 +15,7 @@ import {
   FileText,
   Filter,
   Calendar,
-  ArrowLeft, // Import ArrowLeft
+  ArrowLeft,
 } from "lucide-react";
 
 const AdminNews = () => {
@@ -35,13 +36,15 @@ const AdminNews = () => {
     is_visible: true,
   });
 
+  // ❌ ลบส่วนที่เขียนเองออกให้หมดครับ เพราะเราจะใช้ toAssetUrl แทน
+  /*
   const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
-
   const getImageSrc = (url) => {
     if (!url) return "";
     if (url.startsWith("http://") || url.startsWith("https://")) return url;
     return `${SERVER_URL}${url}`;
   };
+  */
 
   useEffect(() => {
     fetchNews();
@@ -274,7 +277,8 @@ const AdminNews = () => {
 
                 <tbody className="divide-y divide-gray-100">
                   {news.map((item) => {
-                    const thumbSrc = getImageSrc(item.image_url);
+                    // ✅ 2. เรียกใช้ toAssetUrl ตรงนี้
+                    const thumbSrc = toAssetUrl(item.image_url);
 
                     return (
                       <tr
@@ -401,8 +405,9 @@ const AdminNews = () => {
                 {/* Image Preview */}
                 {formData.image_url && (
                   <div className="relative h-48 rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 group">
+                    {/* ✅ 3. เรียกใช้ toAssetUrl ตรงนี้ด้วย */}
                     <img
-                      src={getImageSrc(formData.image_url)}
+                      src={toAssetUrl(formData.image_url)}
                       alt="Preview"
                       className="w-full h-full object-cover"
                     />
