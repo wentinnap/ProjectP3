@@ -26,7 +26,7 @@ const api = axios.create({
 export const toAssetUrl = (url) => {
   if (!url) return "";
 
-  // 🔴 FIX: ถ้า URL ใน Database เผลอติด localhost มา ให้เปลี่ยนเป็น ASSET_BASE ของจริงทันที
+  // 🔴 FIX: ดักจับ URL ที่ติด localhost มาจาก Database แล้วเปลี่ยนเป็นของจริง
   if (url.includes("localhost:5000")) {
     return url.replace("http://localhost:5000", ASSET_BASE);
   }
@@ -69,7 +69,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      // Optional: ถ้าอยากให้ redirect ไปหน้า login
+      // Optional: Redirect ไปหน้า Login เมื่อ Token หมดอายุ
       window.location.href = "/login";
     }
     return Promise.reject(error);
