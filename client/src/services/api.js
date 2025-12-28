@@ -1,9 +1,13 @@
 import axios from "axios";
 
-// ยิง API: http://localhost:5000/api
+// =========================================================
+// 1. CONFIGURATION
+// =========================================================
+
+// ยิง API: ถ้ามี ENV ให้ใช้ ENV ถ้าไม่มีให้ใช้ localhost
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
-// เสิร์ฟไฟล์ uploads: http://localhost:5000
+// เสิร์ฟไฟล์ uploads: ใช้สำหรับดึงรูปภาพ
 const ASSET_BASE = import.meta.env.VITE_ASSET_URL || "http://localhost:5000";
 
 // Create axios instance
@@ -14,13 +18,31 @@ const api = axios.create({
   },
 });
 
-// ✅ helper: แปลง /uploads/... ให้เป็น URL เต็ม
+// =========================================================
+// 2. HELPER FUNCTION (จุดสำคัญที่แก้ปัญหา)
+// =========================================================
+
+// ✅ helper: แปลง URL รูปภาพให้ถูกต้องเสมอ
 export const toAssetUrl = (url) => {
   if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://")) return url;
-  // url แบบ /uploads/news/xxx.jpg
+
+  // 🔴 FIX: ถ้า URL ใน Database เผลอติด localhost มา ให้เปลี่ยนเป็น ASSET_BASE ของจริงทันที
+  if (url.includes("localhost:5000")) {
+    return url.replace("http://localhost:5000", ASSET_BASE);
+  }
+
+  // ถ้าเป็น URL ภายนอกอื่นๆ ที่ถูกต้องอยู่แล้ว (เช่น ลิงก์จาก Google, Facebook) ให้ใช้ได้เลย
+  if (url.startsWith("http://") || url.startsWith("https://")) {
+    return url;
+  }
+
+  // ถ้ามาแค่ path สั้นๆ (เช่น /uploads/news/xxx.jpg) ให้เอา ASSET_BASE มาต่อ
   return `${ASSET_BASE}${url}`;
 };
+
+// =========================================================
+// 3. INTERCEPTORS
+// =========================================================
 
 // Request interceptor to add token
 api.interceptors.request.use(
@@ -47,15 +69,18 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem("token");
       localStorage.removeItem("user");
+      // Optional: ถ้าอยากให้ redirect ไปหน้า login
       window.location.href = "/login";
     }
     return Promise.reject(error);
   }
 );
 
-// =====================
-// Auth APIs
-// =====================
+// =========================================================
+// 4. API METHODS
+// =========================================================
+
+// --- Auth APIs ---
 export const authAPI = {
   register: (data) => api.post("/auth/register", data),
   login: (data) => api.post("/auth/login", data),
@@ -64,9 +89,7 @@ export const authAPI = {
   changePassword: (data) => api.put("/auth/change-password", data),
 };
 
-// =====================
-// News APIs
-// =====================
+// --- News APIs ---
 export const newsAPI = {
   // public
   getAll: (params) => api.get("/news", { params }),
@@ -89,10 +112,7 @@ export const newsAPI = {
   },
 };
 
-
-// =====================
-// Booking APIs
-// =====================
+// --- Booking APIs ---
 export const bookingAPI = {
   getTypes: () => api.get("/bookings/types"),
   create: (data) => api.post("/bookings", data),
@@ -105,14 +125,12 @@ export const bookingAPI = {
   getStats: () => api.get("/bookings/admin/stats"),
 };
 
-// =====================
-// Event APIs
-// =====================
+// --- Event APIs ---
 export const eventAPI = {
   // public
   getAll: () => api.get("/events"),
 
-  // admin (ถ้าคุณทำ route เหล่านี้แล้ว)
+  // admin
   getAllAdmin: () => api.get("/events/admin/all"),
   create: (data) => api.post("/events", data),
   update: (id, data) => api.put(`/events/${id}`, data),
@@ -120,15 +138,13 @@ export const eventAPI = {
   delete: (id) => api.delete(`/events/${id}`),
 };
 
-// =====================
-// QnA APIs
-// =====================
+// --- QnA APIs ---
 export const qnaAPI = {
   // public
   getAll: (params) => api.get("/qna", { params }),
   ask: (data) => api.post("/qna", data),
 
-  // admin (ถ้าคุณทำ route เหล่านี้แล้ว)
+  // admin
   getAllAdmin: () => api.get("/qna/admin/all"),
   answer: (id, data) => api.put(`/qna/${id}/answer`, data),
   toggleVisibility: (id) => api.patch(`/qna/${id}/toggle-visibility`),
