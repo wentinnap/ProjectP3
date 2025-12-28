@@ -12,11 +12,11 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   enableKeepAlive: true,
-  keepAliveInitialDelay: 0, // ✅ ต้องมี ,
+  keepAliveInitialDelay: 0,
 
-  // ✅ Clever Cloud ต้องใช้ SSL
+  // ✅ Clever Cloud (self-signed SSL)
   ssl: {
-    rejectUnauthorized: true,
+    rejectUnauthorized: false,
   },
 });
 
