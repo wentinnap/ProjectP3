@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { LogIn, Mail, Lock, Sparkles, ArrowRight, User, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, Sparkles, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -36,71 +36,76 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 font-sans relative overflow-hidden">
+    <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-4 font-sans relative overflow-hidden">
       
-      {/* Background Decor (Subtle) */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-          <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-orange-200/20 rounded-full blur-[100px]"></div>
-          <div className="absolute top-[40%] -right-[10%] w-[30%] h-[30%] bg-amber-200/20 rounded-full blur-[100px]"></div>
+      {/* Back to Home Button (Floating Top Left) */}
+      <Link 
+        to="/" 
+        className="absolute top-6 left-6 z-50 group flex items-center gap-2 px-5 py-2.5 bg-white/80 backdrop-blur-md border border-orange-100 text-gray-600 rounded-full shadow-sm hover:shadow-md hover:border-orange-200 transition-all duration-300"
+      >
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform text-orange-500" />
+        <span className="text-sm font-semibold group-hover:text-orange-600 transition-colors">กลับหน้าหลัก</span>
+      </Link>
+
+      {/* Ambient Background Effects */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-orange-400/10 rounded-full blur-[120px]"></div>
+          <div className="absolute bottom-[-10%] right-[-5%] w-[600px] h-[600px] bg-amber-200/20 rounded-full blur-[100px]"></div>
       </div>
 
       {/* Main Card */}
-      <div className="w-full max-w-5xl bg-white rounded-4xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] overflow-hidden relative z-10 flex flex-col md:flex-row min-h-[600px]">
+      <div className="w-full max-w-5xl bg-white rounded-[32px] shadow-[0_20px_60px_-15px_rgba(234,88,12,0.15)] overflow-hidden relative z-10 flex flex-col md:flex-row min-h-[650px] border border-orange-50">
         
-        {/* Left Side: Decorative Panel (Welcome) */}
-        <div className="w-full md:w-1/2 bg-linear-to-br from-orange-600 via-orange-500 to-amber-500 text-white relative p-12 flex flex-col justify-between overflow-hidden">
-            {/* Background Patterns */}
-            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+        {/* Left Side: Decorative Panel */}
+        <div className="w-full md:w-5/12 bg-gradient-to-br from-orange-600 to-amber-500 relative p-12 flex flex-col justify-between overflow-hidden text-white">
             
-            {/* Organic Shapes (Like Reference) */}
-            <div className="absolute -top-20 -left-20 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl"></div>
-            <div className="absolute top-1/2 right-0 w-40 h-40 bg-yellow-300 opacity-20 rounded-full blur-2xl translate-x-1/2"></div>
-            <div className="absolute bottom-0 left-10 w-32 h-32 bg-orange-300 opacity-20 rounded-full blur-xl"></div>
+            {/* Texture Overlay */}
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_1px_1px,#fff_1px,transparent_0)] [background-size:20px_20px]"></div>
+            
+            {/* Abstract Shapes */}
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+            <div className="absolute bottom-0 left-0 w-48 h-48 bg-yellow-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/4"></div>
 
             {/* Content Top */}
-            <div className="relative z-10">
-                <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-4 py-1.5 rounded-full mb-6">
+            <div className="relative z-10 mt-8">
+                <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-4 py-1.5 rounded-full mb-8 shadow-inner">
                     <Sparkles className="w-4 h-4 text-yellow-200" />
-                    <span className="text-sm font-medium tracking-wide">Smart Temple System</span>
+                    <span className="text-xs font-bold tracking-wider uppercase">Smart Temple System</span>
                 </div>
-                <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4 drop-shadow-sm">
-                    ยินดีต้อนรับ<br/>กลับสู่วัดพระธาตุ
+                <h1 className="text-4xl lg:text-5xl font-bold leading-tight mb-6 drop-shadow-md">
+                    ศรัทธา<br/>นำทาง<br/><span className="text-yellow-200">ปัญญา</span>
                 </h1>
-                <p className="text-orange-100 text-lg font-light leading-relaxed max-w-sm">
-                    ระบบจัดการข้อมูลและจองพิธีกรรมออนไลน์ อำนวยความสะดวกแด่พุทธศาสนิกชนทุกท่าน
+                <p className="text-orange-50 text-lg font-light leading-relaxed opacity-90">
+                    เข้าสู่ระบบเพื่อจัดการข้อมูล จองคิวทำบุญ และติดตามข่าวสารของวัดพระธาตุได้อย่างสะดวกสบาย
                 </p>
             </div>
 
-            {/* Content Bottom (Decor) */}
-            <div className="relative z-10 mt-12 hidden md:block">
-                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/10 max-w-xs transform -rotate-2 hover:rotate-0 transition-transform duration-500">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-orange-600 font-bold">ว</div>
-                        <div>
-                            <p className="font-bold text-sm">วัดพระธาตุ</p>
-                            <p className="text-xs text-orange-100">ศูนย์รวมจิตใจ</p>
-                        </div>
-                    </div>
-                    <div className="h-2 bg-white/20 rounded-full w-3/4 mb-2"></div>
-                    <div className="h-2 bg-white/20 rounded-full w-1/2"></div>
+            {/* Content Bottom */}
+            <div className="relative z-10">
+                <div className="flex items-center gap-4 opacity-80">
+                    <div className="h-px bg-white/30 flex-1"></div>
+                    <span className="text-sm font-medium tracking-widest uppercase">Wat Phra That</span>
+                    <div className="h-px bg-white/30 flex-1"></div>
                 </div>
             </div>
         </div>
 
         {/* Right Side: Login Form */}
-        <div className="w-full md:w-1/2 bg-white p-8 md:p-12 lg:p-16 flex flex-col justify-center">
+        <div className="w-full md:w-7/12 bg-white p-8 md:p-16 flex flex-col justify-center relative">
             
             <div className="max-w-md mx-auto w-full">
-                <div className="mb-8">
-                    <h2 className="text-3xl font-bold text-gray-800 mb-2">เข้าสู่ระบบ</h2>
-                    <p className="text-gray-500">กรุณากรอกข้อมูลเพื่อเข้าใช้งานบัญชีของคุณ</p>
+                <div className="mb-10 text-center md:text-left">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-3">ยินดีต้อนรับกลับมา</h2>
+                    <p className="text-gray-500">กรุณากรอกข้อมูลเพื่อเข้าใช้งานระบบ</p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Username */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-bold text-gray-700 ml-1">ชื่อผู้ใช้ หรือ อีเมล</label>
-                        <div className="relative group">
+                    {/* Username Input */}
+                    <div className="space-y-2 group">
+                        <label className="text-sm font-semibold text-gray-700 ml-1 group-focus-within:text-orange-600 transition-colors">
+                            ชื่อผู้ใช้ / อีเมล
+                        </label>
+                        <div className="relative transition-all duration-300 transform group-focus-within:-translate-y-1">
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <Mail className="h-5 w-5 text-gray-400 group-focus-within:text-orange-500 transition-colors" />
                             </div>
@@ -110,21 +115,23 @@ const Login = () => {
                                 value={formData.username}
                                 onChange={handleChange}
                                 placeholder="example@email.com"
-                                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none text-gray-800 font-medium"
+                                className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all outline-none text-gray-800 placeholder:text-gray-400 font-medium"
                                 required
                             />
                         </div>
                     </div>
 
-                    {/* Password */}
-                    <div className="space-y-2">
+                    {/* Password Input */}
+                    <div className="space-y-2 group">
                         <div className="flex justify-between items-center ml-1">
-                            <label className="text-sm font-bold text-gray-700">รหัสผ่าน</label>
-                            <a href="#" className="text-xs font-bold text-orange-500 hover:text-orange-600 hover:underline">
+                            <label className="text-sm font-semibold text-gray-700 group-focus-within:text-orange-600 transition-colors">
+                                รหัสผ่าน
+                            </label>
+                            <a href="#" className="text-xs font-semibold text-orange-500 hover:text-orange-600 hover:underline transition-colors">
                                 ลืมรหัสผ่าน?
                             </a>
                         </div>
-                        <div className="relative group">
+                        <div className="relative transition-all duration-300 transform group-focus-within:-translate-y-1">
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <Lock className="h-5 w-5 text-gray-400 group-focus-within:text-orange-500 transition-colors" />
                             </div>
@@ -134,50 +141,37 @@ const Login = () => {
                                 value={formData.password}
                                 onChange={handleChange}
                                 placeholder="••••••••"
-                                className="w-full pl-12 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none text-gray-800 font-medium"
+                                className="w-full pl-12 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-100 transition-all outline-none text-gray-800 placeholder:text-gray-400 font-medium"
                                 required
                             />
                         </div>
                     </div>
 
-                    {/* Remember & Submit */}
-                    <div className="pt-2">
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full py-4 bg-linear-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl font-bold shadow-lg shadow-orange-500/30 hover:shadow-orange-500/40 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2 group"
-                        >
-                            {loading ? (
-                                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            ) : (
-                                <>
-                                    <span>เข้าสู่ระบบ</span>
-                                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                                </>
-                            )}
-                        </button>
-                    </div>
+                    {/* Submit Button */}
+                    <button
+                        type="submit"
+                        disabled={loading}
+                        className="w-full mt-4 py-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-3 group"
+                    >
+                        {loading ? (
+                            <Loader2 className="w-6 h-6 animate-spin" />
+                        ) : (
+                            <>
+                                <span>เข้าสู่ระบบ</span>
+                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                            </>
+                        )}
+                    </button>
                 </form>
 
-                {/* Footer / Register */}
-                <div className="mt-8 text-center space-y-6">
+                {/* Footer */}
+                <div className="mt-10 text-center">
                     <p className="text-gray-500 text-sm">
                         ยังไม่มีบัญชีผู้ใช้งาน?{' '}
-                        <Link to="/register" className="text-orange-600 font-bold hover:underline">
-                            สมัครสมาชิก
+                        <Link to="/register" className="text-orange-600 font-bold hover:text-orange-700 hover:underline transition-colors">
+                            สมัครสมาชิกใหม่
                         </Link>
                     </p>
-
-                    {/* Demo Account (Optional) */}
-                    <div className="pt-6 border-t border-gray-100">
-                        <div 
-                            onClick={() => setFormData({username: 'admin', password: 'password'})}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 hover:bg-orange-50 border border-gray-200 hover:border-orange-200 rounded-lg cursor-pointer transition-colors"
-                        >
-                            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                            <span className="text-xs text-gray-500 font-medium">Click for Demo Admin</span>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
