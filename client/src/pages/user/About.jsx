@@ -31,7 +31,7 @@ const About = () => {
                     <span className="text-sm font-medium tracking-wide">มรดกแห่งศรัทธา</span>
                 </div>
                 <h1 className="text-4xl md:text-6xl font-bold mb-6 drop-shadow-md">
-                    เกี่ยวกับวัดพระธาตุ
+                    เกี่ยวกับวัดกำแพง
                 </h1>
                 <p className="text-lg md:text-xl text-orange-50 max-w-3xl mx-auto font-light leading-relaxed">
                     ศูนย์รวมจิตใจของพุทธศาสนิกชน สัญลักษณ์อันทรงคุณค่าทางวัฒนธรรมและประวัติศาสตร์ล้านนาที่สืบทอดมายาวนานกว่า 600 ปี
