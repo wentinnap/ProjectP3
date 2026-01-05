@@ -70,7 +70,7 @@ const About = () => {
                     <span className="text-sm text-gray-500">ปีแห่งประวัติศาสตร์</span>
                   </div>
                   <div className="flex-1 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center">
-                    <span className="block text-3xl font-bold text-orange-500">2226</span>
+                    <span className="block text-3xl font-bold text-orange-500">2220</span>
                     <span className="text-sm text-gray-500">พ.ศ. ที่เริ่มก่อสร้าง</span>
                   </div>
                 </div>
