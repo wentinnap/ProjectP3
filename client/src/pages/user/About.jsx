@@ -89,8 +89,8 @@ const About = () => {
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
               {[
                 { icon: Landmark, title: "อุโบสถเก่าแก่", desc: "สถาปัตยกรรมสมัยอยุธยาตอนปลาย", color: "bg-amber-100 text-amber-600" },
-                { icon: Footprints, title: "เขตศักดิ์สิทธิ์", desc: "พื้นที่วิสุงคามสีมาอันเก่าแก่", color: "bg-green-100 text-green-600" },
-                { icon: Sparkles, title: "พระประธาน", desc: "พระพุทธรูปปางสมาธิพุทธลักษณะงดงาม", color: "bg-blue-100 text-blue-600" },
+                { icon: Footprints, title: "หอระฆัง", desc: "พื้นที่บอกสัญญาณเวลา", color: "bg-green-100 text-green-600" },
+                { icon: Sparkles, title: "พระประธาน", desc: "พระพุทธประธานในอุโบสถลักษณะงดงาม", color: "bg-blue-100 text-blue-600" },
                 { icon: Mountain, title: "ศาลาการเปรียญ", desc: "สถานที่ประกอบพิธีกรรมทางศาสนา", color: "bg-purple-100 text-purple-600" },
               ].map((item, index) => (
                 <div key={index} className="p-8 rounded-3xl border border-gray-100 shadow-sm hover:shadow-md transition-all">
