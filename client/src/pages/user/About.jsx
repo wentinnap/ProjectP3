@@ -78,20 +78,19 @@ const About = () => {
                         
                         <div className="prose prose-lg text-gray-600 leading-relaxed">
                             <p>
-                                ประวัติการก่อสร้างวัดเริ่มขึ้นในสมัยของ <strong>พญากือนา</strong> กษัตริย์องค์ที่ 6 แห่งราชวงศ์มังราย (ช่วงปี พ.ศ. 1910 - 1928) เพื่อประดิษฐานพระบรมสารีริกธาตุที่อัญเชิญมาจากเมืองสุโขทัย
+                                ประวัติการก่อสร้างวัดเริ่มขึ้นในสมัยของ <strong>กรุงศรีอยุธยา</strong> ได้รับพระราชทานวิสุงคามสีมาเมื่อ พ.ศ. 2226ได้รับการบูรณปฏิสังขรณ์เมื่อประมาณ พ.ศ. 2500 ในสมัยพระครูธรรมธรทวาย สีลธมฺโม เป็นเจ้าอาวาส ท่านได้สร้างศาสนวัตถุและเสนาสนะต่าง ๆ มากมาย หลังจากนั้นเจ้าอาวาสรูปต่อมาคือพระครูโกศลปริยัติวงศ์ (พระมหาญาณพงศ์ ถิรปุญฺโญ ป.ธ.๓)
                             </p>
                             <p>
-                                <strong>ตำนานช้างเผือกเสี่ยงทาย:</strong> เรื่องราวอันเป็นที่กล่าวขานที่สุดคือการเลือกสถานที่ตั้งวัด โดยอัญเชิญพระบรมสารีริกธาตุขึ้นบนหลังช้างเผือกผู้ศักดิ์สิทธิ์ ช้างมุ่งหน้าขึ้นสู่ยอดดอย และเมื่อถึงจุดที่ตั้งวัดในปัจจุบัน ช้างได้ส่งเสียงร้อง 3 ครั้ง ทำทักษิณาวรรต 3 รอบ ก่อนจะล้มลงสิ้นใจ พญากือนาจึงโปรดให้สร้างเจดีย์ทองคำขึ้น ณ จุดนั้น
-                            </p>
+                                <strong>อาคารเสนาสนะ:</strong> ได้แก่ อุโบสถ สร้างเมื่อ พ.ศ. 2226 เป็นอาคารคอนกรีตเสริมเหล็ก ศาลาการเปรียญ สร้างเมื่อ พ.ศ. 2514 เป็นอาคารคอนกรีตเสริมเหล็กทรงไทย กุฏิสงฆ์ เป็นอาคารไม้ อาคารครึ่งตึกครึ่งไม้ และอาคารคอนกรีตเสริมเหล็ก และศาลาบำเพ็ญกุศล สร้างด้วยคอนกรีตเสริมเหล็ก ส่วนปูชนียวัตถุ มีพระประธานประจำอุโบสถปางสมาธิ สร้างเมื่อ พ.ศ. 2226 พระประธานประจำศาลาการเปรียญปางสมาธิ สร้างเมื่อ พ.ศ. 2514 พระพุทธรูปพุทธลักษณะแบบพระพุทธชินราช
                         </div>
                         
                         <div className="flex gap-4 pt-4">
                             <div className="flex-1 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center">
-                                <span className="block text-3xl font-bold text-orange-500 mb-1">600+</span>
+                                <span className="block text-3xl font-bold text-orange-500 mb-1">300+</span>
                                 <span className="text-sm text-gray-500">ปีแห่งประวัติศาสตร์</span>
                             </div>
                             <div className="flex-1 bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-center">
-                                <span className="block text-3xl font-bold text-orange-500 mb-1">1910</span>
+                                <span className="block text-3xl font-bold text-orange-500 mb-1">2220</span>
                                 <span className="text-sm text-gray-500">พ.ศ. ที่เริ่มก่อสร้าง</span>
                             </div>
                         </div>
@@ -195,33 +194,6 @@ const About = () => {
                 </div>
             </div>
         </section>
-
-        {/* Location & Info Card */}
-        <section className="py-16 bg-white border-t border-gray-100">
-            <div className="container mx-auto px-4">
-                <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                    <div className="bg-gray-50 rounded-3xl p-8 flex items-center gap-6 border border-gray-100 hover:border-orange-200 transition-colors">
-                        <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-orange-500 shadow-sm shrink-0">
-                            <MapPin size={28} />
-                        </div>
-                        <div>
-                            <h4 className="font-bold text-gray-900 mb-1">ที่ตั้ง</h4>
-                            <p className="text-gray-600 text-sm">ห่างจากตัวเมืองเชียงใหม่ประมาณ 15 กม. เดินทางด้วยรถยนต์หรือรถแดง</p>
-                        </div>
-                    </div>
-                    <div className="bg-gray-50 rounded-3xl p-8 flex items-center gap-6 border border-gray-100 hover:border-orange-200 transition-colors">
-                        <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-orange-500 shadow-sm shrink-0">
-                            <Clock size={28} />
-                        </div>
-                        <div>
-                            <h4 className="font-bold text-gray-900 mb-1">เวลาทำการ</h4>
-                            <p className="text-gray-600 text-sm">เปิดให้เข้าชมทุกวัน<br/>เวลา 06:00 น. - 18:00 น.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
       </div>
       <Footer />
     </>
