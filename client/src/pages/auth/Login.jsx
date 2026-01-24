@@ -54,13 +54,13 @@ const Login = () => {
       </div>
 
       {/* Main Card */}
-      <div className="w-full max-w-5xl bg-white rounded-[32px] shadow-[0_20px_60px_-15px_rgba(234,88,12,0.15)] overflow-hidden relative z-10 flex flex-col md:flex-row min-h-[650px] border border-orange-50">
+      <div className="w-full max-w-5xl bg-white rounded-4xl shadow-[0_20px_60px_-15px_rgba(234,88,12,0.15)] overflow-hidden relative z-10 flex flex-col md:flex-row min-h-[650px] border border-orange-50">
         
         {/* Left Side: Decorative Panel */}
-        <div className="w-full md:w-5/12 bg-gradient-to-br from-orange-600 to-amber-500 relative p-12 flex flex-col justify-between overflow-hidden text-white">
+        <div className="w-full md:w-5/12 bg-linear-to-br from-orange-600 to-amber-500 relative p-12 flex flex-col justify-between overflow-hidden text-white">
             
             {/* Texture Overlay */}
-            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_1px_1px,#fff_1px,transparent_0)] [background-size:20px_20px]"></div>
+            <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_1px_1px,#fff_1px,transparent_0)] bg-size-[20px_20px]"></div>
             
             {/* Abstract Shapes */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
@@ -151,7 +151,7 @@ const Login = () => {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full mt-4 py-4 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-3 group"
+                        className="w-full mt-4 py-4 bg-linear-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-2xl font-bold text-lg shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:-translate-y-1 active:translate-y-0 transition-all duration-300 flex items-center justify-center gap-3 group"
                     >
                         {loading ? (
                             <Loader2 className="w-6 h-6 animate-spin" />
