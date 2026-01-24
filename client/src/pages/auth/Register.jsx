@@ -102,7 +102,7 @@ const Register = () => {
                     <span className="text-sm font-medium tracking-wide">สร้างบัญชีผู้ใช้งาน</span>
                 </div>
                 <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4 drop-shadow-sm">
-                    ร่วมเป็นส่วนหนึ่ง<br/>กับวัดพระธาตุ
+                    ร่วมเป็นส่วนหนึ่ง<br/>กับวัดพระกำแพง
                 </h1>
                 <p className="text-orange-100 text-lg font-light leading-relaxed mb-8">
                     สมัครสมาชิกเพื่อเริ่มต้นจองพิธีกรรมทางศาสนา และติดตามข่าวสารกิจกรรมบุญต่างๆ ได้สะดวกรวดเร็ว

@@ -156,13 +156,13 @@ const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="border-t border-white/10 pt-8 mt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-gray-500">
-            <p>© {currentYear} วัดพระธาตุ. All rights reserved.</p>
+            <p>© {currentYear} วัดกำแพง. All rights reserved.</p>
             <div className="flex items-center gap-6">
                 <a href="#" className="hover:text-orange-400 transition-colors">นโยบายความเป็นส่วนตัว</a>
                 <a href="#" className="hover:text-orange-400 transition-colors">เงื่อนไขการใช้งาน</a>
             </div>
             <p className="flex items-center gap-1 text-xs">
-                Made with <Heart size={12} className="text-red-500 fill-red-500 animate-pulse" /> by DevTeam
+                Made with <Heart size={12} className="text-red-500 fill-red-500 animate-pulse" /> by ทีมพัฒนาวัดกำแพง
             </p>
         </div>
       </div>

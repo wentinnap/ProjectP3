@@ -62,19 +62,38 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor for error handling
+// services/api.js
+
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // 1. ตรวจสอบว่า Error เป็น 401 (Unauthorized) หรือไม่
     if (error.response?.status === 401) {
+      
+      // 2. เช็กว่าปัจจุบัน User อยู่ที่หน้าไหน
+      const currentPath = window.location.pathname;
+
+      // 🚩 เงื่อนไขสำคัญ: ถ้าอยู่ที่หน้า /login หรือ /register 
+      // "ห้าม" ทำการ Redirect หรือล้าง LocalStorage
+      // เพราะ 401 ในหน้านี้หมายถึง "รหัสผิด" ไม่ใช่ "Token หมดอายุ"
+      if (currentPath === "/login" || currentPath === "/register") {
+        return Promise.reject(error);
+      }
+
+      // 3. ถ้าเป็นหน้าอื่นๆ (เช่น หน้า Admin, Profile) แล้วเจอ 401
+      // แสดงว่า Token หมดอายุ หรือไม่มีสิทธิ์จริงๆ ให้ทำการ Logout
       localStorage.removeItem("token");
       localStorage.removeItem("user");
-      // Optional: Redirect ไปหน้า Login เมื่อ Token หมดอายุ
-      window.location.href = "/login";
+
+      // ใช้ replace แทน href เพื่อป้องกันการกด Back กลับมา
+      window.location.replace("/login");
     }
+
     return Promise.reject(error);
   }
 );
+
+
 
 // =========================================================
 // 4. API METHODS

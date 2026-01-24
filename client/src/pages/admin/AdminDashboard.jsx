@@ -52,7 +52,7 @@ const AdminDashboard = () => {
             
             {/* Logo & Title */}
             <div className="flex items-center gap-3 md:gap-4">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-orange-500 to-amber-500 rounded-xl md:rounded-2xl flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-linear-to-br from-orange-500 to-amber-500 rounded-xl md:rounded-2xl flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
                     <LayoutDashboard size={20} className="md:w-6 md:h-6" />
                 </div>
                 <div>
@@ -74,7 +74,7 @@ const AdminDashboard = () => {
                 <div className="h-8 w-px bg-gray-200"></div>
 
                 <div className="flex items-center gap-3 bg-white px-1.5 py-1.5 pr-4 rounded-full border border-gray-100 shadow-sm">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-600 font-bold text-sm">
+                    <div className="w-9 h-9 rounded-full bg-linear-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-600 font-bold text-sm">
                         {user?.full_name?.charAt(0).toUpperCase()}
                     </div>
                     <span className="text-sm font-bold text-gray-700">{user?.full_name}</span>
@@ -129,13 +129,13 @@ const AdminDashboard = () => {
         
         {/* Welcome Card */}
         <div className="mb-8 md:mb-12 p-6 md:p-8 bg-white rounded-3xl md:rounded-4xl shadow-sm border border-gray-100 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-40 h-40 md:w-80 md:h-80 bg-gradient-to-bl from-orange-100/50 to-transparent rounded-bl-full -mr-8 -mt-8 md:-mr-16 md:-mt-16 transition-transform duration-700 group-hover:scale-110"></div>
+            <div className="absolute top-0 right-0 w-40 h-40 md:w-80 md:h-80 bg-linear-to-bl from-orange-100/50 to-transparent rounded-bl-full -mr-8 -mt-8 md:-mr-16 md:-mt-16 transition-transform duration-700 group-hover:scale-110"></div>
             
             <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4 md:gap-6">
                 <div>
                     <h2 className="text-2xl md:text-4xl font-bold text-gray-800 mb-2 md:mb-3">
                         สวัสดีครับ, <br className="md:hidden"/>
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-amber-600">{user?.full_name}</span> 👋
+                        <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-amber-600">{user?.full_name}</span> 👋
                     </h2>
                     <p className="text-gray-500 text-sm md:text-lg">จัดการข้อมูลวัด ตรวจสอบการจอง และดูแลระบบ</p>
                 </div>
@@ -180,7 +180,7 @@ const AdminDashboard = () => {
 
         {/* Action Menu Section */}
         <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
-            <div className="w-1 md:w-1.5 h-6 md:h-8 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full"></div>
+            <div className="w-1 md:w-1.5 h-6 md:h-8 bg-linear-to-b from-orange-500 to-amber-500 rounded-full"></div>
             <div>
                 <h3 className="text-xl md:text-2xl font-bold text-gray-800">เมนูจัดการ</h3>
                 <p className="text-xs md:text-sm text-gray-400">เลือกรายการที่ต้องการดำเนินการ</p>
@@ -235,7 +235,7 @@ const StatCard = ({ title, value, icon: Icon, color, isPending }) => {
 
     return (
         <div className={`bg-white p-4 md:p-6 rounded-2xl md:rounded-3xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden flex flex-col justify-between h-full`}>
-            {isPending && <div className="absolute top-0 right-0 w-12 h-12 md:w-20 md:h-20 bg-orange-100 rounded-bl-[2rem] md:rounded-bl-[4rem] -mr-6 -mt-6 md:-mr-10 md:-mt-10 opacity-50 animate-pulse"></div>}
+            {isPending && <div className="absolute top-0 right-0 w-12 h-12 md:w-20 md:h-20 bg-orange-100 rounded-bl-4xl md:rounded-bl-[4rem] -mr-6 -mt-6 md:-mr-10 md:-mt-10 opacity-50 animate-pulse"></div>}
             
             <div className="flex justify-between items-start mb-2 md:mb-4 relative z-10">
                 <div className={`p-2.5 md:p-4 rounded-xl md:rounded-2xl ${colors[color]} group-hover:scale-110 transition-transform duration-300`}>
@@ -263,7 +263,7 @@ const MenuCard = ({ to, icon: Icon, title, desc, color, notification }) => {
         <Link to={to} className="group bg-white rounded-2xl md:rounded-3xl p-5 md:p-6 border border-gray-100 shadow-sm hover:shadow-xl hover:border-gray-200 transition-all duration-300 flex flex-row md:flex-col items-center md:items-start justify-between md:justify-start gap-4 h-full relative overflow-hidden">
             
             {/* Mobile: Left Icon / Desktop: Top Icon */}
-            <div className={`w-12 h-12 md:w-16 md:h-16 shrink-0 rounded-xl md:rounded-2xl bg-gradient-to-br ${theme[color].split(' ')[0]} ${theme[color].split(' ')[1]} text-white flex items-center justify-center shadow-lg ${theme[color].split(' ')[2]} group-hover:scale-110 transition-transform duration-300`}>
+            <div className={`w-12 h-12 md:w-16 md:h-16 shrink-0 rounded-xl md:rounded-2xl bg-linear-to-br ${theme[color].split(' ')[0]} ${theme[color].split(' ')[1]} text-white flex items-center justify-center shadow-lg ${theme[color].split(' ')[2]} group-hover:scale-110 transition-transform duration-300`}>
                 <Icon className="w-6 h-6 md:w-8 md:h-8" />
             </div>
             
