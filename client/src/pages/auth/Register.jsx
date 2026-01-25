@@ -51,6 +51,11 @@ const Register = () => {
       newErrors.full_name = 'กรุณากรอกชื่อ-นามสกุล';
     }
 
+    // เพิ่มการตรวจสอบเบอร์โทรศัพท์ (ถ้าต้องการให้เป็นฟิลด์บังคับ)
+    if (!formData.phone || formData.phone.length < 9) {
+      newErrors.phone = 'กรุณากรอกเบอร์โทรศัพท์ที่ถูกต้อง';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -86,23 +91,19 @@ const Register = () => {
       {/* Main Card */}
       <div className="w-full max-w-6xl bg-white rounded-4xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] overflow-hidden relative z-10 flex flex-col md:flex-row min-h-[700px]">
         
-        {/* Left Side: Decorative Panel (Welcome) */}
+        {/* Left Side: Decorative Panel */}
         <div className="w-full md:w-5/12 bg-linear-to-br from-orange-600 via-orange-500 to-amber-500 text-white relative p-12 flex flex-col justify-between overflow-hidden order-1 md:order-1">
-            {/* Background Patterns */}
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-            
-            {/* Organic Shapes */}
             <div className="absolute -top-20 -right-20 w-64 h-64 bg-white opacity-10 rounded-full blur-3xl"></div>
             <div className="absolute bottom-10 left-0 w-40 h-40 bg-yellow-300 opacity-20 rounded-full blur-2xl -translate-x-1/2"></div>
 
-            {/* Content Top */}
             <div className="relative z-10">
                 <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 px-4 py-1.5 rounded-full mb-6">
                     <UserPlus className="w-4 h-4 text-yellow-200" />
                     <span className="text-sm font-medium tracking-wide">สร้างบัญชีผู้ใช้งาน</span>
                 </div>
                 <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4 drop-shadow-sm">
-                    ร่วมเป็นส่วนหนึ่ง<br/>กับวัดพระกำแพง
+                    ร่วมเป็นส่วนหนึ่ง<br/>กับวัดกำแพง
                 </h1>
                 <p className="text-orange-100 text-lg font-light leading-relaxed mb-8">
                     สมัครสมาชิกเพื่อเริ่มต้นจองพิธีกรรมทางศาสนา และติดตามข่าวสารกิจกรรมบุญต่างๆ ได้สะดวกรวดเร็ว
@@ -122,10 +123,9 @@ const Register = () => {
                 </div>
             </div>
 
-            {/* Content Bottom */}
-            <div className="relative z-10 mt-auto pt-8">
-                <p className="text-sm text-orange-200 opacity-80 text-center">
-                    © 2024 วัดพระธาตุ Smart Temple System
+            <div className="relative z-10 mt-auto pt-8 text-center md:text-left">
+                <p className="text-sm text-orange-200 opacity-80">
+                    © 2024 วัดกำแพง Smart Temple System
                 </p>
             </div>
         </div>
@@ -187,10 +187,10 @@ const Register = () => {
                         </div>
                     </div>
 
-                    {/* Email */}
+                    {/* Email - ดอกจันถูกเอาออกแล้ว */}
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-gray-700 ml-1">
-                            อีเมล <span className="text-red-500">*</span>
+                            อีเมล
                         </label>
                         <div className="relative group">
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -209,10 +209,10 @@ const Register = () => {
                         {errors.email && <p className="text-xs text-red-500 ml-1">{errors.email}</p>}
                     </div>
 
-                    {/* Phone */}
+                    {/* Phone - เพิ่มดอกจันและตรวจสอบ Error */}
                     <div className="space-y-2">
                         <label className="text-sm font-bold text-gray-700 ml-1">
-                            เบอร์โทรศัพท์
+                            เบอร์โทรศัพท์ <span className="text-red-500">*</span>
                         </label>
                         <div className="relative group">
                             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -224,9 +224,11 @@ const Register = () => {
                                 value={formData.phone}
                                 onChange={handleChange}
                                 placeholder="08x-xxx-xxxx"
-                                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 transition-all outline-none text-gray-800 font-medium"
+                                className={`w-full pl-12 pr-4 py-3 bg-gray-50 border rounded-xl focus:bg-white focus:ring-4 focus:ring-orange-500/10 transition-all outline-none text-gray-800 font-medium ${errors.phone ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-orange-500'}`}
+                                required
                             />
                         </div>
+                        {errors.phone && <p className="text-xs text-red-500 ml-1">{errors.phone}</p>}
                     </div>
 
                     <div className="grid md:grid-cols-2 gap-5">

@@ -28,7 +28,7 @@ const Footer = () => {
               </div>
               <div className="flex flex-col">
                 <span className="text-2xl font-bold text-white tracking-tight">วัดกำแพง</span>
-                <span className="text-[10px] font-medium tracking-[0.2em] text-orange-400 uppercase">Smart Temple System</span>
+                <span className="text-[10px] font-medium tracking-[0.2em] text-orange-400 uppercase"></span>
               </div>
             </Link>
             
@@ -93,7 +93,7 @@ const Footer = () => {
                   <MapPin size={20} className="text-orange-500" />
                 </div>
                 <span className="text-gray-400 leading-relaxed">
-                  123 ถนนพระธาตุ ตำบลวัด <br/>อำเภอเมือง จังหวัดเชียงใหม่ 50000
+                  	เลขที่ 19 หมู่ที่ 8 ซอยพิบูลสงคราม 22  <br/>อำเภอนนทบุรี จังหวัดนนทบุรี 11000
                 </span>
               </li>
               <li className="flex items-center gap-3">
@@ -111,7 +111,7 @@ const Footer = () => {
                 </div>
                 <div>
                    <span className="block text-gray-400 text-xs">อีเมล</span>
-                   <span className="text-white font-medium hover:text-blue-400 transition-colors cursor-pointer">contact@temple.com</span>
+                   <span className="text-white font-medium hover:text-blue-400 transition-colors cursor-pointer">wat.kampaeng@gmail.com</span>
                 </div>
               </li>
             </ul>

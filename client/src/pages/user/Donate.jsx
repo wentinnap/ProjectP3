@@ -122,7 +122,7 @@ const Donate = () => {
                                             123-4-56789-0
                                         </p>
                                         <p className="text-sm font-medium text-gray-600 truncate max-w-[200px] md:max-w-xs">
-                                            กองทุนบูรณะวัดพระธาตุ
+                                            กองทุนบูรณะวัดกำแพง
                                         </p>
                                     </div>
                                     <button 
@@ -145,7 +145,7 @@ const Donate = () => {
                         <div className="mt-8 pt-6 border-t border-gray-100">
                             <div className="flex items-start gap-2 justify-center text-xs text-gray-400 leading-relaxed max-w-sm mx-auto text-center">
                                 <Info size={14} className="shrink-0 mt-0.5 text-orange-400" />
-                                <p>ใบอนุโมทนาบัตรจะออกให้สำหรับยอดบริจาค 500 บาทขึ้นไป โปรดติดต่อเจ้าหน้าที่ผ่าน Line หรือ Facebook ของวัด</p>
+                                <p></p>
                             </div>
                         </div>
 
