@@ -217,6 +217,13 @@ const AdminDashboard = () => {
                 desc="ตอบคำถามจากทางบ้าน" 
                 color="cyan"
             />
+            <MenuCard 
+                to="/admin/albums"  // ลิงก์ไปหน้าจัดการอัลบั้ม
+                icon={Image} 
+                title="จัดการรูปภาพ" 
+                desc="อัลบั้มกิจกรรมและแกลเลอรี่" 
+                color="green" // ใช้สีเขียวเพื่อให้เด่น
+            />
         </div>
 
       </div>

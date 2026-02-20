@@ -8,7 +8,7 @@ import ProtectedRoute from "./components/commom/ProtectedRoute";
 // Pages
 import Home from './pages/user/Home';
 import About from './pages/user/About';
-import Donate from './pages/user/Donate'; // Import Donate page
+import Donate from './pages/user/Donate';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import NewsList from './pages/user/NewsList';
@@ -17,6 +17,8 @@ import Booking from './pages/user/Booking';
 import Profile from './pages/user/Profile';
 import EventCalendar from "./pages/user/EventCalendar";
 import QnA from './pages/user/QnA';
+import Gallery from './pages/user/Gallery'; // เพิ่มหน้า Gallery
+import AlbumDetail from './pages/user/AlbumDetail'; // เพิ่มหน้าแสดงรูปในบั้ม
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -24,8 +26,8 @@ import AdminNews from './pages/admin/AdminNews';
 import AdminBookings from './pages/admin/AdminBookings';
 import AdminEvents from './pages/admin/AdminEvents';
 import AdminQnA from './pages/admin/AdminQnA';
+import AdminAlbums from './pages/admin/AdminAlbums'; // เพิ่มหน้าจัดการอัลบั้ม
 
-// Custom Toast Styles (Modern & Luxury Look)
 const contextClass = {
   success: "bg-white border-l-4 border-green-500 text-gray-800",
   error: "bg-white border-l-4 border-red-500 text-gray-800",
@@ -45,13 +47,17 @@ function App() {
               {/* Public Routes */}
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
-              <Route path="/donate" element={<Donate />} /> {/* เพิ่ม Route Donate */}
+              <Route path="/donate" element={<Donate />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/news" element={<NewsList />} />
               <Route path="/news/:id" element={<NewsDetail />} />
               <Route path="/events" element={<EventCalendar />} />
               <Route path="/qna" element={<QnA />} />
+              
+              {/* Gallery Routes (User) */}
+              <Route path="/gallery" element={<Gallery />} />
+              <Route path="/gallery/:id" element={<AlbumDetail />} />
 
               {/* Protected User Routes */}
               <Route
@@ -112,13 +118,21 @@ function App() {
                   </ProtectedRoute>
                 }
               />
+              {/* Admin Gallery Management */}
+              <Route
+                path="/admin/albums"
+                element={
+                  <ProtectedRoute adminOnly>
+                    <AdminAlbums />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* 404 */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
 
-          {/* Luxury Toast Notification */}
           <ToastContainer
             position="bottom-right"
             autoClose={4000}
@@ -134,7 +148,7 @@ function App() {
               " relative flex p-1 min-h-[64px] rounded-xl justify-between overflow-hidden cursor-pointer shadow-[0_8px_30px_rgb(0,0,0,0.12)] mb-4 transform hover:scale-[1.02] transition-all duration-300 items-center font-sans"
             }
             bodyClassName={() => "text-sm font-semibold flex items-center gap-3 px-3"}
-            icon={true} // ใช้ Default icon ของ library หรือจะ Custom ก็ได้
+            icon={true}
           />
         </div>
       </Router>

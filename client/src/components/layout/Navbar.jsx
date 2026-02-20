@@ -2,6 +2,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Menu, X, User, LogOut, Calendar, Newspaper, LayoutDashboard, ChevronDown, Sparkles, Landmark, HeartHandshake, CalendarClock, MessageCircleQuestion } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import { Image
+} from 'lucide-react';
 
 // เมนู Navbar
 const NAV_LINKS = [
@@ -13,6 +15,7 @@ const NAV_LINKS = [
     children: [
       { to: '/news', label: 'ข่าวสารประชาสัมพันธ์', icon: Newspaper },
       { to: '/events', label: 'ปฏิทินกิจกรรม', icon: CalendarClock },
+      { to: '/gallery', label: 'แกลเลอรี่รูปภาพ', icon: Image },
     ]
   },
   { to: '/booking', label: 'จองพิธี', icon: Calendar },

@@ -9,6 +9,7 @@ const newsRoutes = require("./src/routes/newsRoutes");
 const bookingRoutes = require("./src/routes/bookingRoutes");
 const eventRoutes = require("./src/routes/eventRoutes");
 const qnaRoutes = require("./src/routes/qnaRoutes");
+const albumRoutes = require("./src/routes/albumRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -54,6 +55,7 @@ app.use("/api/news", newsRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/qna", qnaRoutes);
+app.use("/api/albums", albumRoutes);
 
 // =====================
 // 404 handler

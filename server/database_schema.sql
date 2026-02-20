@@ -105,3 +105,17 @@ FROM bookings b
 JOIN booking_types bt ON b.booking_type_id = bt.id
 JOIN users u ON b.user_id = u.id
 LEFT JOIN users admin ON b.admin_id = admin.id;
+
+CREATE TABLE albums (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    is_hidden TINYINT(1) DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE album_photos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    album_id INT,
+    file_path VARCHAR(255) NOT NULL,
+    FOREIGN KEY (album_id) REFERENCES albums(id) ON DELETE CASCADE
+);
