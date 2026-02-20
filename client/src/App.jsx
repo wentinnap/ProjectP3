@@ -18,7 +18,7 @@ import Profile from './pages/user/Profile';
 import EventCalendar from "./pages/user/EventCalendar";
 import QnA from './pages/user/QnA';
 import Gallery from './pages/user/Gallery'; // เพิ่มหน้า Gallery
-import AlbumDetail from './pages/user/AlbumDetail'; // เพิ่มหน้าแสดงรูปในบั้ม
+
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -57,7 +57,7 @@ function App() {
               
               {/* Gallery Routes (User) */}
               <Route path="/gallery" element={<Gallery />} />
-              <Route path="/gallery/:id" element={<AlbumDetail />} />
+              
 
               {/* Protected User Routes */}
               <Route
