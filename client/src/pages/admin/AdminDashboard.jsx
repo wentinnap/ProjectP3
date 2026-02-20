@@ -5,7 +5,8 @@ import { bookingAPI } from '../../services/api';
 import { 
   Calendar, Newspaper, CheckCircle, XCircle, Clock, 
   LogOut, LayoutDashboard, Bell, ArrowRight, Activity, 
-  Users, CalendarClock, MessageCircleQuestion, Home, Menu, X
+  Users, CalendarClock, MessageCircleQuestion, Home, Menu, X, 
+  Image
 } from 'lucide-react';
 
 const AdminDashboard = () => {
