@@ -14,7 +14,7 @@ const AlbumDetail = () => {
   useEffect(() => {
     const fetchPhotos = async () => {
       try {
-        const res = await albumAPI.getPhotosByAlbumId(id);
+        const res = await albumAPI.getPhotos(id);
 
         // ✅ ดึงเฉพาะ array
         if (res?.data?.success) {
