@@ -7,16 +7,26 @@ const Gallery = () => {
   const navigate = useNavigate();
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchAlbums = async () => {
       try {
-        const res = await albumAPI.getAll(); // ต้องมี API นี้
-        if (res.data.success) {
-          setAlbums(res.data.data);
+        // ✅ แก้จาก getAll() เป็น getAllUser()
+        const res = await albumAPI.getAllUser();
+
+        // รองรับหลายโครงสร้าง response
+        if (res?.data?.success) {
+          setAlbums(res.data.data || []);
+        } else if (Array.isArray(res?.data)) {
+          setAlbums(res.data);
+        } else {
+          setAlbums([]);
         }
       } catch (err) {
         console.error("Error loading albums:", err);
+        setError("ไม่สามารถโหลดอัลบั้มได้");
+        setAlbums([]);
       } finally {
         setLoading(false);
       }
@@ -25,6 +35,9 @@ const Gallery = () => {
     fetchAlbums();
   }, []);
 
+  // ===============================
+  // Loading Screen
+  // ===============================
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
@@ -34,6 +47,20 @@ const Gallery = () => {
     );
   }
 
+  // ===============================
+  // Error Screen
+  // ===============================
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <p className="text-red-500 font-semibold text-lg">{error}</p>
+      </div>
+    );
+  }
+
+  // ===============================
+  // Main UI
+  // ===============================
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 font-sans">
       <div className="max-w-7xl mx-auto">
@@ -59,6 +86,7 @@ const Gallery = () => {
                   onClick={() => navigate(`/gallery/${album.id}`)}
                   className="group cursor-pointer bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100 hover:-translate-y-1"
                 >
+                  {/* Cover */}
                   <div className="aspect-video bg-gray-100 overflow-hidden relative">
                     {coverUrl ? (
                       <img
@@ -74,6 +102,7 @@ const Gallery = () => {
                     )}
                   </div>
 
+                  {/* Info */}
                   <div className="p-4">
                     <h2 className="font-bold text-gray-800 text-lg truncate">
                       {album.title}
