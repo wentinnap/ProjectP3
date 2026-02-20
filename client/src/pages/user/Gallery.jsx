@@ -67,7 +67,7 @@ const AlbumDetail = () => {
         {photos.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-5">
             {photos.map((photo, index) => {
-              const imageUrl = toAssetUrl(`/uploads/${photo.file_path}`);
+              const imageUrl = toAssetUrl(`${photo.file_path}`);
               return (
                 <div 
                   key={photo.id || index} 
