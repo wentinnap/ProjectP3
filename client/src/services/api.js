@@ -170,4 +170,25 @@ export const qnaAPI = {
   delete: (id) => api.delete(`/qna/${id}`),
 };
 
+// --- Album APIs ---
+export const albumAPI = {
+  // Public (สำหรับหน้า User): ดูเฉพาะอัลบั้มที่โชว์ (is_hidden = 0)
+  getAllUser: () => api.get("/albums/user"),
+
+  // Admin (สำหรับหน้าจัดการ): ดูอัลบั้มทั้งหมดรวมที่ซ่อนอยู่
+  getAllAdmin: () => api.get("/albums/admin"),
+
+  // ดึงรูปภาพทั้งหมดภายในอัลบั้มนั้นๆ (ใช้ทั้ง Admin และ User)
+  getPhotos: (id) => api.get(`/albums/${id}/photos`),
+
+  // Admin: สร้างอัลบั้มใหม่ (รับไฟล์ผ่าน FormData)
+  create: (formData) => api.post("/albums", formData),
+
+  // Admin: สลับสถานะ ซ่อน/แสดง (isHidden ส่ง 1 หรือ 0)
+  toggleHide: (id, isHidden) => api.patch(`/albums/${id}/hide`, { is_hidden: isHidden }),
+
+  // Admin: ลบทั้งอัลบั้ม
+  delete: (id) => api.delete(`/albums/${id}`),
+};
+
 export default api;
