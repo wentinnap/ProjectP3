@@ -122,9 +122,9 @@ const AdminAlbums = () => {
               {/* Image Container */}
               <div className="relative aspect-video overflow-hidden bg-gray-100">
                 <img
-                  src={toAssetUrl(album.cover_img ? `/uploads/${album.cover_img}` : '/placeholder.png')}
-                  className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${album.is_hidden ? 'grayscale' : ''}`}
-                  alt={album.title}
+                src={toAssetUrl(album.cover_img || "/placeholder.png")}
+                className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${album.is_hidden ? 'grayscale' : ''}`}
+                alt={album.title}
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-gray-800 text-[10px] font-bold px-2 py-1 rounded-lg shadow-sm">
