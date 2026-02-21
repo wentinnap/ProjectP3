@@ -4,8 +4,9 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from "./components/commom/ProtectedRoute";
+import AdminLayout from './components/layout/AdminLayout'; // อย่าลืมสร้างไฟล์ Layout ที่ผมให้ไว้ก่อนหน้านี้
 
-// Pages
+// Pages (User)
 import Home from './pages/user/Home';
 import About from './pages/user/About';
 import Donate from './pages/user/Donate';
@@ -17,9 +18,8 @@ import Booking from './pages/user/Booking';
 import Profile from './pages/user/Profile';
 import EventCalendar from "./pages/user/EventCalendar";
 import QnA from './pages/user/QnA';
-import Gallery from './pages/user/Gallery'; // เพิ่มหน้า Gallery
+import Gallery from './pages/user/Gallery';
 import AlbumDetail from './pages/user/AlbumDetail';
-
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -27,7 +27,7 @@ import AdminNews from './pages/admin/AdminNews';
 import AdminBookings from './pages/admin/AdminBookings';
 import AdminEvents from './pages/admin/AdminEvents';
 import AdminQnA from './pages/admin/AdminQnA';
-import AdminAlbums from './pages/admin/AdminAlbums'; // เพิ่มหน้าจัดการอัลบั้ม
+import AdminAlbums from './pages/admin/AdminAlbums';
 
 const contextClass = {
   success: "bg-white border-l-4 border-green-500 text-gray-800",
@@ -45,7 +45,7 @@ function App() {
         <div className="min-h-screen flex flex-col font-sans text-gray-900">
           <main className="flex-1">
             <Routes>
-              {/* Public Routes */}
+              {/* --- Public Routes --- */}
               <Route path="/" element={<Home />} />
               <Route path="/about" element={<About />} />
               <Route path="/donate" element={<Donate />} />
@@ -55,82 +55,40 @@ function App() {
               <Route path="/news/:id" element={<NewsDetail />} />
               <Route path="/events" element={<EventCalendar />} />
               <Route path="/qna" element={<QnA />} />
-              
-              {/* Gallery Routes (User) */}
               <Route path="/gallery" element={<Gallery />} />
               <Route path="/gallery/:id" element={<AlbumDetail />} />
-              
 
-              {/* Protected User Routes */}
-              <Route
-                path="/booking"
-                element={
-                  <ProtectedRoute>
-                    <Booking />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
-                }
-              />
+              {/* --- Protected User Routes --- */}
+              <Route path="/booking" element={
+                <ProtectedRoute>
+                  <Booking />
+                </ProtectedRoute>
+              } />
+              <Route path="/profile" element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } />
 
-              {/* Protected Admin Routes */}
-              <Route
-                path="/admin"
+              {/* --- Protected Admin Routes (Nested with AdminLayout) --- */}
+              <Route 
+                path="/admin" 
                 element={
                   <ProtectedRoute adminOnly>
-                    <AdminDashboard />
+                    <AdminLayout />
                   </ProtectedRoute>
                 }
-              />
-              <Route
-                path="/admin/news"
-                element={
-                  <ProtectedRoute adminOnly>
-                    <AdminNews />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/bookings"
-                element={
-                  <ProtectedRoute adminOnly>
-                    <AdminBookings />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/events"
-                element={
-                  <ProtectedRoute adminOnly>
-                    <AdminEvents />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="/admin/qna"
-                element={
-                  <ProtectedRoute adminOnly>
-                    <AdminQnA />
-                  </ProtectedRoute>
-                }
-              />
-              {/* Admin Gallery Management */}
-              <Route
-                path="/admin/albums"
-                element={
-                  <ProtectedRoute adminOnly>
-                    <AdminAlbums />
-                  </ProtectedRoute>
-                }
-              />
+              >
+                {/* ทุก Route ด้านล่างนี้จะแสดงผลภายในช่อง Outlet ของ AdminLayout */}
+                <Route index element={<AdminDashboard />} />
+                <Route path="news" element={<AdminNews />} />
+                <Route path="bookings" element={<AdminBookings />} />
+                <Route path="events" element={<AdminEvents />} />
+                <Route path="qna" element={<AdminQnA />} />
+                <Route path="albums" element={<AdminAlbums />} />
+              </Route>
 
-              {/* 404 */}
+              {/* 404 Not Found */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </main>
