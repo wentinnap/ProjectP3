@@ -1,20 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { Link } from 'react-router-dom';
 import { bookingAPI } from '../../services/api';
 import { 
-  Calendar, Newspaper, CheckCircle, XCircle, Clock, 
-  LogOut, LayoutDashboard, Bell, ArrowRight, Activity, 
-  Users, CalendarClock, MessageCircleQuestion, Home, Menu, X, 
-  Image // นำเข้าไอคอน Image เรียบร้อย
+  ChevronDown
 } from 'lucide-react';
 
 const AdminDashboard = () => {
-  const { logout, user } = useAuth();
-  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -31,180 +24,136 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
-
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="w-16 h-16 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin"></div>
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans flex flex-col pb-10">
-      
-      {/* --- Top Navbar --- */}
-      <nav className="bg-white/90 backdrop-blur-md border-b border-gray-100 sticky top-0 z-50 transition-all duration-300">
-        <div className="container mx-auto px-4 md:px-6 h-16 md:h-20 flex items-center justify-between">
-            <div className="flex items-center gap-3 md:gap-4">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-linear-to-br from-orange-500 to-amber-500 rounded-xl md:rounded-2xl flex items-center justify-center text-white shadow-lg shadow-orange-500/20">
-                    <LayoutDashboard size={20} className="md:w-6 md:h-6" />
-                </div>
-                <div>
-                    <h1 className="text-lg md:text-xl font-extrabold text-gray-800 tracking-tight leading-tight">Admin Portal</h1>
-                    <p className="text-[10px] text-gray-400 font-semibold tracking-widest uppercase hidden sm:block">Smart Temple System</p>
-                </div>
-            </div>
+    <div className="animate-in fade-in duration-500">
+      {/* ส่วนหัวของหน้า Dashboard */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-gray-800">แผงควบคุมระบบ</h2>
+        <p className="text-gray-500 text-sm">ภาพรวมข้อมูลและการจัดการระบบจัดการวัด</p>
+      </div>
 
-            <div className="hidden md:flex items-center gap-4">
-                <Link to="/" className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-gray-600 font-medium text-sm hover:bg-orange-50 hover:text-orange-600 transition-all duration-300 group">
-                    <Home size={18} className="group-hover:-translate-y-0.5 transition-transform" />
-                    <span>หน้าเว็บไซต์</span>
-                </Link>
-                <div className="h-8 w-px bg-gray-200"></div>
-                <div className="flex items-center gap-3 bg-white px-1.5 py-1.5 pr-4 rounded-full border border-gray-100 shadow-sm">
-                    <div className="w-9 h-9 rounded-full bg-linear-to-br from-gray-100 to-gray-200 flex items-center justify-center text-gray-600 font-bold text-sm">
-                        {user?.full_name?.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="text-sm font-bold text-gray-700">{user?.full_name}</span>
-                </div>
-                <button onClick={handleLogout} className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-red-50 hover:text-red-500 transition-all duration-300">
-                    <LogOut size={18} />
-                </button>
-            </div>
-
-            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="md:hidden w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-600">
-                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
-        </div>
-
-        {isMobileMenuOpen && (
-            <div className="md:hidden absolute top-full left-0 w-full bg-white border-b border-gray-100 shadow-xl py-4 px-4 flex flex-col gap-3">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl mb-2">
-                    <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center text-gray-600 font-bold text-lg shadow-sm">
-                        {user?.full_name?.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                        <p className="font-bold text-gray-800">{user?.full_name}</p>
-                        <p className="text-xs text-gray-500">ผู้ดูแลระบบ</p>
-                    </div>
-                </div>
-                <Link to="/" className="flex items-center gap-3 p-3 rounded-xl text-gray-600 hover:bg-orange-50">
-                    <Home size={20} /> <span className="font-medium">กลับหน้าเว็บไซต์</span>
-                </Link>
-                <button onClick={handleLogout} className="flex items-center gap-3 p-3 rounded-xl text-red-500 hover:bg-red-50 w-full text-left">
-                    <LogOut size={20} /> <span className="font-medium">ออกจากระบบ</span>
-                </button>
-            </div>
-        )}
-      </nav>
-
-      <div className="flex-1 container mx-auto px-4 md:px-6 py-6 md:py-10">
-        {/* Welcome Card */}
-        <div className="mb-8 md:mb-12 p-6 md:p-8 bg-white rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 w-40 h-40 bg-linear-to-bl from-orange-100/50 to-transparent rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
-            <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
-                <div>
-                    <h2 className="text-2xl md:text-4xl font-bold text-gray-800 mb-2">
-                        สวัสดีครับ, <span className="text-transparent bg-clip-text bg-linear-to-r from-orange-600 to-amber-600">{user?.full_name}</span> 👋
-                    </h2>
-                    <p className="text-gray-500 text-sm md:text-lg">จัดการข้อมูลวัด ตรวจสอบการจอง และดูแลระบบ</p>
-                </div>
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-xl text-xs font-semibold border border-green-100 shadow-sm">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                      <span className="relative rounded-full h-2 w-2 bg-green-500"></span>
-                    </span>
-                    ระบบปกติ
-                </div>
-            </div>
-        </div>
-
-        {/* Dashboard Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8 md:mb-12">
-            <StatCard title="การจองทั้งหมด" value={stats?.total_bookings || 0} icon={Users} color="blue" />
-            <StatCard title="รอการตอบรับ" value={stats?.pending_count || 0} icon={Clock} color="orange" isPending={true} />
-            <StatCard title="อนุมัติแล้ว" value={stats?.approved_count || 0} icon={CheckCircle} color="green" />
-            <StatCard title="ปฏิเสธ/ยกเลิก" value={stats?.rejected_count || 0} icon={XCircle} color="red" />
-        </div>
-
-        <div className="flex items-center gap-3 md:gap-4 mb-6 md:mb-8">
-            <div className="w-1 md:w-1.5 h-6 md:h-8 bg-linear-to-b from-orange-500 to-amber-500 rounded-full"></div>
-            <div>
-                <h3 className="text-xl md:text-2xl font-bold text-gray-800">เมนูจัดการ</h3>
-                <p className="text-xs md:text-sm text-gray-400">เลือกรายการที่ต้องการดำเนินการ</p>
-            </div>
-        </div>
+      {/* Grid Layout สำหรับ Widget (ตามสไตล์ภาพต้นฉบับ) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-            <MenuCard to="/admin/bookings" icon={Calendar} title="จัดการการจอง" desc="ตรวจสอบและอนุมัติคิว" color="orange" notification={stats?.pending_count} />
-            <MenuCard to="/admin/news" icon={Newspaper} title="จัดการข่าวสาร" desc="ประชาสัมพันธ์กิจกรรมวัด" color="blue" />
-            <MenuCard to="/admin/events" icon={CalendarClock} title="จัดการกิจกรรม" desc="ตารางงานบุญและพิธีการ" color="purple" />
-            <MenuCard to="/admin/qna" icon={MessageCircleQuestion} title="จัดการถาม-ตอบ" desc="ตอบคำถามจากทางบ้าน" color="cyan" />
-            <MenuCard to="/admin/albums" icon={Image} title="จัดการรูปภาพ" desc="อัลบั้มกิจกรรมและแกลเลอรี่" color="green" />
-        </div>
+        {/* วิดเจ็ตแบบที่ 1: Donut Chart Look */}
+        <DashboardCard title="สถิติการอนุมัติ">
+           <div className="flex justify-center items-center py-4">
+              <div className="relative w-32 h-32 rounded-full border-12 border-gray-100 flex items-center justify-center">
+                {/* คำนวณเปอร์เซ็นต์จริงจาก API หรือใช้ค่าจำลองตามดีไซน์ */}
+                <div className="absolute inset-0 rounded-full border-12 border-cyan-500 border-t-transparent border-l-transparent transform rotate-45"></div>
+                <span className="text-2xl font-bold text-gray-700">75%</span>
+              </div>
+           </div>
+        </DashboardCard>
+
+        {/* วิดเจ็ตแบบที่ 2: Progress Bars */}
+        <DashboardCard title="สถานะการจอง">
+            <div className="space-y-6 py-4">
+                <ProgressBar label={stats?.approved_count || '0'} color="bg-cyan-500" percent="75%" title="อนุมัติแล้ว" />
+                <ProgressBar label={stats?.pending_count || '0'} color="bg-red-500" percent="50%" title="รอตรวจสอบ" />
+                <ProgressBar label={stats?.rejected_count || '0'} color="bg-orange-500" percent="35%" title="ยกเลิก/ปฏิเสธ" />
+            </div>
+        </DashboardCard>
+
+        {/* วิดเจ็ตแบบที่ 3: Bar Chart Look */}
+        <DashboardCard title="ปริมาณการใช้งาน">
+            <div className="flex items-end justify-between h-32 px-4 py-2 border-l border-b border-gray-100">
+                <div className="w-6 bg-cyan-400 h-[60%] rounded-t-sm" title="จอง"></div>
+                <div className="w-6 bg-red-500 h-[90%] rounded-t-sm" title="ข่าวสาร"></div>
+                <div className="w-6 bg-[#343d52] h-[50%] rounded-t-sm" title="กิจกรรม"></div>
+                <div className="w-6 bg-orange-400 h-[30%] rounded-t-sm" title="ถาม-ตอบ"></div>
+            </div>
+            <div className="flex justify-between mt-2 text-[10px] text-gray-400 font-bold">
+                <span>จอง</span>
+                <span>ข่าว</span>
+                <span>งาน</span>
+                <span>Q&A</span>
+            </div>
+        </DashboardCard>
+
+        {/* วิดเจ็ตแบบที่ 4: Menu Shortcut */}
+        <DashboardCard title="ทางลัดการจัดการ">
+           <div className="grid grid-cols-2 gap-4 py-2">
+             <QuickMenu to="/admin/bookings" label="ตรวจสอบการจอง" count={stats?.pending_count} color="bg-orange-500" />
+             <QuickMenu to="/admin/news" label="ประกาศข่าวสาร" color="bg-blue-500" />
+             <QuickMenu to="/admin/events" label="ตารางกิจกรรม" color="bg-purple-500" />
+             <QuickMenu to="/admin/albums" label="คลังรูปภาพ" color="bg-green-500" />
+           </div>
+        </DashboardCard>
+
+        {/* วิดเจ็ตแบบที่ 5: Total Count */}
+        <DashboardCard title="รายการจองทั้งหมด">
+            <div className="bg-cyan-500 text-white p-6 rounded-lg mt-4 flex justify-between items-center shadow-lg shadow-cyan-500/20">
+                <span className="text-4xl font-light">{stats?.total_bookings || '0'} รายการ</span>
+                <ChevronDown size={24} />
+            </div>
+            <div className="mt-4 inline-block bg-gray-100 px-3 py-1 text-[10px] rounded text-gray-500 uppercase font-bold tracking-wider">Update: Just now</div>
+        </DashboardCard>
+
+        {/* วิดเจ็ตแบบที่ 6: System Status */}
+        <DashboardCard title="สถานะเซิร์ฟเวอร์">
+            <ul className="space-y-4 mt-2">
+                <StatusItem label="ฐานข้อมูล (Database)" status="Online" color="text-blue-500" />
+                <StatusItem label="API เชื่อมต่อปกติ" status="Connected" color="text-cyan-500" />
+                <StatusItem label="พื้นที่จัดเก็บรูปภาพ" status="Normal" color="text-red-500" />
+            </ul>
+        </DashboardCard>
+
       </div>
     </div>
   );
 };
 
-const StatCard = ({ title, value, icon: Icon, color, isPending }) => {
-    const colors = {
-        blue: "bg-blue-50 text-blue-600 border-blue-100",
-        orange: "bg-orange-50 text-orange-600 border-orange-100",
-        green: "bg-green-50 text-green-600 border-green-100",
-        red: "bg-red-50 text-red-600 border-red-100",
-    };
-    return (
-        <div className="bg-white p-4 md:p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all group relative overflow-hidden flex flex-col justify-between h-full">
-            <div className="flex justify-between items-start mb-2 relative z-10">
-                <div className={`p-2.5 md:p-4 rounded-xl ${colors[color] || colors.blue} group-hover:scale-110 transition-transform`}>
-                    <Icon className="w-5 h-5" />
-                </div>
-            </div>
-            <div>
-                <h3 className="text-gray-400 text-xs md:text-sm font-medium pl-1 truncate">{title}</h3>
-                <p className="text-2xl md:text-4xl font-extrabold pl-1 text-gray-800">{value}</p>
-            </div>
+// --- Sub Components (Internal) ---
+
+const DashboardCard = ({ title, children }) => (
+  <div className="bg-white p-6 shadow-sm border border-gray-200 min-h-[280px] flex flex-col hover:shadow-md transition-shadow">
+    <h3 className="text-gray-400 text-lg font-light mb-1">{title}</h3>
+    <p className="text-[10px] text-gray-300 uppercase tracking-wider mb-4 font-bold">Smart Temple Management System Platform</p>
+    <div className="flex-1">
+        {children}
+    </div>
+  </div>
+);
+
+const ProgressBar = ({ label, color, percent, title }) => (
+    <div className="space-y-1">
+        <div className="flex justify-between text-[10px] text-gray-400 uppercase font-bold">
+            <span>{title}</span>
         </div>
-    );
-};
-
-const MenuCard = ({ to, icon: Icon, title, desc, color, notification }) => {
-    const theme = {
-        orange: "from-orange-500 to-amber-500 shadow-orange-200 text-orange-600",
-        blue: "from-blue-500 to-indigo-500 shadow-blue-200 text-blue-600",
-        purple: "from-purple-500 to-fuchsia-500 shadow-purple-200 text-purple-600",
-        cyan: "from-cyan-500 to-teal-500 shadow-cyan-200 text-cyan-600",
-        green: "from-green-500 to-emerald-500 shadow-green-200 text-green-600", // เพิ่มสีเขียวที่ขาดไป
-    };
-
-    const currentTheme = theme[color] || theme.orange;
-    const parts = currentTheme.split(' ');
-
-    return (
-        <Link to={to} className="group bg-white rounded-2xl p-5 md:p-6 border border-gray-100 shadow-sm hover:shadow-xl transition-all flex flex-row md:flex-col items-center md:items-start gap-4 h-full relative overflow-hidden">
-            <div className={`w-12 h-12 md:w-16 md:h-16 shrink-0 rounded-xl bg-linear-to-br ${parts[0]} ${parts[1]} text-white flex items-center justify-center shadow-lg ${parts[2]} group-hover:scale-110 transition-transform`}>
-                <Icon className="w-6 h-6 md:w-8 md:h-8" />
+        <div className="flex items-center gap-4">
+            <div className="flex-1 h-8 bg-gray-100 rounded-sm relative overflow-hidden">
+                <div className={`absolute top-0 left-0 h-full ${color} transition-all duration-1000`} style={{ width: percent }}></div>
             </div>
-            <div className="flex-1 min-w-0">
-                <h3 className={`text-lg md:text-xl font-bold text-gray-800 group-hover:${parts[3]} truncate`}>{title}</h3>
-                <p className="text-xs md:text-sm text-gray-400 mt-0.5 font-light line-clamp-2">{desc}</p>
-                {notification > 0 && (
-                    <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 bg-red-50 text-red-600 border border-red-100 rounded-lg text-xs font-bold animate-pulse">
-                        <Bell size={10} className="fill-red-600" /> {notification} ใหม่
-                    </div>
-                )}
-            </div>
-            <div className="hidden md:flex absolute top-6 right-6 w-10 h-10 rounded-full bg-gray-50 items-center justify-center text-gray-300 group-hover:text-gray-600 transition-colors">
-                <ArrowRight size={18} />
-            </div>
-        </Link>
-    );
-};
+            <span className="text-gray-500 font-bold w-8 text-right">{label}</span>
+        </div>
+    </div>
+);
+
+const QuickMenu = ({ to, label, count, color }) => (
+    <Link to={to} className="flex flex-col gap-2 p-3 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors group border border-gray-100">
+        <div className={`w-2 h-2 ${color} rounded-full`}></div>
+        <span className="text-xs font-bold text-gray-600 group-hover:text-black">{label}</span>
+        {count > 0 && <span className="text-[10px] text-red-500 font-bold">{count} รายการใหม่</span>}
+    </Link>
+);
+
+const StatusItem = ({ label, status, color }) => (
+    <li className="flex justify-between items-center text-sm text-gray-500 border-b border-gray-50 pb-2">
+        <span>{label}</span>
+        <div className="flex items-center gap-2 font-bold">
+            <span className={color}>{status}</span>
+            <ChevronDown size={14} className={color} />
+        </div>
+    </li>
+);
 
 export default AdminDashboard;

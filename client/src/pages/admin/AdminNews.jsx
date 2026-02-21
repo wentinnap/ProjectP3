@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { newsAPI, toAssetUrl } from "../../services/api";
 import { toast } from "react-toastify";
-import { Plus, Edit, Trash2, Eye, EyeOff, Search, X, Image as ImageIcon, FileText, Filter, Calendar, ArrowLeft } from "lucide-react";
+import { 
+  Plus, Edit, Trash2, Search, X, 
+  Image as ImageIcon, Newspaper, Filter 
+} from "lucide-react";
 
 const AdminNews = () => {
   const [news, setNews] = useState([]);
@@ -47,7 +49,6 @@ const AdminNews = () => {
     try {
       let finalImageUrl = formData.image_url;
 
-      // ถ้ามีการเลือกไฟล์ใหม่ ให้จัดการอัปโหลดก่อน
       if (imageFile) {
         const res = await newsAPI.uploadImage(imageFile);
         finalImageUrl = res.data?.data?.image_url;
@@ -84,159 +85,189 @@ const AdminNews = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-10">
-      {/* Top Header */}
-      <header className="bg-white border-b sticky top-0 z-30 px-4 py-4">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <Link to="/admin" className="p-2 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft size={20}/></Link>
-            <h1 className="text-xl font-bold text-gray-800">จัดการข่าวสาร</h1>
-          </div>
-          <button onClick={() => handleOpenModal()} className="bg-orange-500 hover:bg-orange-600 text-white px-5 py-2 rounded-xl flex items-center gap-2 font-medium transition-all shadow-md shadow-orange-100">
-            <Plus size={18}/> เพิ่มข่าว
-          </button>
-        </div>
-      </header>
-
-      <main className="max-w-7xl mx-auto p-4 md:p-6">
-        {/* Filter Bar */}
-        <div className="flex flex-col md:flex-row gap-4 mb-6">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18}/>
-            <input 
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500/20 outline-none"
-              placeholder="ค้นหาหัวข้อข่าว..."
-              onChange={(e) => setFilters(prev => ({...prev, search: e.target.value}))}
-            />
-          </div>
-          <select 
-            className="px-4 py-2.5 rounded-xl border border-gray-200 outline-none bg-white"
-            onChange={(e) => setFilters(prev => ({...prev, visibility: e.target.value}))}
-          >
-            <option value="all">ทั้งหมด</option>
-            <option value="visible">แสดงอยู่</option>
-            <option value="hidden">ซ่อนอยู่</option>
-          </select>
+    <div className="animate-in fade-in duration-500">
+      {/* --- Page Header --- */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <Newspaper className="text-cyan-500" size={28} />
+            จัดการข่าวสาร
+          </h2>
+          <p className="text-gray-500 text-sm">อัปเดตข่าวประชาสัมพันธ์และกิจกรรมล่าสุดของวัด</p>
         </div>
 
-        {/* Data List */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          {loading ? (
-            <div className="p-20 text-center text-gray-400">กำลังโหลด...</div>
-          ) : news.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead className="bg-gray-50 text-gray-500 text-sm uppercase">
-                  <tr>
-                    <th className="px-6 py-4 font-semibold">หัวข้อ</th>
-                    <th className="px-6 py-4 font-semibold">สถานะ</th>
-                    <th className="px-6 py-4 font-semibold text-right">จัดการ</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {news.map((item) => (
-                    <tr key={item.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-4">
-                          <img 
-                            src={toAssetUrl(item.image_url) || "https://placehold.co/600x400?text=No+Image"} 
-                            className="w-12 h-12 rounded-lg object-cover bg-gray-100" 
-                            alt=""
-                          />
-                          <div>
-                            <div className="font-bold text-gray-800 line-clamp-1">{item.title}</div>
-                            <div className="text-xs text-gray-400">{new Date(item.created_at).toLocaleDateString('th-TH')}</div>
+        <button 
+          onClick={() => handleOpenModal()} 
+          className="w-full md:w-auto px-6 py-2.5 bg-[#343d52] hover:bg-[#3e485f] text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95"
+        >
+          <Plus size={20}/> เพิ่มข่าวใหม่
+        </button>
+      </div>
+
+      {/* --- Filter Bar --- */}
+      <div className="flex flex-col md:flex-row gap-3 mb-6">
+        <div className="relative flex-1 group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-cyan-500 transition-colors" size={18}/>
+          <input 
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-cyan-100 outline-none transition-all"
+            placeholder="ค้นหาหัวข้อข่าว..."
+            onChange={(e) => setFilters(prev => ({...prev, search: e.target.value}))}
+          />
+        </div>
+        <div className="flex items-center gap-2 bg-white border border-gray-200 p-1 rounded-xl">
+            <Filter size={16} className="ml-2 text-gray-400" />
+            <select 
+                className="pr-4 py-1.5 text-sm font-bold text-gray-600 outline-none bg-transparent cursor-pointer"
+                onChange={(e) => setFilters(prev => ({...prev, visibility: e.target.value}))}
+            >
+                <option value="all">ทั้งหมด</option>
+                <option value="visible">เผยแพร่แล้ว</option>
+                <option value="hidden">ซ่อนอยู่</option>
+            </select>
+        </div>
+      </div>
+
+      {/* --- Data Table --- */}
+      <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <div className="w-12 h-12 border-4 border-cyan-100 border-t-cyan-500 rounded-full animate-spin"></div>
+            <p className="text-gray-400 font-medium">กำลังโหลดข่าวสาร...</p>
+          </div>
+        ) : news.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead className="bg-gray-50/50 text-gray-400 text-[11px] uppercase tracking-widest font-bold">
+                <tr>
+                  <th className="px-6 py-4">เนื้อหาข่าวสาร</th>
+                  <th className="px-6 py-4 text-center">สถานะ</th>
+                  <th className="px-6 py-4 text-right">จัดการ</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {news.map((item) => (
+                  <tr key={item.id} className="hover:bg-gray-50/50 transition-colors group">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-4">
+                        <div className="relative w-16 h-12 rounded-lg overflow-hidden bg-gray-100 shrink-0 shadow-sm">
+                            <img 
+                                src={toAssetUrl(item.image_url) || "https://placehold.co/600x400?text=News"} 
+                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                                alt=""
+                            />
+                        </div>
+                        <div>
+                          <div className="font-bold text-gray-700 line-clamp-1 group-hover:text-cyan-600 transition-colors">{item.title}</div>
+                          <div className="text-[11px] font-bold text-gray-400 uppercase tracking-tighter">
+                            สร้างเมื่อ: {new Date(item.created_at).toLocaleDateString('th-TH')}
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${item.is_visible ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
-                          {item.is_visible ? 'เผยแพร่' : 'ซ่อน'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-right">
-                        <div className="flex justify-end gap-1">
-                          <button onClick={() => handleOpenModal(item)} className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg"><Edit size={18}/></button>
-                          <button onClick={() => handleDelete(item.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg"><Trash2 size={18}/></button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <div className="p-20 text-center text-gray-400">ไม่พบข้อมูล</div>
-          )}
-        </div>
-      </main>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
+                        item.is_visible ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        {item.is_visible ? 'Public' : 'Hidden'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <button onClick={() => handleOpenModal(item)} className="p-2 text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors"><Edit size={18}/></button>
+                        <button onClick={() => handleDelete(item.id)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={18}/></button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="p-20 text-center flex flex-col items-center gap-3">
+            <Newspaper size={48} className="text-gray-200" />
+            <p className="text-gray-400 font-medium">ไม่พบข้อมูลข่าวสาร</p>
+          </div>
+        )}
+      </div>
 
-      {/* Simplified Modal */}
+      {/* --- Action Modal --- */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl">
-            <div className="px-6 py-4 border-b flex justify-between items-center bg-gray-50">
-              <h2 className="font-bold text-gray-800">{editingNews ? 'แก้ไขข่าวสาร' : 'เพิ่มข่าวใหม่'}</h2>
-              <button onClick={() => setShowModal(false)}><X size={20} className="text-gray-400"/></button>
+        <div className="fixed inset-0 bg-[#343d52]/60 backdrop-blur-sm z-100 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl w-full max-w-xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b flex justify-between items-center bg-gray-50/50">
+              <h2 className="font-bold text-gray-800 text-lg">{editingNews ? 'แก้ไขข่าวสาร' : 'สร้างข่าวใหม่'}</h2>
+              <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-200 rounded-full transition-colors"><X size={20} className="text-gray-400"/></button>
             </div>
             
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+            <form onSubmit={handleSubmit} className="p-6 space-y-5">
               {/* Image Upload Area */}
-              <div className="relative group aspect-video bg-gray-100 rounded-2xl overflow-hidden border-2 border-dashed border-gray-200 flex flex-col items-center justify-center">
-                {(imageFile || formData.image_url) ? (
-                  <img 
-                    src={imageFile ? URL.createObjectURL(imageFile) : toAssetUrl(formData.image_url)} 
-                    className="w-full h-full object-cover" 
-                    alt="preview"
-                  />
-                ) : (
-                  <div className="text-center text-gray-400">
-                    <ImageIcon className="mx-auto mb-2" size={32}/>
-                    <p className="text-sm">คลิกเพื่อเพิ่มรูปภาพ</p>
-                  </div>
-                )}
-                <input 
-                  type="file" 
-                  className="absolute inset-0 opacity-0 cursor-pointer" 
-                  onChange={(e) => setImageFile(e.target.files[0])}
-                  accept="image/*"
-                />
+              <div>
+                <label className="text-[11px] font-bold text-gray-400 uppercase mb-2 block tracking-widest">รูปภาพหน้าปก</label>
+                <div className="relative group aspect-21/9 bg-gray-50 rounded-xl overflow-hidden border-2 border-dashed border-gray-200 hover:border-cyan-300 transition-all flex flex-col items-center justify-center cursor-pointer">
+                    {(imageFile || formData.image_url) ? (
+                    <img 
+                        src={imageFile ? URL.createObjectURL(imageFile) : toAssetUrl(formData.image_url)} 
+                        className="w-full h-full object-cover" 
+                        alt="preview"
+                    />
+                    ) : (
+                    <div className="text-center text-gray-400">
+                        <ImageIcon className="mx-auto mb-2 text-gray-300" size={40}/>
+                        <p className="text-xs font-bold">อัปโหลดรูปภาพข่าว (1200 x 600 px)</p>
+                    </div>
+                    )}
+                    <input 
+                    type="file" 
+                    className="absolute inset-0 opacity-0 cursor-pointer" 
+                    onChange={(e) => setImageFile(e.target.files[0])}
+                    accept="image/*"
+                    />
+                </div>
               </div>
 
-              <input 
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 outline-none focus:border-orange-500"
-                placeholder="หัวข้อข่าว *"
-                required
-                value={formData.title}
-                onChange={(e) => setFormData({...formData, title: e.target.value})}
-              />
-              
-              <textarea 
-                className="w-full px-4 py-2.5 rounded-xl border border-gray-200 outline-none focus:border-orange-500 h-32 resize-none"
-                placeholder="เนื้อหาข่าว *"
-                required
-                value={formData.content}
-                onChange={(e) => setFormData({...formData, content: e.target.value})}
-              />
+              <div className="space-y-4">
+                <div>
+                    <label className="text-[11px] font-bold text-gray-400 uppercase mb-1 block tracking-widest">หัวข้อข่าวสาร</label>
+                    <input 
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-cyan-500 focus:bg-white transition-all text-sm font-medium"
+                        placeholder="พิมพ์หัวข้อข่าวที่นี่..."
+                        required
+                        value={formData.title}
+                        onChange={(e) => setFormData({...formData, title: e.target.value})}
+                    />
+                </div>
+                
+                <div>
+                    <label className="text-[11px] font-bold text-gray-400 uppercase mb-1 block tracking-widest">เนื้อหาข่าวอย่างย่อ</label>
+                    <textarea 
+                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-cyan-500 focus:bg-white transition-all text-sm h-32 resize-none"
+                        placeholder="เขียนรายละเอียดข่าวสาร..."
+                        required
+                        value={formData.content}
+                        onChange={(e) => setFormData({...formData, content: e.target.value})}
+                    />
+                </div>
+              </div>
 
-              <label className="flex items-center gap-3 cursor-pointer p-2 hover:bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
                 <input 
                   type="checkbox" 
-                  className="w-5 h-5 accent-orange-500"
+                  id="news-vis"
+                  className="w-5 h-5 accent-cyan-500 cursor-pointer"
                   checked={formData.is_visible}
                   onChange={(e) => setFormData({...formData, is_visible: e.target.checked})}
                 />
-                <span className="text-sm font-medium text-gray-700">แสดงข่าวนี้บนเว็บไซต์</span>
-              </label>
+                <label htmlFor="news-vis" className="text-sm font-bold text-gray-600 cursor-pointer">แสดงข่าวนี้บนหน้าเว็บไซต์ทันที</label>
+              </div>
 
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-xl transition-colors">ยกเลิก</button>
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-3 text-gray-500 font-bold hover:bg-gray-100 rounded-xl transition-colors text-sm">ยกเลิก</button>
                 <button 
                   type="submit" 
                   disabled={isSubmitting}
-                  className="flex-2 py-3 bg-orange-500 text-white font-bold rounded-xl hover:bg-orange-600 disabled:opacity-50 transition-all shadow-lg shadow-orange-100"
+                  className="flex-2 py-3 bg-cyan-500 text-white font-bold rounded-xl hover:bg-cyan-600 disabled:opacity-50 transition-all shadow-lg shadow-cyan-100 text-sm"
                 >
-                  {isSubmitting ? 'กำลังบันทึก...' : 'บันทึกข้อมูล'}
+                  {isSubmitting ? 'กำลังบันทึกข้อมูล...' : 'บันทึกข่าวสาร'}
                 </button>
               </div>
             </form>
