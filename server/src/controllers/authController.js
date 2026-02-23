@@ -296,16 +296,46 @@ exports.forgotPassword = async (req, res) => {
     // เปลี่ยนจาก process.env.FRONTEND_URL เป็น process.env.CLIENT_URL
     const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
 
-    await transporter.sendMail({
-      to: email,
-      subject: 'รีเซ็ตรหัสผ่าน - ระบบวัดกำแพง',
-      html: `
-        <h3>คุณได้รับอีเมลนี้เนื่องจากมีการขอรีเซ็ตรหัสผ่าน</h3>
-        <p>กรุณาคลิกลิงก์ด้านล่างเพื่อตั้งรหัสผ่านใหม่ (ลิงก์มีอายุ 1 ชม.):</p>
-        <a href="${resetUrl}" target="_blank">${resetUrl}</a>
-        <p>หากคุณไม่ได้เป็นคนขอ โปรดละทิ้งอีเมลนี้</p>
-      `
-    });
+  await transporter.sendMail({
+  to: email,
+  subject: 'รีเซ็ตรหัสผ่าน - ระบบวัดกำแพง',
+  html: `
+    <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e1e1e1; border-radius: 10px;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <h2 style="color: #2c3e50;">ระบบวัดกำแพง</h2>
+      </div>
+      
+      <div style="padding: 20px; background-color: #ffffff;">
+        <h3 style="color: #2c3e50; margin-top: 0;">สวัสดีครับ/ค่ะ,</h3>
+        <p>เราได้รับคำขอให้รีเซ็ตรหัสผ่านสำหรับบัญชีของคุณในระบบวัดกำแพง คุณสามารถเริ่มตั้งรหัสผ่านใหม่ได้โดยการคลิกปุ่มด้านล่างนี้:</p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetUrl}" 
+             style="background-color: #007bff; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+             ตั้งรหัสผ่านใหม่
+          </a>
+        </div>
+        
+        <p style="font-size: 0.9em; color: #666;">* ลิงก์นี้จะมีอายุการใช้งาน <strong>1 ชั่วโมง</strong> เท่านั้น</p>
+        
+        <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+        
+        <p style="font-size: 0.8em; color: #999;">
+          หากคุณไม่ได้เป็นผู้ส่งคำขอนี้ โปรดละทิ้งอีเมลฉบับนี้ บัญชีของคุณยังคงปลอดภัย
+        </p>
+        
+        <p style="font-size: 0.8em; color: #999; word-break: break-all;">
+          หากปุ่มใช้งานไม่ได้ สามารถคัดลอกลิงก์นี้ไปวางในเบราว์เซอร์ของคุณได้โดยตรง:<br>
+          <a href="${resetUrl}" style="color: #007bff;">${resetUrl}</a>
+        </p>
+      </div>
+      
+      <div style="text-align: center; padding-top: 20px; font-size: 0.75em; color: #aaa;">
+        &copy; ${new Date().getFullYear()} ระบบวัดกำแพง. All rights reserved.
+      </div>
+    </div>
+  `
+});
 
     res.json({ success: true, message: 'ส่งลิงก์รีเซ็ตรหัสผ่านไปที่อีเมลแล้ว' });
   } catch (error) {
