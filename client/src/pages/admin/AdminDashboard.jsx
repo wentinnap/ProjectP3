@@ -68,9 +68,9 @@ const AdminDashboard = () => {
         {/* วิดเจ็ตแบบที่ 1: Donut Chart Look */}
         <DashboardCard title="สถิติการอนุมัติ">
             <div className="flex justify-center items-center py-4">
-              <div className="relative w-36 h-36 rounded-full border-[14px] border-orange-50 flex items-center justify-center shadow-inner">
+              <div className="relative w-36 h-36 rounded-full border-14 border-orange-50 flex items-center justify-center shadow-inner">
                 {/* วงกลมความก้าวหน้า (จำลองด้วย border) */}
-                <div className="absolute inset-[-14px] rounded-full border-[14px] border-orange-500 border-t-transparent border-l-transparent transform rotate-[135deg]"></div>
+                <div className="absolute -inset-3.5 rounded-full border-14 border-orange-500 border-t-transparent border-l-transparent transform rotate-135"></div>
                 <div className="text-center">
                    <span className="text-3xl font-black text-gray-800 block">75%</span>
                    <span className="text-[10px] text-orange-500 font-bold uppercase tracking-tighter">Approved</span>
@@ -116,7 +116,7 @@ const AdminDashboard = () => {
 
         {/* วิดเจ็ตแบบที่ 5: Total Count */}
         <DashboardCard title="รายการจองรวม">
-            <div className="bg-gradient-to-br from-orange-500 to-amber-500 text-white p-6 rounded-[2rem] mt-4 flex justify-between items-center shadow-xl shadow-orange-500/25 group cursor-pointer">
+            <div className="bg-linear-to-br from-orange-500 to-amber-500 text-white p-6 rounded-4xl mt-4 flex justify-between items-center shadow-xl shadow-orange-500/25 group cursor-pointer">
                 <div>
                   <span className="text-4xl font-black">{stats?.total_bookings || '0'}</span>
                   <span className="text-sm font-bold ml-2 opacity-80 uppercase tracking-widest">Items</span>
