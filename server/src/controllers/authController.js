@@ -293,11 +293,12 @@ exports.forgotPassword = async (req, res) => {
       }
     });
 
-    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+    // เปลี่ยนจาก process.env.FRONTEND_URL เป็น process.env.CLIENT_URL
+    const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
 
     await transporter.sendMail({
       to: email,
-      subject: 'รีเซ็ตรหัสผ่าน - ระบบอัลบั้มรูปภาพ',
+      subject: 'รีเซ็ตรหัสผ่าน - ระบบวัดกำแพง',
       html: `
         <h3>คุณได้รับอีเมลนี้เนื่องจากมีการขอรีเซ็ตรหัสผ่าน</h3>
         <p>กรุณาคลิกลิงก์ด้านล่างเพื่อตั้งรหัสผ่านใหม่ (ลิงก์มีอายุ 1 ชม.):</p>
