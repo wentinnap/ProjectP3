@@ -20,6 +20,8 @@ import EventCalendar from "./pages/user/EventCalendar";
 import QnA from './pages/user/QnA';
 import Gallery from './pages/user/Gallery';
 import AlbumDetail from './pages/user/AlbumDetail';
+import ForgotPassword from './pages/auth/ForgotPassword';
+import ResetPassword from './pages/auth/ResetPassword';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -57,6 +59,8 @@ function App() {
               <Route path="/qna" element={<QnA />} />
               <Route path="/gallery" element={<Gallery />} />
               <Route path="/gallery/:id" element={<AlbumDetail />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
 
               {/* --- Protected User Routes --- */}
               <Route path="/booking" element={

@@ -154,9 +154,12 @@ const Login = () => {
                   <label className="text-sm font-bold text-gray-700">
                     รหัสผ่าน
                   </label>
-                  <a href="#" className="text-xs font-bold text-orange-600 hover:text-orange-700 transition-colors">
+                  <Link 
+                       to="/forgot-password" 
+                        className="text-xs font-bold text-orange-600 hover:text-orange-700 transition-colors"
+                        >
                     ลืมรหัสผ่าน?
-                  </a>
+                  </Link>
                 </div>
 
                 <div className="relative group">

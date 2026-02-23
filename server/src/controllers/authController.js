@@ -257,3 +257,91 @@ exports.changePassword = async (req, res) => {
     });
   }
 };
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'กรุณากรอกอีเมล' });
+    }
+
+    // 1. เช็คว่ามีอีเมลนี้ไหม
+    const [users] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
+    if (users.length === 0) {
+      return res.status(404).json({ success: false, message: 'ไม่พบที่อยู่อีเมลนี้ในระบบ' });
+    }
+
+    // 2. สร้าง Token และเวลาหมดอายุ (1 ชั่วโมง)
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetExpire = new Date(Date.now() + 3600000); // 1 hour from now
+
+    // 3. บันทึกลงฐานข้อมูล (อย่าลืมรันคำสั่ง SQL เพิ่ม Column ในข้อ 2 ด้านล่าง)
+    await db.query(
+      'UPDATE users SET reset_token = ?, reset_expire = ? WHERE email = ?',
+      [resetToken, resetExpire, email]
+    );
+
+    // 4. ส่งอีเมล (ตัวอย่างใช้ Gmail)
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER, // ใส่อีเมลใน .env
+        pass: process.env.EMAIL_PASS  // ใส่ App Password ใน .env
+      }
+    });
+
+    const resetUrl = `${process.env.FRONTEND_URL}/reset-password?token=${resetToken}`;
+
+    await transporter.sendMail({
+      to: email,
+      subject: 'รีเซ็ตรหัสผ่าน - ระบบอัลบั้มรูปภาพ',
+      html: `
+        <h3>คุณได้รับอีเมลนี้เนื่องจากมีการขอรีเซ็ตรหัสผ่าน</h3>
+        <p>กรุณาคลิกลิงก์ด้านล่างเพื่อตั้งรหัสผ่านใหม่ (ลิงก์มีอายุ 1 ชม.):</p>
+        <a href="${resetUrl}" target="_blank">${resetUrl}</a>
+        <p>หากคุณไม่ได้เป็นคนขอ โปรดละทิ้งอีเมลนี้</p>
+      `
+    });
+
+    res.json({ success: true, message: 'ส่งลิงก์รีเซ็ตรหัสผ่านไปที่อีเมลแล้ว' });
+  } catch (error) {
+    console.error('Forgot password error:', error);
+    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการส่งอีเมล' });
+  }
+};
+
+// Reset Password - ยืนยันรหัสใหม่
+exports.resetPassword = async (req, res) => {
+  try {
+    const { token, password } = req.body;
+
+    if (!token || !password) {
+      return res.status(400).json({ success: false, message: 'ข้อมูลไม่ครบถ้วน' });
+    }
+
+    // 1. ตรวจสอบ Token และวันหมดอายุ
+    const [users] = await db.query(
+      'SELECT id FROM users WHERE reset_token = ? AND reset_expire > NOW()',
+      [token]
+    );
+
+    if (users.length === 0) {
+      return res.status(400).json({ success: false, message: 'ลิงก์ไม่ถูกต้องหรือหมดอายุแล้ว' });
+    }
+
+    // 2. Hash รหัสผ่านใหม่
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // 3. อัปเดตและล้างค่า Token
+    await db.query(
+      'UPDATE users SET password = ?, reset_token = NULL, reset_expire = NULL WHERE id = ?',
+      [hashedPassword, users[0].id]
+    );
+
+    res.json({ success: true, message: 'เปลี่ยนรหัสผ่านใหม่สำเร็จแล้ว' });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน' });
+  }
+};
