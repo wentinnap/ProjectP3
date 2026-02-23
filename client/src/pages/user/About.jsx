@@ -34,18 +34,24 @@ const About = () => {
           </div>
         </section>
 
-        {/* History Section */}
+        {/* History Section - ใส่รูปภาพจริงตรงนี้ */}
         <section className="py-20 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="flex flex-col lg:flex-row items-center gap-12 max-w-6xl mx-auto">
               <div className="w-full lg:w-1/2 relative">
-                <div className="relative rounded-4xl overflow-hidden shadow-2xl h-[450px] border-8 border-white">
+                {/* ตกแต่งกรอบรูปให้พรีเมียม */}
+                <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl h-[450px] border-8 border-white group">
                   <img 
-                    src="/assets/images/about/history.png" 
-                    alt="History" 
-                    className="w-full h-full object-cover shadow-inner"
+                    src="/about.jpg"  // ดึงจาก public/about.jpg โดยตรง
+                    alt="บรรยากาศวัดกำแพง" 
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
+                  {/* Overlay บางๆ เพื่อความสวยงาม */}
+                  <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent"></div>
                 </div>
+                {/* ของตกแต่งด้านหลังรูป */}
+                <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-orange-100 rounded-full -z-10 blur-2xl opacity-60"></div>
+                <div className="absolute -top-6 -left-6 w-24 h-24 bg-amber-100 rounded-full -z-10 blur-xl opacity-60"></div>
               </div>
 
               <div className="w-full lg:w-1/2 space-y-8">
@@ -55,22 +61,22 @@ const About = () => {
                 </div>
                 
                 <div className="prose prose-lg text-gray-600 leading-relaxed">
-                  <p>
-                    ประวัติการก่อสร้างวัดเริ่มขึ้นในสมัยของ <strong className="text-orange-600">กรุงศรีอยุธยา</strong> ได้รับพระราชทานวิสุงคามสีมาเมื่อ พ.ศ. 2226
+                  <p className="indent-8">
+                    ประวัติการก่อสร้างวัดเริ่มขึ้นในสมัยของ <strong className="text-orange-600">กรุงศรีอยุธยา</strong> ได้รับพระราชทานวิสุงคามสีมาเมื่อ พ.ศ. 2226 นับเป็นหนึ่งในวัดที่มีประวัติศาสตร์อันยาวนานเคียงคู่ชุมชน
                   </p>
                   <p>
-                    <strong className="text-gray-800">อาคารเสนาสนะ:</strong> ได้แก่ อุโบสถ สร้างเมื่อ พ.ศ. 2226 เป็นอาคารคอนกรีตเสริมเหล็ก ศาลาการเปรียญทรงไทย สร้างเมื่อ พ.ศ. 2514
+                    <strong className="text-gray-800">อาคารเสนาสนะ:</strong> โดดเด่นด้วยอุโบสถที่สร้างขึ้นตั้งแต่สมัยอยุธยา เป็นอาคารคอนกรีตเสริมเหล็กที่มีการบูรณะรักษาความงดงามไว้อย่างดี พร้อมด้วยศาลาการเปรียญทรงไทยอันวิจิตรที่สร้างขึ้นในปี พ.ศ. 2514
                   </p>
                 </div>
                 
                 <div className="flex gap-4 pt-4">
-                  <div className="flex-1 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow">
-                    <span className="block text-4xl font-bold text-orange-500 mb-1">300+</span>
+                  <div className="flex-1 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 text-center hover:shadow-md transition-all group">
+                    <span className="block text-4xl font-bold text-orange-500 mb-1 group-hover:scale-110 transition-transform">300+</span>
                     <span className="text-sm text-gray-500 font-medium">ปีแห่งประวัติศาสตร์</span>
                   </div>
-                  <div className="flex-1 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 text-center hover:shadow-md transition-shadow">
-                    <span className="block text-4xl font-bold text-orange-500 mb-1">2220</span>
-                    <span className="text-sm text-gray-500 font-medium">พ.ศ. ที่เริ่มก่อสร้าง</span>
+                  <div className="flex-1 bg-white p-6 rounded-3xl shadow-sm border border-gray-100 text-center hover:shadow-md transition-all group">
+                    <span className="block text-4xl font-bold text-orange-500 mb-1 group-hover:scale-110 transition-transform">2226</span>
+                    <span className="text-sm text-gray-500 font-medium">พ.ศ. ที่รับวิสุงคามสีมา</span>
                   </div>
                 </div>
               </div>
@@ -78,7 +84,7 @@ const About = () => {
           </div>
         </section>
 
-        {/* Architecture Section */}
+        {/* Architecture Section - ปรับสีให้เข้ากับธีม */}
         <section className="py-24 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
@@ -87,13 +93,13 @@ const About = () => {
             </div>
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
               {[
-                { icon: Landmark, title: "อุโบสถเก่าแก่", desc: "สถาปัตยกรรมสมัยอยุธยาตอนปลายที่ทรงคุณค่า", color: "bg-amber-100 text-amber-600" },
-                { icon: Footprints, title: "หอระฆัง", desc: "สถาปัตยกรรมพื้นถิ่น พื้นที่บอกสัญญาณเวลา", color: "bg-green-100 text-green-600" },
-                { icon: Sparkles, title: "พระประธาน", desc: "พระพุทธประธานในอุโบสถ พุทธลักษณะงดงาม", color: "bg-blue-100 text-blue-600" },
-                { icon: Mountain, title: "ศาลาการเปรียญ", desc: "สถานที่ประกอบพิธีกรรมทรงไทยประยุกต์", color: "bg-purple-100 text-purple-600" },
+                { icon: Landmark, title: "อุโบสถเก่าแก่", desc: "สถาปัตยกรรมสมัยอยุธยาตอนปลายที่ทรงคุณค่าและหาชมได้ยาก", color: "bg-amber-100 text-amber-600" },
+                { icon: Footprints, title: "หอระฆัง", desc: "สถาปัตยกรรมพื้นถิ่นที่ใช้บอกสัญญาณเวลาและรักษาเอกลักษณ์ชุมชน", color: "bg-orange-100 text-orange-600" },
+                { icon: Sparkles, title: "พระประธาน", desc: "พระพุทธรูปประธานในอุโบสถที่มีพุทธลักษณะงดงามเปี่ยมเมตตา", color: "bg-yellow-100 text-yellow-600" },
+                { icon: Mountain, title: "ศาลาการเปรียญ", desc: "สถานที่ประกอบพิธีกรรมทางศาสนาทรงไทยประยุกต์ที่มีพื้นที่กว้างขวาง", color: "bg-rose-100 text-rose-600" },
               ].map((item, index) => (
                 <div key={index} className="group p-8 rounded-4xl border border-gray-100 shadow-sm hover:shadow-xl hover:-translate-y-2 transition-all duration-300 bg-white">
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:scale-110 ${item.color}`}>
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-transform group-hover:rotate-12 ${item.color}`}>
                     <item.icon size={32} />
                   </div>
                   <h3 className="text-xl font-bold text-gray-800 mb-3">{item.title}</h3>
@@ -104,15 +110,13 @@ const About = () => {
           </div>
         </section>
 
-        {/* Etiquette Section - New Premium Design */}
+        {/* Etiquette Section */}
         <section className="py-24 bg-gray-50/50">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-stretch rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.06)] border border-white bg-white">
               
-              {/* Left Side: Title Card */}
               <div className="w-full md:w-5/12 bg-linear-to-br from-orange-600 to-orange-500 p-12 text-white flex flex-col items-center justify-center relative overflow-hidden group">
                 <div className="absolute -top-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
-                
                 <div className="relative z-10 flex flex-col items-center text-center">
                   <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mb-6 border border-white/30 shadow-inner">
                     <Info size={40} strokeWidth={2.5} />
@@ -122,7 +126,6 @@ const About = () => {
                 </div>
               </div>
 
-              {/* Right Side: Guidelines List */}
               <div className="w-full md:w-7/12 p-10 md:p-14 flex flex-col justify-center">
                 <ul className="space-y-8">
                   <li className="flex items-start gap-5 group">
