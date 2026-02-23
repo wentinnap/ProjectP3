@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/database');
+const crypto = require('crypto'); // 🔥 เพิ่มบรรทัดนี้
+const nodemailer = require('nodemailer'); // 🔥 เพิ่มบรรทัดนี้
 
 // Generate JWT Token
 const generateToken = (user) => {
