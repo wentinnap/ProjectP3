@@ -191,108 +191,18 @@ export const albumAPI = {
 };
 
 // ---------------- NOTIFICATION ----------------
-// ---------------- NOTIFICATION API ----------------
-// ---------------- NOTIFICATION ----------------
-// ---------------- NOTIFICATION API ----------------
-// ---------------- NOTIFICATION API (ฉบับสมบูรณ์) ----------------
-// ---------------- NOTIFICATION API ----------------
+// services/api.js
 export const notificationAPI = {
-  // ฟังก์ชันช่วยสกัดข้อมูลให้เป็น Array เสมอ (ป้องกัน Error n.map)
-  extractArray(res) {
-    const data = res?.data?.data || res?.data || [];
-    return Array.isArray(data) ? data : [];
-  },
-
-  async getUserSummary() {
+  // ดึงข้อมูลแจ้งเตือนสรุปชุดเดียวจาก Backend
+  async getSummary() {
     try {
-      // ดึงข้อมูล ข่าวสาร และ การจอง พร้อมกัน
-      const [newsRes, bookingRes] = await Promise.all([
-        newsAPI.getAll({ limit: 5 }).catch(() => ({ data: [] })),
-        bookingAPI.getUserBookings().catch(() => ({ data: [] })),
-      ]);
-
-      const rawNews = this.extractArray(newsRes); //
-      const rawBookings = this.extractArray(bookingRes); //
-
-      // 1️⃣ แปลงข้อมูลข่าวสาร (ใช้ฟิลด์ title, created_at ตามตาราง news)
-      const newsItems = rawNews.map((n) => ({
-        id: `user-news-${n.id}`,
-        type: "news",
-        title: "ประกาศจากทางวัด",
-        message: n.title || "มีข่าวสารอัปเดตใหม่",
-        time_ago: n.created_at,
-        link: `/news/${n.id}`,
-      }));
-
-      // 2️⃣ แปลงข้อมูลการจอง (ใช้ฟิลด์ status, full_name ตามตาราง bookings)
-      const bookingItems = rawBookings.map((b) => {
-        const status = (b.status || "").toLowerCase();
-        let statusText = "รอตรวจสอบ";
-        if (status === "approved") statusText = "อนุมัติเรียบร้อยแล้ว"; //
-        if (status === "rejected") statusText = "ปฏิเสธคำขอ"; //
-        if (status === "cancelled") statusText = "ยกเลิกแล้ว"; //
-
-        return {
-          id: `user-bk-${b.id}`,
-          type: "booking_status",
-          title: "สถานะการจองพิธี",
-          message: `รายการของคุณ ${b.full_name || ''} ได้รับการ ${statusText}`,
-          time_ago: b.updated_at || b.created_at,
-          link: "/profile",
-        };
-      });
-
-      // รวมและเรียงลำดับเวลาล่าสุดขึ้นก่อน
-      const combined = [...newsItems, ...bookingItems].sort(
-        (a, b) => new Date(b.time_ago || 0) - new Date(a.time_ago || 0)
-      );
-
-      return { unreadCount: combined.length, items: combined };
+      const response = await axios.get('/api/notifications/summary');
+      return {
+        unreadCount: response.data.unreadCount || 0,
+        items: response.data.items || []
+      };
     } catch (error) {
-      console.error("User Notification Error:", error);
-      return { unreadCount: 0, items: [] };
-    }
-  },
-
-  async getAdminSummary() {
-    try {
-      const [bookingRes, qnaRes] = await Promise.all([
-        bookingAPI.getAllAdmin().catch(() => ({ data: [] })),
-        qnaAPI.getAllAdmin().catch(() => ({ data: [] })),
-      ]);
-
-      const rawBookings = this.extractArray(bookingRes);
-      const rawQna = this.extractArray(qnaRes);
-
-      // กรองเฉพาะรายการที่ยังไม่ได้จัดการ (pending หรือยังไม่มีคำตอบ)
-      const bookingItems = rawBookings
-        .filter((b) => (b.status || "").toLowerCase() === "pending")
-        .map((b) => ({
-          id: `admin-bk-${b.id}`,
-          type: "new_booking",
-          title: "มีคำขอจองใหม่",
-          message: `จากคุณ ${b.full_name || b.user_name || 'ผู้ใช้'}`,
-          time_ago: b.created_at,
-          link: "/admin/bookings",
-        }));
-
-      const qnaItems = rawQna
-        .filter((q) => !q.answer)
-        .map((q) => ({
-          id: `admin-qna-${q.id}`,
-          type: "qna",
-          title: "มีคำถามใหม่",
-          message: q.question || "มีคำถามรอการตอบ",
-          time_ago: q.created_at,
-          link: "/admin/qna",
-        }));
-
-      const combined = [...bookingItems, ...qnaItems].sort(
-        (a, b) => new Date(b.time_ago || 0) - new Date(a.time_ago || 0)
-      );
-
-      return { unreadCount: combined.length, items: combined };
-    } catch (error) {
+      console.error("Error fetching notifications:", error);
       return { unreadCount: 0, items: [] };
     }
   }
