@@ -6,90 +6,106 @@ exports.getNotificationSummary = async (req, res) => {
         const userRole = req.user.role;
         let notifications = [];
 
+        // ==========================================
+        // 1. กรณีเป็น ADMIN (จัดการคำขอจอง และ คำถาม QnA)
+        // ==========================================
         if (userRole === 'admin') {
-            // สำหรับ Admin: ดึงข้อมูลการจองที่รออนุมัติ และคำถามที่ยังไม่ได้ตอบ
             const [bookingRes, qnaRes] = await Promise.all([
+                // ตรวจสอบจากตาราง bookings
                 db.query('SELECT id, full_name, created_at FROM bookings WHERE status = "pending" ORDER BY created_at DESC LIMIT 10'),
-                // ✅ แก้ไขเป็น answer ตามโครงสร้างตาราง qna ของคุณ
+                // ตรวจสอบจากตาราง qna
+                // ✅ แก้ไขเป็น answer IS NULL ตามโครงสร้างจริงของคุณ
                 db.query('SELECT id, question, created_at FROM qna WHERE answer IS NULL OR answer = "" ORDER BY created_at DESC LIMIT 10')
             ]);
 
             const pendingBookings = bookingRes[0] || [];
             const pendingQna = qnaRes[0] || [];
 
-            // จัดใส่ Array การแจ้งเตือนของ Admin
-            pendingBookings.forEach(b => notifications.push({
-                id: `admin-bk-${b.id}`,
-                type: 'new_booking',
-                title: 'มีคำขอจองใหม่',
-                message: `จากคุณ ${b.full_name}`,
-                time_ago: b.created_at,
-                link: '/admin/bookings'
-            }));
+            // เพิ่มรายการแจ้งเตือนการจองใหม่
+            pendingBookings.forEach(b => {
+                notifications.push({
+                    id: `admin-bk-${b.id}`,
+                    type: 'new_booking',
+                    title: 'มีคำขอจองใหม่',
+                    message: `คุณ ${b.full_name} ได้ส่งคำขอจองใหม่เข้ามา`,
+                    time_ago: b.created_at,
+                    link: '/admin/bookings'
+                });
+            });
 
-            pendingQna.forEach(q => notifications.push({
-                id: `admin-qna-${q.id}`,
-                type: 'qna',
-                title: 'มีคำถามใหม่ที่ยังไม่ได้ตอบ',
-                message: q.question?.substring(0, 50) + (q.question?.length > 50 ? '...' : ''),
-                time_ago: q.created_at,
-                link: '/admin/qna'
-            }));
+            // เพิ่มรายการแจ้งเตือนคำถามใหม่
+            pendingQna.forEach(q => {
+                notifications.push({
+                    id: `admin-qna-${q.id}`,
+                    type: 'qna',
+                    title: 'คำถามที่ยังไม่ได้ตอบ',
+                    message: q.question ? (q.question.substring(0, 50) + (q.question.length > 50 ? '...' : '')) : 'มีคำถามใหม่',
+                    time_ago: q.created_at,
+                    link: '/admin/qna'
+                });
+            });
 
+        // ==========================================
+        // 2. กรณีเป็น USER (ดูสถานะการจอง และ ข่าวสาร)
+        // ==========================================
         } else {
-            // สำหรับ User: ดึงข่าวสาร และสถานะการจองของตัวเอง
-            const [newsRes, bookingRes] = await Promise.all([
+            const [newsRes, myBookingRes] = await Promise.all([
+                // ตรวจสอบข่าวสาร
                 db.query('SELECT id, title, created_at FROM news WHERE is_visible = 1 ORDER BY created_at DESC LIMIT 5'),
+                // ตรวจสอบสถานะการจองของตนเอง
                 db.query('SELECT id, status, booking_date, updated_at FROM bookings WHERE user_id = ? ORDER BY updated_at DESC LIMIT 10', [userId])
             ]);
 
-            const news = newsRes[0] || [];
-            const myBookings = bookingRes[0] || [];
+            const newsItems = newsRes[0] || [];
+            const userBookings = myBookingRes[0] || [];
 
-            news.forEach(n => notifications.push({
-                id: `user-news-${n.id}`,
-                type: 'news',
-                title: 'ข่าวสารใหม่จากวัด',
-                message: n.title,
-                time_ago: n.created_at,
-                link: `/news/${n.id}`
-            }));
+            // ข่าวสารใหม่
+            newsItems.forEach(n => {
+                notifications.push({
+                    id: `user-news-${n.id}`,
+                    type: 'news',
+                    title: 'ข่าวสารใหม่',
+                    message: n.title,
+                    time_ago: n.created_at,
+                    link: `/news/${n.id}`
+                });
+            });
 
-            myBookings.forEach(b => {
+            // สถานะการจองเปลี่ยนไป
+            userBookings.forEach(b => {
                 const statusMap = {
-                    'approved': 'อนุมัติแล้ว',
-                    'rejected': 'ปฏิเสธแล้ว',
+                    'approved': 'ได้รับการอนุมัติ',
+                    'rejected': 'ถูกปฏิเสธ',
                     'pending': 'รอตรวจสอบ',
-                    'cancelled': 'ยกเลิกแล้ว'
+                    'cancelled': 'ถูกยกเลิก'
                 };
                 notifications.push({
                     id: `user-bk-${b.id}`,
                     type: 'booking_status',
                     title: 'อัปเดตสถานะการจอง',
-                    message: `รายการวันที่ ${new Date(b.booking_date).toLocaleDateString('th-TH')} สถานะ: ${statusMap[b.status] || b.status}`,
+                    message: `รายการวันที่ ${new Date(b.booking_date).toLocaleDateString('th-TH')} คือ "${statusMap[b.status] || b.status}"`,
                     time_ago: b.updated_at,
                     link: '/profile'
                 });
             });
         }
 
-        // เรียงลำดับจากล่าสุดไปเก่าสุด (Latest First)
-        notifications.sort((a, b) => new Date(b.time_ago || 0) - new Date(a.time_ago || 0));
+        // เรียงลำดับตามวันเวลา (ใหม่สุดอยู่บน)
+        notifications.sort((a, b) => new Date(b.time_ago) - new Date(a.time_ago));
 
-        // ส่งข้อมูลกลับไปที่ Frontend
         res.json({
+            success: true,
             unreadCount: notifications.length,
             items: notifications
         });
 
     } catch (error) {
-        // พ่น Error ออกมาดูที่ Render Logs หากเกิดปัญหา
-        console.error("Noti Error Details:", error);
-        res.status(500).json({ 
-            success: false, 
-            message: "Internal Server Error", 
-            error: error.message,
-            items: [] 
+        console.error("Noti Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Internal Server Error",
+            error: error.message, // ส่ง Error ออกไปดูว่าพังที่จุดไหน
+            items: []
         });
     }
 };
