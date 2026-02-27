@@ -265,5 +265,73 @@ export const notificationAPI = {
       return { unreadCount: 0, items: [] };
     }
   },
+
+
+  async getAdminSummary() {
+    try {
+      const [bookingRes, qnaRes] = await Promise.all([
+        bookingAPI.getAllAdmin().catch(() => ({ data: [] })),
+        qnaAPI.getAllAdmin().catch(() => ({ data: [] })),
+      ]);
+
+      const rawBookings =
+        bookingRes?.data?.data ||
+        bookingRes?.data ||
+        [];
+
+      const rawQna =
+        qnaRes?.data?.data ||
+        qnaRes?.data ||
+        [];
+
+      // 🔶 New Bookings
+      const bookingItems = Array.isArray(rawBookings)
+        ? rawBookings
+            .filter((b) => (b.status || "").toLowerCase() === "pending")
+            .map((b) => ({
+              id: `admin-bk-${b.id}`,
+              type: "new_booking",
+              title: "มีคำขอจองใหม่",
+              message: `มีรายการจองใหม่จากผู้ใช้`,
+              time_ago:
+                b.created_at ||
+                b.createdAt ||
+                null,
+              link: "/admin/bookings",
+            }))
+        : [];
+
+      // 🔶 New QnA
+      const qnaItems = Array.isArray(rawQna)
+        ? rawQna
+            .filter((q) => !q.answer)
+            .map((q) => ({
+              id: `admin-qna-${q.id}`,
+              type: "qna",
+              title: "มีคำถามใหม่",
+              message: q.question || "มีคำถามใหม่รอการตอบ",
+              time_ago:
+                q.created_at ||
+                q.createdAt ||
+                null,
+              link: "/admin/qna",
+            }))
+        : [];
+
+      const safeDate = (d) => (d ? new Date(d) : new Date(0));
+
+      const combined = [...bookingItems, ...qnaItems].sort(
+        (a, b) => safeDate(b.time_ago) - safeDate(a.time_ago)
+      );
+
+      return {
+        unreadCount: combined.length,
+        items: combined,
+      };
+    } catch (error) {
+      console.error("Admin Notification Error:", error);
+      return { unreadCount: 0, items: [] };
+    }
+  },
 };
 export default api;
