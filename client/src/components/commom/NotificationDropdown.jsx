@@ -15,12 +15,14 @@ const NotificationDropdown = () => {
     setLoading(true);
     try {
       const res = await notificationAPI.getSummary();
+      // เช็คให้ชัวร์ว่าเป็น Array ก่อนเซ็ตลง State
       setData({
-        unreadCount: res.unreadCount || 0,
-        items: Array.isArray(res.items) ? res.items : []
+        unreadCount: res?.unreadCount || 0,
+        items: Array.isArray(res?.items) ? res.items : []
       });
     } catch (err) {
-      console.error("UI Noti Error:", err);
+      console.error("UI fetch error:", err);
+      setData({ unreadCount: 0, items: [] });
     } finally {
       setLoading(false);
     }
@@ -44,7 +46,10 @@ const NotificationDropdown = () => {
 
   return (
     <div className="relative font-sans">
-      <button onClick={() => setIsOpen(!isOpen)} className="relative p-2.5 bg-white border border-gray-100 text-gray-500 hover:text-orange-500 rounded-2xl shadow-sm transition-all active:scale-95">
+      <button 
+        onClick={() => setIsOpen(!isOpen)} 
+        className="relative p-2.5 bg-white border border-gray-100 text-gray-400 hover:text-orange-500 rounded-2xl shadow-sm transition-all active:scale-95"
+      >
         <Bell size={22} className={data.unreadCount > 0 ? "text-orange-500" : ""} />
         {data.unreadCount > 0 && (
           <span className="absolute top-2 right-2 flex h-3 w-3">
@@ -62,9 +67,14 @@ const NotificationDropdown = () => {
             <div className="p-6 pb-4 flex justify-between items-center border-b border-gray-50">
               <div>
                 <h3 className="font-black text-gray-800 text-lg tracking-tight">การแจ้งเตือน</h3>
-                <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">{data.unreadCount} รายการใหม่</p>
+                <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">
+                  {data.unreadCount > 0 ? `คุณมี ${data.unreadCount} รายการใหม่` : 'ไม่มีรายการค้างอ่าน'}
+                </p>
               </div>
-              <button onClick={(e) => { e.stopPropagation(); fetchNoti(); }} className={`p-2 rounded-xl hover:bg-gray-50 transition-colors ${loading ? 'animate-spin' : ''}`}>
+              <button 
+                onClick={(e) => { e.stopPropagation(); fetchNoti(); }} 
+                className={`p-2 rounded-xl hover:bg-gray-50 transition-colors ${loading ? 'animate-spin' : ''}`}
+              >
                 <RefreshCw size={16} className="text-gray-400" />
               </button>
             </div>
@@ -74,8 +84,13 @@ const NotificationDropdown = () => {
                 data.items.map((item) => {
                   const s = getStyle(item.type);
                   return (
-                    <Link to={item.link || "#"} key={item.id} onClick={() => setIsOpen(false)} className="flex gap-4 p-4 m-1 rounded-3xl transition-all hover:bg-orange-50/30 group">
-                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border border-transparent group-hover:border-white transition-all ${s.color}`}>
+                    <Link 
+                      to={item.link || "#"} 
+                      key={item.id} 
+                      onClick={() => setIsOpen(false)} 
+                      className="flex gap-4 p-4 m-1 rounded-3xl transition-all hover:bg-orange-50/30 group border border-transparent hover:border-orange-100"
+                    >
+                      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${s.color}`}>
                         {s.icon}
                       </div>
                       <div className="flex-1 min-w-0">
@@ -84,7 +99,9 @@ const NotificationDropdown = () => {
                           <span className="w-2 h-2 bg-red-500 rounded-full mt-1.5 shrink-0"></span>
                         </div>
                         <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{item.message}</p>
-                        <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase">{item.time_ago || "เมื่อสักครู่"}</p>
+                        <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase">
+                           {item.time_ago ? new Date(item.time_ago).toLocaleString('th-TH') : "เมื่อสักครู่"}
+                        </p>
                       </div>
                     </Link>
                   );

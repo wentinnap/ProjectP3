@@ -193,22 +193,23 @@ export const albumAPI = {
 
 // ---------------- NOTIFICATION ----------------
 // ---------------- NOTIFICATION ----------------
+// ---------------- NOTIFICATION ----------------
 export const notificationAPI = {
   getSummary: async () => {
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       if (!user.id) return { unreadCount: 0, items: [] };
 
-      // 1. สำหรับ ADMIN: แจ้งเตือน Q&A และ รายการจองค้างตรวจสอบ
+      // === กรณี ADMIN ===
       if (user.role === 'admin') {
         const [qnaRes, bookingRes] = await Promise.all([
           qnaAPI.getAllAdmin(),
           bookingAPI.getStats()
         ]);
 
-        const qnaData = qnaRes.data?.data || [];
+        const qnaData = qnaRes.data?.data || qnaRes.data || [];
         const qnaPending = Array.isArray(qnaData) ? qnaData.filter(item => !item.answer) : [];
-        const bookingCount = bookingRes.data?.data?.pending_count || 0;
+        const bookingPendingCount = bookingRes.data?.data?.pending_count || 0;
 
         const items = [
           ...qnaPending.map(item => ({
@@ -219,11 +220,11 @@ export const notificationAPI = {
             time_ago: item.created_at,
             link: '/admin/qna'
           })),
-          ...(bookingCount > 0 ? [{
+          ...(bookingPendingCount > 0 ? [{
             id: 'admin-booking',
             type: 'new_booking',
-            title: 'รายการจองคิว',
-            message: `มี ${bookingCount} รายการที่รอคุณตรวจสอบ`,
+            title: 'รายการจองรอตรวจสอบ',
+            message: `มี ${bookingPendingCount} รายการใหม่ที่รอคุณอนุมัติ`,
             time_ago: 'Update: Now',
             link: '/admin/bookings'
           }] : [])
@@ -231,38 +232,44 @@ export const notificationAPI = {
         return { unreadCount: items.length, items };
       } 
       
-      // 2. สำหรับ USER: แจ้งเตือนข่าวสาร และ ผลการอนุมัติการจอง
+      // === กรณี USER (จุดที่พังอยู่) ===
       else {
         const [bookingRes, newsRes] = await Promise.all([
-          bookingAPI.getUserBookings(),
-          newsAPI.getAll({ limit: 5 })
+          bookingAPI.getUserBookings(), // ดึงประวัติจองของ User เอง
+          newsAPI.getAll({ limit: 5 })  // ดึงข่าวสารล่าสุด
         ]);
 
-        const myBookings = bookingRes.data?.data || bookingRes.data || [];
-        const latestNews = newsRes.data?.data || newsRes.data || [];
+        // กันเหนียว: เช็กโครงสร้างข้อมูลให้ชัวร์ก่อน .map
+        const rawBookings = bookingRes.data?.data || bookingRes.data || [];
+        const rawNews = newsRes.data?.data || newsRes.data || [];
 
-        const newsItems = Array.isArray(latestNews) ? latestNews.map(news => ({
+        // 1. แปลงข่าวสาร (อ้างอิงจากตาราง news ในรูป image_09e79e.png)
+        const newsItems = Array.isArray(rawNews) ? rawNews.map(news => ({
           id: `news-${news.id}`,
           type: 'news',
-          title: 'ข่าวสารใหม่',
+          title: 'ประกาศวัดกำแพง',
           message: news.title,
           time_ago: news.created_at,
           link: `/news/${news.id}`
         })) : [];
 
-        const statusItems = Array.isArray(myBookings) ? myBookings
-          .filter(b => b.status !== 'pending') // แจ้งเฉพาะรายการที่อนุมัติหรือปฏิเสธแล้ว
+        // 2. แปลงสถานะการจอง (อ้างอิงจากตาราง bookings ในรูป image_09e458.png)
+        const bookingStatusItems = Array.isArray(rawBookings) ? rawBookings
+          .filter(b => b.status !== 'pending') // แจ้งเฉพาะที่ Approve หรือ Reject แล้ว
           .map(b => ({
             id: `status-${b.id}`,
             type: 'booking_status',
-            title: 'อัปเดตการจอง',
-            message: `รายการ "${b.ceremony_name || 'พิธีการ'}": ${b.status}`,
+            title: 'อัปเดตผลการจอง',
+            message: `รายการ "${b.ceremony_name || 'พิธีการ'}" ของคุณได้รับการ ${b.status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธ'}`,
             time_ago: b.updated_at,
             link: '/profile'
           })) : [];
 
-        const combined = [...newsItems, ...statusItems];
-        return { unreadCount: combined.length, items: combined };
+        const allItems = [...newsItems, ...bookingStatusItems].sort(
+          (a, b) => new Date(b.time_ago) - new Date(a.time_ago)
+        );
+
+        return { unreadCount: allItems.length, items: allItems };
       }
     } catch (error) {
       console.error("Noti API Error:", error);
