@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const notiController = require('../controllers/notificationController');
-const { verifyToken } = require('../middleware/auth'); // ตรวจสอบว่าชื่อ middleware ตรงกับที่คุณใช้ (auth.js)
+// ✅ เปลี่ยนจาก verifyToken เป็น authenticate ให้ตรงกับไฟล์ auth.js ที่คุณส่งมา
+const { authenticate } = require('../middleware/auth'); 
 
-// ดึงสรุปการแจ้งเตือน
-router.get('/summary', verifyToken, notiController.getNotificationSummary);
+// ✅ เปลี่ยนจาก verifyToken เป็น authenticate
+router.get('/summary', authenticate, notiController.getNotificationSummary);
 
 module.exports = router;

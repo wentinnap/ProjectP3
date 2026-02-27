@@ -10,7 +10,7 @@ const bookingRoutes = require("./src/routes/bookingRoutes");
 const eventRoutes = require("./src/routes/eventRoutes");
 const qnaRoutes = require("./src/routes/qnaRoutes");
 const albumRoutes = require("./src/routes/albumRoutes");
-const notificationRoutes = require('./routes/notificationRoutes');
+const notificationRoutes = require('./src/routes/notificationRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
