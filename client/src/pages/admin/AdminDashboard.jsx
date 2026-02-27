@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { bookingAPI } from '../../services/api';
 import { 
   PieChart, Pie, Cell, 
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer 
+  BarChart, Bar, XAxis, Tooltip, ResponsiveContainer 
 } from 'recharts';
 import { 
-  ChevronDown, Home, ArrowRight, Settings, 
-  Activity, Database, Cloud, LayoutDashboard,
-  CheckCircle2, Clock, XCircle
+  Activity, 
+  ArrowRight, 
+  LayoutDashboard,
+  Settings
 } from 'lucide-react';
 
 const AdminDashboard = () => {
@@ -22,7 +22,6 @@ const AdminDashboard = () => {
   const fetchStats = async () => {
     try {
       const response = await bookingAPI.getStats();
-      // สมมติโครงสร้าง data: { approved_count: 10, pending_count: 5, rejected_count: 2, total_bookings: 17 ... }
       setStats(response.data.data);
     } catch (error) {
       console.error('Failed to fetch stats:', error);
@@ -31,23 +30,20 @@ const AdminDashboard = () => {
     }
   };
 
-  // --- ข้อมูลสำหรับกราฟ (Data Preparation) ---
+  // --- ข้อมูลสำหรับกราฟ ---
   
-  // 1. Donut Chart Data
   const donutData = [
-    { name: 'Approved', value: stats?.approved_count || 0, color: '#f97316' }, // Orange-500
+    { name: 'Approved', value: stats?.approved_count || 0, color: '#f97316' }, 
     { name: 'Pending/Others', value: (stats?.total_bookings - stats?.approved_count) || 0, color: '#fff7ed' }
   ];
 
-  // 2. Bar Chart Data
   const barData = [
     { name: 'การจอง', value: stats?.total_bookings || 0 },
-    { name: 'ข่าวสาร', value: stats?.news_count || 12 }, // ตัวอย่างถ้า API ยังไม่มี
-    { name: 'กิจกรรม', value: stats?.events_count || 8 },
-    { name: 'Q&A', value: stats?.qa_count || 5 },
+    { name: 'ข่าวสาร', value: stats?.news_count || 0 },
+    { name: 'กิจกรรม', value: stats?.events_count || 0 },
+    { name: 'Q&A', value: stats?.qa_count || 0 },
   ];
 
-  // คำนวณ % สำหรับ Progress Bars
   const getPercent = (value) => {
     if (!stats?.total_bookings) return 0;
     return Math.round((value / stats.total_bookings) * 100);
@@ -64,36 +60,26 @@ const AdminDashboard = () => {
   return (
     <div className="animate-in fade-in duration-500 pb-10 p-6 bg-gray-50/30">
       
-      {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-10">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <LayoutDashboard className="w-5 h-5 text-orange-600" />
-            <h2 className="text-3xl font-black text-gray-900 tracking-tight">แผงควบคุมระบบ</h2>
-          </div>
-          <p className="text-gray-500 font-medium">Smart Temple Management Platform • ข้อมูลอัปเดตล่าสุด</p>
+      {/* Header Section (เอาปุ่มกลับหน้าหลักออกแล้ว) */}
+      <div className="mb-10">
+        <div className="flex items-center gap-2 mb-1">
+          <LayoutDashboard className="w-5 h-5 text-orange-600" />
+          <h2 className="text-3xl font-black text-gray-900 tracking-tight">แผงควบคุมระบบ</h2>
         </div>
-
-        <Link 
-          to="/" 
-          className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-orange-100 text-orange-600 rounded-2xl font-bold shadow-sm hover:bg-orange-50 hover:border-orange-200 hover:-translate-y-0.5 transition-all duration-300 active:scale-95"
-        >
-          <Home size={20} />
-          <span>กลับหน้าเว็บไซต์</span>
-        </Link>
+        <p className="text-gray-500 font-medium">Smart Temple Management Platform • ข้อมูลภาพรวมสถิติ</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8">
         
-        {/* วิดเจ็ต 1: Donut Chart (สถิติการอนุมัติ) */}
+        {/* วิดเจ็ต 1: สถิติการอนุมัติ */}
         <DashboardCard title="สถิติการอนุมัติ">
-          <div className="h-48 w-full relative flex items-center justify-center">
+          <div className="h-56 w-full relative flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={donutData}
-                  innerRadius={60}
-                  outerRadius={80}
+                  innerRadius={70}
+                  outerRadius={95}
                   paddingAngle={5}
                   dataKey="value"
                   startAngle={90}
@@ -106,15 +92,15 @@ const AdminDashboard = () => {
               </PieChart>
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-black text-gray-800">{getPercent(stats?.approved_count)}%</span>
-              <span className="text-[10px] text-orange-500 font-bold uppercase tracking-widest">Approved</span>
+              <span className="text-4xl font-black text-gray-800">{getPercent(stats?.approved_count)}%</span>
+              <span className="text-[11px] text-orange-500 font-bold uppercase tracking-widest">Approved</span>
             </div>
           </div>
         </DashboardCard>
 
-        {/* วิดเจ็ต 2: Progress Bars (สถานะการจอง) */}
-        <DashboardCard title="สถานะการจอง">
-          <div className="space-y-6 py-2">
+        {/* วิดเจ็ต 2: สถานะการจอง */}
+        <DashboardCard title="สถานะการจองรายบุคคล">
+          <div className="space-y-8 py-4 px-2">
             <ProgressBar 
               label={stats?.approved_count || 0} 
               color="bg-orange-500" 
@@ -136,115 +122,78 @@ const AdminDashboard = () => {
           </div>
         </DashboardCard>
 
-        {/* วิดเจ็ต 3: Bar Chart (ความนิยมการใช้งาน) */}
-        <DashboardCard title="ความนิยมการใช้งาน">
-          <div className="h-48 w-full mt-2">
+        {/* วิดเจ็ต 3: ความนิยมการใช้งาน */}
+        <DashboardCard title="ความนิยมการใช้งานส่วนต่างๆ">
+          <div className="h-64 w-full mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <Tooltip 
                   cursor={{fill: '#fff7ed'}} 
                   contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontWeight: 'bold' }}
                 />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 10, fontWeight: 800, fill: '#9ca3af'}} />
-                <Bar dataKey="value" fill="#f97316" radius={[6, 6, 0, 0]} barSize={35} />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fontSize: 12, fontWeight: 800, fill: '#6b7280'}} />
+                <Bar dataKey="value" fill="#f97316" radius={[8, 8, 0, 0]} barSize={50} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </DashboardCard>
 
-        {/* วิดเจ็ต 4-6: (ใช้โค้ดเดิมของคุณที่ปรับปรุงสไตล์เล็กน้อย) */}
-        <DashboardCard title="ทางลัดการจัดการ">
-           <div className="grid grid-cols-2 gap-4 mt-2">
-             <QuickMenu to="/admin/bookings" label="ตรวจสอบการจอง" count={stats?.pending_count} color="bg-orange-500" />
-             <QuickMenu to="/admin/news" label="ประกาศข่าวสาร" color="bg-amber-500" />
-             <QuickMenu to="/admin/events" label="ตารางกิจกรรม" color="bg-orange-700" />
-             <QuickMenu to="/admin/albums" label="คลังรูปภาพ" color="bg-gray-800" />
-           </div>
-        </DashboardCard>
-
-        <DashboardCard title="รายการจองรวม">
-            <div className="bg-linear-to-br from-orange-500 to-amber-500 text-white p-6 rounded-4xl mt-4 flex justify-between items-center shadow-xl shadow-orange-500/20 group cursor-pointer transition-transform hover:scale-[1.02]">
-                <div>
-                  <span className="text-4xl font-black">{stats?.total_bookings || 0}</span>
-                  <span className="text-sm font-bold ml-2 opacity-80 uppercase tracking-widest block">Total Bookings</span>
+        {/* วิดเจ็ต 4: รายการจองรวม (Highlight Card) */}
+        <div className="flex flex-col gap-6">
+            <DashboardCard title="สรุปยอดรวมระบบ">
+                <div className="bg-linear-to-br from-orange-500 to-amber-500 text-white p-8 rounded-[2.5rem] mt-4 flex justify-between items-center shadow-xl shadow-orange-500/20 group cursor-pointer transition-transform hover:scale-[1.01]">
+                    <div>
+                      <span className="text-5xl font-black">{stats?.total_bookings || 0}</span>
+                      <span className="text-sm font-bold ml-2 opacity-80 uppercase tracking-widest block mt-1">Total Transactions</span>
+                    </div>
+                    <ArrowRight size={32} className="group-hover:translate-x-2 transition-transform" />
                 </div>
-                <ArrowRight size={28} className="group-hover:translate-x-2 transition-transform" />
-            </div>
-            <div className="mt-8 flex items-center gap-2">
-               <Activity size={14} className="text-orange-500 animate-pulse" />
-               <span className="bg-orange-50 px-3 py-1 text-[10px] rounded-full text-orange-600 uppercase font-black tracking-widest">Update: Real-time</span>
-            </div>
-        </DashboardCard>
-
-        <DashboardCard title="สถานะระบบ">
-            <ul className="space-y-4 mt-2">
-                <StatusItem label="ฐานข้อมูล (SQL)" status="Online" color="text-green-500" icon={<Database size={14}/>} />
-                <StatusItem label="API Endpoint" status="Connected" color="text-orange-500" icon={<Activity size={14}/>} />
-                <StatusItem label="พื้นที่จัดเก็บ" status="Normal" color="text-orange-500" icon={<Cloud size={14}/>} />
-            </ul>
-        </DashboardCard>
+                <div className="mt-10 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Activity size={16} className="text-orange-500 animate-pulse" />
+                        <span className="bg-orange-50 px-3 py-1 text-[11px] rounded-full text-orange-600 uppercase font-black tracking-widest">Update: Real-time</span>
+                    </div>
+                    <span className="text-[10px] text-gray-400 font-bold uppercase tracking-tight">System Healthy</span>
+                </div>
+            </DashboardCard>
+        </div>
 
       </div>
     </div>
   );
 };
 
-// --- Sub Components (คงเดิมแต่ปรับปรุง Props) ---
+// --- Sub Components ---
 
 const DashboardCard = ({ title, children }) => (
-  <div className="bg-white p-8 rounded-[2.5rem] shadow-[0_15px_40px_-15px_rgba(234,88,12,0.08)] border border-orange-50/50 flex flex-col hover:shadow-2xl transition-all duration-500 group">
+  <div className="bg-white p-10 rounded-[3rem] shadow-[0_15px_50px_-15px_rgba(234,88,12,0.1)] border border-orange-50 flex flex-col hover:shadow-2xl hover:border-orange-100 transition-all duration-500">
     <div className="flex items-center justify-between mb-1">
-      <h3 className="text-gray-900 text-lg font-black tracking-tight group-hover:text-orange-600 transition-colors">{title}</h3>
-      <Settings size={16} className="text-gray-300 hover:rotate-90 transition-transform duration-500 cursor-pointer" />
+      <h3 className="text-gray-900 text-xl font-black tracking-tight">{title}</h3>
+      <Settings size={18} className="text-gray-300 hover:rotate-90 transition-transform duration-500 cursor-pointer" />
     </div>
-    <p className="text-[10px] text-gray-400 uppercase tracking-[0.15em] mb-6 font-bold">Internal Admin Monitor</p>
-    <div className="flex-1">
+    <p className="text-[11px] text-gray-400 uppercase tracking-[0.2em] mb-8 font-bold">Data Insight Analysis</p>
+    <div className="flex-1 flex flex-col justify-center">
         {children}
     </div>
   </div>
 );
 
 const ProgressBar = ({ label, color, percent, title }) => (
-    <div className="space-y-1">
-        <div className="flex justify-between text-[10px] text-gray-500 uppercase font-black tracking-tight mb-1">
+    <div className="space-y-2">
+        <div className="flex justify-between text-xs text-gray-500 uppercase font-black tracking-tight">
             <span>{title}</span>
-            <span className="text-gray-400">{percent}</span>
+            <span className="text-gray-400 font-bold">{percent}</span>
         </div>
-        <div className="flex items-center gap-4">
-            <div className="flex-1 h-2.5 bg-gray-50 rounded-full relative overflow-hidden">
+        <div className="flex items-center gap-6">
+            <div className="flex-1 h-3.5 bg-gray-50 rounded-full relative overflow-hidden border border-gray-100/50">
                 <div 
-                  className={`absolute top-0 left-0 h-full ${color} transition-all duration-1000 ease-out rounded-full`} 
+                  className={`absolute top-0 left-0 h-full ${color} transition-all duration-1000 ease-out rounded-full shadow-sm`} 
                   style={{ width: percent }}
                 ></div>
             </div>
-            <span className="text-gray-800 font-black text-sm w-8 text-right">{label}</span>
+            <span className="text-gray-900 font-black text-lg w-10 text-right">{label}</span>
         </div>
     </div>
-);
-
-const QuickMenu = ({ to, label, count, color }) => (
-    <Link to={to} className="flex flex-col gap-3 p-4 bg-gray-50/50 hover:bg-orange-50 rounded-2xl transition-all group border border-transparent hover:border-orange-100 active:scale-95">
-        <div className={`w-2.5 h-2.5 ${color} rounded-full`}></div>
-        <span className="text-xs font-black text-gray-700 group-hover:text-orange-700 tracking-tighter">{label}</span>
-        {count > 0 && (
-          <div className="flex items-center gap-1">
-            <span className="text-[9px] bg-orange-600 text-white px-1.5 py-0.5 rounded font-black">{count} NEW</span>
-          </div>
-        )}
-    </Link>
-);
-
-const StatusItem = ({ label, status, color, icon }) => (
-    <li className="flex justify-between items-center text-sm text-gray-600 border-b border-orange-50/50 pb-3 last:border-0">
-        <div className="flex items-center gap-2 font-bold">
-            <span className="text-gray-300">{icon}</span>
-            <span>{label}</span>
-        </div>
-        <div className="flex items-center gap-2 font-black text-[10px] uppercase tracking-widest">
-            <span className={color}>{status}</span>
-            <div className={`w-1.5 h-1.5 rounded-full ${color.replace('text', 'bg')} animate-pulse`}></div>
-        </div>
-    </li>
 );
 
 export default AdminDashboard;

@@ -1,13 +1,12 @@
 import { useState } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-// ✅ แก้ไข path จาก commom เป็น common ให้ถูกต้อง
-import NotificationDropdown from '../commom/NotificationDropdown'; 
+import NotificationDropdown from '../common/NotificationDropdown'; 
 import { 
   LayoutDashboard, Calendar, 
   MessageCircleQuestion, LogOut,
   Newspaper, CalendarClock, Image as ImageIcon, Menu, 
-  ChevronRight
+  ExternalLink, Home
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -36,7 +35,7 @@ const AdminLayout = () => {
   return (
     <div className="h-screen w-full bg-[#FCFAF8] flex overflow-hidden font-sans">
       
-      {/* --- Sidebar (คงเดิม) --- */}
+      {/* --- Sidebar --- */}
       <aside className={`${isSidebarOpen ? 'w-72' : 'w-24'} bg-[#1e1b18] text-white transition-all duration-500 ease-in-out flex flex-col h-full z-50 shrink-0 shadow-2xl relative`}>
         <div className="p-8 flex items-center gap-3 border-b border-white/5">
           <div className="bg-linear-to-br from-orange-500 to-amber-600 p-2.5 rounded-2xl shadow-lg shadow-orange-500/20">
@@ -49,6 +48,7 @@ const AdminLayout = () => {
           )}
         </div>
 
+        {/* User Profile Info */}
         <div className={`p-8 flex flex-col items-center ${isSidebarOpen ? 'bg-white/5' : ''} border-b border-white/5 mx-4 my-6 rounded-4xl transition-all`}>
           <div className="w-16 h-16 bg-linear-to-tr from-orange-500 to-amber-300 rounded-2xl flex items-center justify-center border-2 border-white/10 overflow-hidden text-2xl font-black shadow-xl rotate-3">
              {user?.full_name?.charAt(0).toUpperCase()}
@@ -61,6 +61,14 @@ const AdminLayout = () => {
         </div>
 
         <nav className="flex-1 px-4 overflow-y-auto space-y-2">
+          {/* ✅ เพิ่มปุ่มไปหน้าหลักใน Sidebar */}
+          <Link to="/" className="flex items-center gap-4 px-5 py-4 rounded-2xl text-amber-400 hover:bg-amber-400/10 transition-all mb-4 border border-amber-400/10">
+            <Home size={22} />
+            {isSidebarOpen && <span className="text-[15px] font-bold">ไปหน้าหลักเว็บไซต์</span>}
+          </Link>
+
+          <div className="h-px bg-white/5 mx-4 my-4"></div>
+
           {menuItems.map((item) => {
             const isActive = location.pathname === item.path;
             return (
@@ -73,7 +81,7 @@ const AdminLayout = () => {
         </nav>
 
         <div className="p-4">
-            <button onClick={handleLogout} className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-gray-500 hover:text-red-400 hover:bg-red-400/10 font-bold transition-all">
+            <button onClick={handleLogout} className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-gray-500 hover:text-red-400 hover:bg-red-400/10 font-bold transition-all border border-transparent hover:border-red-400/10">
                 <LogOut size={22} />
                 {isSidebarOpen && <span className="text-[15px]">ออกจากระบบ</span>}
             </button>
@@ -93,7 +101,17 @@ const AdminLayout = () => {
           </div>
           
           <div className="flex items-center gap-5">
-              {/* ✅ Notification Dropdown พร้อมจุดแดง */}
+              {/* ✅ เพิ่มปุ่มลัดไปหน้า Home ใน Header */}
+              <Link 
+                to="/" 
+                className="hidden lg:flex items-center gap-2 px-4 py-2 text-orange-600 font-bold text-sm bg-orange-50 hover:bg-orange-100 rounded-xl transition-all border border-orange-100"
+              >
+                <ExternalLink size={16} />
+                ดูหน้าเว็บ
+              </Link>
+
+              <div className="h-8 w-px bg-gray-100 hidden lg:block"></div>
+
               <NotificationDropdown />
 
               <div className="h-10 w-px bg-gray-100"></div>
@@ -103,7 +121,7 @@ const AdminLayout = () => {
                     <p className="text-[13px] font-black text-gray-900 leading-none">{user?.full_name}</p>
                     <p className="text-[11px] font-bold text-orange-500 mt-1 uppercase tracking-tighter">Administrator</p>
                 </div>
-                <div className="w-11 h-11 rounded-2xl bg-orange-100 text-orange-600 border border-orange-200 flex items-center justify-center font-black">
+                <div className="w-11 h-11 rounded-2xl bg-orange-100 text-orange-600 border border-orange-200 flex items-center justify-center font-black transition-transform group-hover:scale-105 shadow-sm shadow-orange-200/50">
                   {user?.full_name?.charAt(0)}
                 </div>
               </div>
