@@ -192,85 +192,75 @@ export const albumAPI = {
 
 
 // ---------------- NOTIFICATION ----------------
-// ---------------- NOTIFICATION ----------------
 export const notificationAPI = {
   getSummary: async () => {
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       if (!user.id) return { unreadCount: 0, items: [] };
 
-      // 1. กรณีเป็น ADMIN: ดูรายการจองใหม่ และ Q&A ที่ยังไม่ได้ตอบ
       if (user.role === 'admin') {
         const [qnaRes, bookingRes] = await Promise.all([
           qnaAPI.getAllAdmin(),
           bookingAPI.getStats()
         ]);
-
-        const qnaPending = qnaRes.data?.data?.filter(item => !item.answer) || [];
+        // ป้องกัน Error ด้วยการเช็ก Array ชั้นแรก
+        const qnaData = qnaRes.data?.data || [];
+        const qnaPending = Array.isArray(qnaData) ? qnaData.filter(item => !item.answer) : [];
         const bookingCount = bookingRes.data?.data?.pending_count || 0;
 
         const items = [
           ...qnaPending.map(item => ({
             id: `qna-${item.id}`,
             type: 'qna',
-            title: 'คำถามใหม่ที่รอคำตอบ',
+            title: 'คำถามใหม่',
             message: item.question,
             time_ago: item.created_at,
             link: '/admin/qna'
           })),
           ...(bookingCount > 0 ? [{
-            id: 'booking-pending-admin',
+            id: 'booking-admin',
             type: 'new_booking',
-            title: 'มีรายการจองใหม่',
-            message: `คุณมี ${bookingCount} รายการจองที่รอการตรวจสอบ`,
-            time_ago: 'อัปเดตเมื่อสักครู่',
+            title: 'มีรายการจองคิว',
+            message: `มี ${bookingCount} รายการที่รอคุณตรวจสอบ`,
+            time_ago: 'Update: Now',
             link: '/admin/bookings'
           }] : [])
         ];
-
         return { unreadCount: items.length, items };
       } 
-      
-      // 2. กรณีเป็น USER: ดูข่าวสาร และสถานะการจองของตัวเอง
       else {
+        // ฝั่ง USER
         const [bookingRes, newsRes] = await Promise.all([
-          bookingAPI.getUserBookings(), 
-          newsAPI.getAll({ limit: 5 }) 
+          bookingAPI.getUserBookings(),
+          newsAPI.getAll({ limit: 5 })
         ]);
 
-        const myBookings = bookingRes.data?.data || [];
-        const latestNews = newsRes.data?.data || [];
+        // 🔥 จุดที่ต้องระวัง: เช็กโครงสร้างข้อมูลให้ชัวร์ก่อน map
+        const myBookings = bookingRes.data?.data || bookingRes.data || [];
+        const latestNews = newsRes.data?.data || newsRes.data || [];
 
-        // ข่าวสาร
-        const newsItems = latestNews.map(news => ({
+        const newsItems = Array.isArray(latestNews) ? latestNews.map(news => ({
           id: `news-${news.id}`,
           type: 'news',
-          title: 'ประกาศข่าวสารใหม่',
+          title: 'ข่าวสารใหม่',
           message: news.title,
           time_ago: news.created_at,
           link: `/news/${news.id}`
-        }));
+        })) : [];
 
-        // สถานะการจอง (กรองเอาเฉพาะที่อนุมัติหรือยกเลิก เพื่อแจ้งเตือนการเปลี่ยนแปลง)
-        const statusItems = myBookings
-          .filter(b => b.status !== 'pending') 
+        const statusItems = Array.isArray(myBookings) ? myBookings
+          .filter(b => b.status !== 'pending')
           .map(b => ({
             id: `status-${b.id}`,
             type: 'booking_status',
-            title: 'อัปเดตสถานะการจอง',
-            message: `การจอง "${b.ceremony_name || 'พิธีการ'}" ของคุณ: ${b.status === 'approved' ? 'อนุมัติแล้ว' : 'ไม่ผ่านการอนุมัติ'}`,
+            title: 'อัปเดตการจอง',
+            message: `รายการ "${b.ceremony_name || 'พิธีการ'}": ${b.status}`,
             time_ago: b.updated_at,
             link: '/profile'
-          }));
+          })) : [];
 
-        const allItems = [...newsItems, ...statusItems].sort(
-          (a, b) => new Date(b.time_ago) - new Date(a.time_ago)
-        );
-
-        return {
-          unreadCount: allItems.length,
-          items: allItems
-        };
+        const allItems = [...newsItems, ...statusItems];
+        return { unreadCount: allItems.length, items: allItems };
       }
     } catch (error) {
       console.error("Noti API Error:", error);
@@ -278,5 +268,4 @@ export const notificationAPI = {
     }
   }
 };
-
 export default api;

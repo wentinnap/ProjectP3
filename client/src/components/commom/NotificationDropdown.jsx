@@ -10,18 +10,19 @@ const NotificationDropdown = () => {
   const [data, setData] = useState({ unreadCount: 0, items: [] });
   const [loading, setLoading] = useState(false);
 
+  // ฟังก์ชันดึงข้อมูลที่รองรับทั้ง Admin และ User
   const fetchNotifications = useCallback(async () => {
-    if (!user) return;
+    if (!user?.id) return;
     setLoading(true);
     try {
       const res = await notificationAPI.getSummary();
-      // ดึงค่าตรงๆ จาก res (เพราะเราแก้ api.js ให้ return object ปกติแล้ว)
+      // เช็คให้ชัวร์ว่า items เป็น array เสมอเพื่อไม่ให้ .map พัง
       setData({
-        unreadCount: res.unreadCount || 0,
-        items: res.items || []
+        unreadCount: res?.unreadCount || 0,
+        items: Array.isArray(res?.items) ? res.items : []
       });
     } catch (err) {
-      console.error("UI Fetch Error:", err);
+      console.error("Notification UI Error:", err);
     } finally {
       setLoading(false);
     }
@@ -29,7 +30,7 @@ const NotificationDropdown = () => {
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000);
+    const interval = setInterval(fetchNotifications, 60000); // อัปเดตทุก 1 นาที
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 
@@ -44,7 +45,8 @@ const NotificationDropdown = () => {
   };
 
   return (
-    <div className="relative">
+    <div className="relative font-sans">
+      {/*ปุ่มกระดิ่ง*/}
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2.5 bg-white border border-gray-100 text-gray-500 hover:text-orange-500 rounded-2xl transition-all shadow-sm active:scale-95"
@@ -63,6 +65,7 @@ const NotificationDropdown = () => {
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
           <div className="absolute right-0 mt-4 w-80 md:w-96 bg-white rounded-4xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-50 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
             
+            {/* Header */}
             <div className="p-6 pb-4 flex justify-between items-center border-b border-gray-50">
               <div>
                 <h3 className="font-black text-gray-800 text-lg tracking-tight">การแจ้งเตือน</h3>
@@ -78,13 +81,14 @@ const NotificationDropdown = () => {
               </button>
             </div>
 
-            <div className="max-h-[380px] overflow-y-auto p-2 scrollbar-hide">
+            {/* List รายการ (เอาปุ่มดูทั้งหมดออกแล้ว) */}
+            <div className="max-h-[420px] overflow-y-auto p-2 scrollbar-hide mb-2">
               {data.items.length > 0 ? (
                 data.items.map((item) => {
                   const style = getStyle(item.type);
                   return (
                     <Link 
-                      to={item.link} 
+                      to={item.link || "#"} 
                       key={item.id}
                       onClick={() => setIsOpen(false)}
                       className="flex gap-4 p-4 m-1 rounded-3xl transition-all border border-transparent hover:border-orange-100 hover:bg-orange-50/30 group"
@@ -93,31 +97,26 @@ const NotificationDropdown = () => {
                         {style.icon}
                       </div>
                       <div className="flex-1 min-w-0 pt-0.5">
-                        <p className="text-[14px] font-bold text-gray-800 mb-0.5 group-hover:text-orange-600 transition-colors">{item.title}</p>
+                        <div className="flex justify-between items-start">
+                           <p className="text-[14px] font-bold text-gray-800 mb-0.5 group-hover:text-orange-600 transition-colors">{item.title}</p>
+                           <span className="w-2 h-2 bg-red-500 rounded-full mt-1.5 shrink-0"></span>
+                        </div>
                         <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{item.message}</p>
-                        <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase">{item.time_ago}</p>
+                        <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-tighter">
+                          {item.time_ago ? new Date(item.time_ago).toLocaleString('th-TH') : "เมื่อสักครู่"}
+                        </p>
                       </div>
                     </Link>
                   );
                 })
               ) : (
-                <div className="py-16 text-center">
-                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Bell size={24} className="text-gray-200" />
+                <div className="py-20 text-center">
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-200">
+                    <Bell size={28} />
                   </div>
-                  <p className="text-gray-400 font-bold text-sm">ยังไม่มีการแจ้งเตือนในขณะนี้</p>
+                  <p className="text-gray-400 font-bold text-sm">ยังไม่มีการแจ้งเตือนใหม่</p>
                 </div>
               )}
-            </div>
-
-            <div className="p-4 bg-gray-50/50">
-              <Link 
-                to={user?.role === 'admin' ? "/admin/bookings" : "/profile"} 
-                className="flex items-center justify-center w-full py-3 bg-white rounded-2xl text-[11px] font-black text-gray-500 hover:text-orange-600 shadow-sm border border-gray-100 transition-all uppercase tracking-[0.15em]"
-                onClick={() => setIsOpen(false)}
-              >
-                ดูประวัติทั้งหมด
-              </Link>
             </div>
           </div>
         </>
