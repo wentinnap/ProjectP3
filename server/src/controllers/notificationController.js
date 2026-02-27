@@ -7,33 +7,33 @@ exports.getNotificationSummary = async (req, res) => {
         let notifications = [];
 
         // ==========================================
-        // 1. กรณีเป็น ADMIN (จัดการคำขอจอง และ คำถาม QnA)
+        // 1. กรณีเป็น ADMIN (ตรวจสอบการจอง และ คำถาม)
         // ==========================================
         if (userRole === 'admin') {
             const [bookingRes, qnaRes] = await Promise.all([
                 // ตรวจสอบจากตาราง bookings
                 db.query('SELECT id, full_name, created_at FROM bookings WHERE status = "pending" ORDER BY created_at DESC LIMIT 10'),
-                // ตรวจสอบจากตาราง qna
-                // ✅ แก้ไขเป็น answer IS NULL ตามโครงสร้างจริงของคุณ
-                db.query('SELECT id, question, created_at FROM qna WHERE answer IS NULL OR answer = "" ORDER BY created_at DESC LIMIT 10')
+                
+                // ✅ แก้ไข SQL: ใช้ LENGTH และ TRIM แทนการใช้ "" เพื่อป้องกัน Error Unknown column
+                db.query('SELECT id, question, created_at FROM qna WHERE answer IS NULL OR LENGTH(TRIM(answer)) = 0 ORDER BY created_at DESC LIMIT 10')
             ]);
 
             const pendingBookings = bookingRes[0] || [];
             const pendingQna = qnaRes[0] || [];
 
-            // เพิ่มรายการแจ้งเตือนการจองใหม่
+            // จัดรูปแบบแจ้งเตือนการจอง (Admin)
             pendingBookings.forEach(b => {
                 notifications.push({
                     id: `admin-bk-${b.id}`,
                     type: 'new_booking',
                     title: 'มีคำขอจองใหม่',
-                    message: `คุณ ${b.full_name} ได้ส่งคำขอจองใหม่เข้ามา`,
+                    message: `คุณ ${b.full_name} ส่งคำขอจองใหม่`,
                     time_ago: b.created_at,
                     link: '/admin/bookings'
                 });
             });
 
-            // เพิ่มรายการแจ้งเตือนคำถามใหม่
+            // จัดรูปแบบแจ้งเตือนคำถาม (Admin)
             pendingQna.forEach(q => {
                 notifications.push({
                     id: `admin-qna-${q.id}`,
@@ -46,7 +46,7 @@ exports.getNotificationSummary = async (req, res) => {
             });
 
         // ==========================================
-        // 2. กรณีเป็น USER (ดูสถานะการจอง และ ข่าวสาร)
+        // 2. กรณีเป็น USER (ตรวจสอบข่าวสาร และ สถานะการจองตัวเอง)
         // ==========================================
         } else {
             const [newsRes, myBookingRes] = await Promise.all([
@@ -59,38 +59,38 @@ exports.getNotificationSummary = async (req, res) => {
             const newsItems = newsRes[0] || [];
             const userBookings = myBookingRes[0] || [];
 
-            // ข่าวสารใหม่
+            // แจ้งข่าวสารใหม่
             newsItems.forEach(n => {
                 notifications.push({
                     id: `user-news-${n.id}`,
                     type: 'news',
-                    title: 'ข่าวสารใหม่',
+                    title: 'ข่าวสารใหม่จากวัด',
                     message: n.title,
                     time_ago: n.created_at,
                     link: `/news/${n.id}`
                 });
             });
 
-            // สถานะการจองเปลี่ยนไป
+            // แจ้งสถานะการจอง (User)
             userBookings.forEach(b => {
                 const statusMap = {
-                    'approved': 'ได้รับการอนุมัติ',
-                    'rejected': 'ถูกปฏิเสธ',
+                    'approved': 'อนุมัติแล้ว',
+                    'rejected': 'ปฏิเสธแล้ว',
                     'pending': 'รอตรวจสอบ',
-                    'cancelled': 'ถูกยกเลิก'
+                    'cancelled': 'ยกเลิกแล้ว'
                 };
                 notifications.push({
                     id: `user-bk-${b.id}`,
                     type: 'booking_status',
                     title: 'อัปเดตสถานะการจอง',
-                    message: `รายการวันที่ ${new Date(b.booking_date).toLocaleDateString('th-TH')} คือ "${statusMap[b.status] || b.status}"`,
+                    message: `รายการวันที่ ${new Date(b.booking_date).toLocaleDateString('th-TH')} สถานะ: ${statusMap[b.status] || b.status}`,
                     time_ago: b.updated_at,
                     link: '/profile'
                 });
             });
         }
 
-        // เรียงลำดับตามวันเวลา (ใหม่สุดอยู่บน)
+        // เรียงลำดับแจ้งเตือนล่าสุดขึ้นก่อนเสมอ
         notifications.sort((a, b) => new Date(b.time_ago) - new Date(a.time_ago));
 
         res.json({
@@ -100,11 +100,12 @@ exports.getNotificationSummary = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("Noti Error:", error);
+        // บันทึก Error ลง Log ของ Render เพื่อการตรวจสอบ
+        console.error("Noti Error Details:", error);
         res.status(500).json({
             success: false,
-            message: "Internal Server Error",
-            error: error.message, // ส่ง Error ออกไปดูว่าพังที่จุดไหน
+            message: "เกิดข้อผิดพลาดในการดึงข้อมูลแจ้งเตือน",
+            error: error.message,
             items: []
         });
     }
