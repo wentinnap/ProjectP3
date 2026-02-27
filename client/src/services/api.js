@@ -192,18 +192,20 @@ export const albumAPI = {
 
 
 // ---------------- NOTIFICATION ----------------
+// ---------------- NOTIFICATION ----------------
 export const notificationAPI = {
   getSummary: async () => {
     try {
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       if (!user.id) return { unreadCount: 0, items: [] };
 
+      // 1. สำหรับ ADMIN: แจ้งเตือน Q&A และ รายการจองค้างตรวจสอบ
       if (user.role === 'admin') {
         const [qnaRes, bookingRes] = await Promise.all([
           qnaAPI.getAllAdmin(),
           bookingAPI.getStats()
         ]);
-        // ป้องกัน Error ด้วยการเช็ก Array ชั้นแรก
+
         const qnaData = qnaRes.data?.data || [];
         const qnaPending = Array.isArray(qnaData) ? qnaData.filter(item => !item.answer) : [];
         const bookingCount = bookingRes.data?.data?.pending_count || 0;
@@ -212,15 +214,15 @@ export const notificationAPI = {
           ...qnaPending.map(item => ({
             id: `qna-${item.id}`,
             type: 'qna',
-            title: 'คำถามใหม่',
+            title: 'มีคำถามใหม่',
             message: item.question,
             time_ago: item.created_at,
             link: '/admin/qna'
           })),
           ...(bookingCount > 0 ? [{
-            id: 'booking-admin',
+            id: 'admin-booking',
             type: 'new_booking',
-            title: 'มีรายการจองคิว',
+            title: 'รายการจองคิว',
             message: `มี ${bookingCount} รายการที่รอคุณตรวจสอบ`,
             time_ago: 'Update: Now',
             link: '/admin/bookings'
@@ -228,14 +230,14 @@ export const notificationAPI = {
         ];
         return { unreadCount: items.length, items };
       } 
+      
+      // 2. สำหรับ USER: แจ้งเตือนข่าวสาร และ ผลการอนุมัติการจอง
       else {
-        // ฝั่ง USER
         const [bookingRes, newsRes] = await Promise.all([
           bookingAPI.getUserBookings(),
           newsAPI.getAll({ limit: 5 })
         ]);
 
-        // 🔥 จุดที่ต้องระวัง: เช็กโครงสร้างข้อมูลให้ชัวร์ก่อน map
         const myBookings = bookingRes.data?.data || bookingRes.data || [];
         const latestNews = newsRes.data?.data || newsRes.data || [];
 
@@ -249,7 +251,7 @@ export const notificationAPI = {
         })) : [];
 
         const statusItems = Array.isArray(myBookings) ? myBookings
-          .filter(b => b.status !== 'pending')
+          .filter(b => b.status !== 'pending') // แจ้งเฉพาะรายการที่อนุมัติหรือปฏิเสธแล้ว
           .map(b => ({
             id: `status-${b.id}`,
             type: 'booking_status',
@@ -259,8 +261,8 @@ export const notificationAPI = {
             link: '/profile'
           })) : [];
 
-        const allItems = [...newsItems, ...statusItems];
-        return { unreadCount: allItems.length, items: allItems };
+        const combined = [...newsItems, ...statusItems];
+        return { unreadCount: combined.length, items: combined };
       }
     } catch (error) {
       console.error("Noti API Error:", error);
