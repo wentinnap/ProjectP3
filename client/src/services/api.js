@@ -124,20 +124,25 @@ export const newsAPI = {
 };
 
 // ---------------- BOOKING ----------------
+// ---------------- BOOKING ----------------
 export const bookingAPI = {
+  // Public & User
   getTypes: () => api.get("/bookings/types"),
   create: (data) => api.post("/bookings", data),
-  getUserBookings: (params) =>
-    api.get("/bookings/my-bookings", { params }),
-  cancelBooking: (id) =>
-    api.patch(`/bookings/${id}/cancel`),
+  getUserBookings: (params) => api.get("/bookings/my-bookings", { params }),
+  cancelBooking: (id) => api.patch(`/bookings/${id}/cancel`),
 
-  getAllAdmin: (params) =>
-    api.get("/bookings/admin/all", { params }),
-  updateStatus: (id, data) =>
-    api.put(`/bookings/admin/${id}/status`, data),
-  getStats: () =>
-    api.get("/bookings/admin/stats"),
+  // Admin: Management
+  getAllAdmin: (params) => api.get("/bookings/admin/all", { params }),
+  updateStatus: (id, data) => api.put(`/bookings/admin/${id}/status`, data),
+  getStats: () => api.get("/bookings/admin/stats"),
+  
+  // ✅ เพิ่มใหม่: ลบรายการจอง (Admin)
+  deleteBooking: (id) => api.delete(`/bookings/admin/${id}`),
+
+  // ✅ เพิ่มใหม่: จัดการประเภทพิธี (Admin Booking Types)
+  createType: (data) => api.post("/bookings/types", data),
+  deleteType: (id) => api.delete(`/bookings/types/${id}`),
 };
 
 // ---------------- EVENT ----------------
@@ -166,12 +171,20 @@ export const qnaAPI = {
 };
 
 // ---------------- ALBUM ----------------
+// ---------------- ALBUM ----------------
 export const albumAPI = {
   getAllUser: () => api.get("/albums/user"),
   getAllAdmin: () => api.get("/albums/admin"),
   getPhotos: (id) => api.get(`/albums/${id}/photos`),
 
   create: (formData) => api.post("/albums", formData),
+
+  // ✅ เพิ่มใหม่: สำหรับแก้ไขชื่ออัลบั้ม หรืออัปโหลดรูปเพิ่มเข้าไป (formData)
+  update: (id, formData) => api.put(`/albums/${id}`, formData),
+
+  // ✅ เพิ่มใหม่: สำหรับลบรูปภาพเพียงรูปเดียวโดยใช้ ID ของรูปนั้น
+  deletePhoto: (photoId) => api.delete(`/albums/photo/${photoId}`),
+
   toggleHide: (id, isHidden) =>
     api.patch(`/albums/${id}/hide`, { is_hidden: isHidden }),
   delete: (id) => api.delete(`/albums/${id}`),

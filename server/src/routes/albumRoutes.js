@@ -9,10 +9,9 @@ const albumController = require("../controllers/albumController");
 // ==========================================
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, "uploads/"); // ตรวจสอบว่ามีโฟลเดอร์ uploads ที่ root project
+        cb(null, "uploads/");
     },
     filename: (req, file, cb) => {
-        // ตั้งชื่อไฟล์: timestamp-สุ่มตัวเลข.นามสกุลเดิม
         const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
         cb(null, uniqueSuffix + path.extname(file.originalname));
     }
@@ -20,9 +19,8 @@ const storage = multer.diskStorage({
 
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // จำกัดขนาด 5MB ต่อไฟล์
+    limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
-        // รับเฉพาะไฟล์รูปภาพเท่านั้น
         const fileTypes = /jpeg|jpg|png|webp/;
         const extname = fileTypes.test(path.extname(file.originalname).toLowerCase());
         const mimetype = fileTypes.test(file.mimetype);
@@ -40,24 +38,26 @@ const upload = multer({
 // ==========================================
 
 // --- สำหรับ USER ทั่วไป (หน้าบ้าน) ---
-// ดึงเฉพาะอัลบั้มที่ไม่ได้ซ่อน (is_hidden = 0)
 router.get("/user", albumController.getAllAlbumsUser); 
-
-// ดึงรูปภาพทั้งหมดที่อยู่ในอัลบั้มนั้นๆ (ใช้ตอนคลิกเข้าดูอัลบั้ม)
 router.get("/:id/photos", albumController.getPhotosByAlbumId); 
 
 
 // --- สำหรับ ADMIN (หลังบ้าน) ---
-// ดึงทุกอัลบั้มรวมที่ซ่อนอยู่ เพื่อให้ Admin จัดการ
 router.get("/admin", albumController.getAllAlbumsAdmin); 
 
-// สร้างอัลบั้มใหม่พร้อมอัปโหลดรูป (สูงสุด 20 รูปต่อครั้ง)
+// สร้างอัลบั้มใหม่
 router.post("/", upload.array("images", 20), albumController.createAlbum); 
 
-// อัปเดตสถานะการมองเห็น (ซ่อน/แสดง)
+// [เพิ่มใหม่] แก้ไขชื่ออัลบั้มและอัปโหลดรูปเพิ่มเข้าไปในอัลบั้มเดิม
+router.put("/:id", upload.array("images", 20), albumController.updateAlbum);
+
+// [เพิ่มใหม่] ลบรูปภาพเฉพาะใบที่เลือกภายในอัลบั้ม
+router.delete("/photo/:photoId", albumController.deletePhoto);
+
+// อัปเดตสถานะการมองเห็น
 router.patch("/:id/hide", albumController.toggleHide); 
 
-// ลบอัลบั้ม (ลบข้อมูลใน DB และลบไฟล์จริงออกจาก Folder uploads)
+// ลบอัลบั้มทั้งชุด
 router.delete("/:id", albumController.deleteAlbum); 
 
 module.exports = router;

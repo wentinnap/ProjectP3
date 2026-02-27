@@ -1,24 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { albumAPI, toAssetUrl } from "../../services/api";
 import { 
-  BsPlusLg, 
-  BsEyeFill, 
-  BsEyeSlashFill, 
-  BsTrash3Fill, 
-  BsImage,
-  BsX,
-  BsImages,
-  BsCloudUpload
+  BsPlusLg, BsEyeFill, BsEyeSlashFill, BsTrash3Fill, 
+  BsImage, BsX, BsImages, BsCloudUpload, BsPencilSquare 
 } from "react-icons/bs";
 
 const AdminAlbums = () => {
   const [albums, setAlbums] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
 
-  // States สำหรับสร้างอัลบั้มใหม่
+  // States สำหรับสร้าง/แก้ไข
   const [title, setTitle] = useState("");
   const [selectedFiles, setSelectedFiles] = useState([]);
+  const [currentAlbum, setCurrentAlbum] = useState(null);
+  const [existingPhotos, setExistingPhotos] = useState([]);
 
   useEffect(() => {
     fetchAlbums();
@@ -28,26 +25,71 @@ const AdminAlbums = () => {
     setLoading(true);
     try {
       const res = await albumAPI.getAllAdmin();
-      if (res.data.success) {
-        setAlbums(res.data.data || []);
-      }
+      if (res.data.success) setAlbums(res.data.data || []);
     } catch (err) {
-      console.error("Error fetching albums:", err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
+  // --- ฟังก์ชันเปิดหน้าแก้ไข ---
+  const handleEditClick = async (album) => {
+    setCurrentAlbum(album);
+    setTitle(album.title);
+    setSelectedFiles([]);
+    setShowEditModal(true);
+    // ดึงรูปภาพทั้งหมดในอัลบั้มนี้
+    try {
+      const res = await albumAPI.getPhotos(album.id);
+      if (res.data.success) setExistingPhotos(res.data.data);
+    } catch (err) {
+      console.error("Error fetching photos:", err);
+    }
+  };
+
+  // --- ฟังก์ชันบันทึกการแก้ไข (Update) ---
+  const handleUpdateAlbum = async (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append("title", title);
+    selectedFiles.forEach(file => formData.append("images", file));
+
+    try {
+      setLoading(true);
+      const res = await albumAPI.update(currentAlbum.id, formData);
+      if (res.data.success) {
+        setShowEditModal(false);
+        fetchAlbums();
+      }
+    } catch (err) {
+      alert("แก้ไขไม่สำเร็จ");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // --- ฟังก์ชันลบรูปภาพรายใบ ---
+  const handleDeletePhoto = async (photoId) => {
+    if (!window.confirm("ลบรูปภาพนี้ใช่หรือไม่?")) return;
+    try {
+      const res = await albumAPI.deletePhoto(photoId);
+      if (res.data.success) {
+        setExistingPhotos(existingPhotos.filter(p => p.id !== photoId));
+      }
+    } catch (err) {
+      alert("ลบรูปภาพล้มเหลว");
+    }
+  };
+
+  // ... (handleCreateAlbum, handleToggleHide, handleDelete เหมือนเดิมที่คุณเขียนไว้) ...
+
   const handleCreateAlbum = async (e) => {
     e.preventDefault();
     if (selectedFiles.length === 0) return alert("กรุณาเลือกรูปภาพอย่างน้อย 1 รูป");
-
     const formData = new FormData();
     formData.append("title", title);
-    selectedFiles.forEach((file) => {
-      formData.append("images", file);
-    });
-
+    selectedFiles.forEach((file) => formData.append("images", file));
     try {
       setLoading(true);
       const res = await albumAPI.create(formData);
@@ -58,7 +100,7 @@ const AdminAlbums = () => {
         fetchAlbums();
       }
     } catch (err) {
-      alert(err.response?.data?.message || "เกิดข้อผิดพลาดในการสร้างอัลบั้ม");
+      alert(err.response?.data?.message || "เกิดข้อผิดพลาด");
     } finally {
       setLoading(false);
     }
@@ -75,7 +117,7 @@ const AdminAlbums = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("⚠️ คุณแน่ใจหรือไม่ที่จะลบอัลบั้มนี้? รูปภาพทั้งหมดในอัลบั้มจะถูกลบถาวร")) return;
+    if (!window.confirm("⚠️ คุณแน่ใจหรือไม่ที่จะลบอัลบั้มนี้?")) return;
     try {
       await albumAPI.delete(id);
       fetchAlbums();
@@ -85,19 +127,19 @@ const AdminAlbums = () => {
   };
 
   return (
-    <div className="animate-in fade-in duration-500">
+    <div className="animate-in fade-in duration-500 pb-10">
       {/* --- Page Header --- */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
           <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <BsImages className="text-cyan-500" size={28} />
+            <BsImages className="text-orange-500" size={28} />
             จัดการอัลบั้มรูปภาพ
           </h2>
           <p className="text-gray-500 text-sm font-medium">จัดการคลังภาพกิจกรรมและรูปภาพสื่อประชาสัมพันธ์</p>
         </div>
         <button
-          onClick={() => setShowModal(true)}
-          className="w-full md:w-auto flex items-center justify-center gap-2 bg-[#343d52] hover:bg-[#3e485f] text-white px-6 py-3 rounded-xl transition-all shadow-lg active:scale-95 text-sm font-bold"
+          onClick={() => { setTitle(""); setSelectedFiles([]); setShowModal(true); }}
+          className="w-full md:w-auto flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-xl transition-all shadow-lg active:scale-95 text-sm font-bold"
         >
           <BsPlusLg strokeWidth={1} /> 
           เพิ่มอัลบั้มใหม่
@@ -105,80 +147,92 @@ const AdminAlbums = () => {
       </div>
 
       {/* --- Album Grid --- */}
-      {loading && albums.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <div className="w-12 h-12 border-4 border-cyan-100 border-t-cyan-500 rounded-full animate-spin"></div>
-          <p className="text-gray-400 font-medium tracking-wide">กำลังเข้าถึงคลังภาพ...</p>
-        </div>
-      ) : albums.length === 0 ? (
-        <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200 flex flex-col items-center gap-4">
-           <BsImage className="text-gray-200" size={64} />
-           <p className="text-gray-400 font-bold">ยังไม่มีอัลบั้มรูปภาพในระบบ</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {albums.map((album) => (
-            <div 
-              key={album.id} 
-              className={`group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 ${album.is_hidden ? 'opacity-80' : ''}`}
-            >
-              {/* Image Container */}
-              <div className="relative aspect-video overflow-hidden bg-gray-100">
-                <img
-                  src={toAssetUrl(album.cover_img || "/placeholder.png")}
-                  className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${album.is_hidden ? 'grayscale' : ''}`}
-                  alt={album.title}
-                />
-                <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                
-                {/* Image Count Badge */}
-                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm text-[#343d52] text-[10px] font-black px-2 py-1 rounded-lg shadow-sm border border-white/50">
-                   {album.photo_count || 0} PHOTOS
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-5">
-                <h3 className="font-bold text-gray-800 truncate text-base mb-4 group-hover:text-cyan-600 transition-colors" title={album.title}>
-                  {album.title}
-                </h3>
-                
-                <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleToggleHide(album.id, album.is_hidden)}
-                      className={`p-2.5 rounded-xl transition-all ${
-                        album.is_hidden 
-                        ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' 
-                        : 'bg-cyan-50 text-cyan-600 hover:bg-cyan-100'
-                      }`}
-                      title={album.is_hidden ? "แสดงบนหน้าเว็บ" : "ซ่อนจากหน้าเว็บ"}
-                    >
-                      {album.is_hidden ? <BsEyeSlashFill size={16} /> : <BsEyeFill size={16} />}
-                    </button>
-
-                    <button
-                      onClick={() => handleDelete(album.id)}
-                      className="p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-100 transition-all"
-                      title="ลบอัลบั้ม"
-                    >
-                      <BsTrash3Fill size={15} />
-                    </button>
-                  </div>
-
-                  <span className={`text-[10px] uppercase tracking-widest font-black px-3 py-1 rounded-lg ${
-                    album.is_hidden ? 'bg-gray-100 text-gray-400' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'
-                  }`}>
-                    {album.is_hidden ? 'Private' : 'Published'}
-                  </span>
-                </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {albums.map((album) => (
+          <div key={album.id} className="group bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-xl transition-all">
+            <div className="relative aspect-video overflow-hidden">
+              <img src={toAssetUrl(album.cover_img || "/placeholder.png")} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={album.title} />
+              <div className="absolute top-3 right-3 bg-black/50 text-white text-[10px] px-2 py-1 rounded-lg backdrop-blur-sm">
+                {album.photo_count} PHOTOS
               </div>
             </div>
-          ))}
+            <div className="p-4">
+              <h3 className="font-bold text-gray-800 truncate mb-4">{album.title}</h3>
+              <div className="flex items-center justify-between">
+                <div className="flex gap-2">
+                  <button onClick={() => handleEditClick(album)} className="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100"><BsPencilSquare size={16}/></button>
+                  <button onClick={() => handleToggleHide(album.id, album.is_hidden)} className={`p-2 rounded-lg ${album.is_hidden ? 'bg-amber-50 text-amber-600' : 'bg-cyan-50 text-cyan-600'}`}>
+                    {album.is_hidden ? <BsEyeSlashFill size={16}/> : <BsEyeFill size={16}/>}
+                  </button>
+                  <button onClick={() => handleDelete(album.id)} className="p-2 bg-red-50 text-red-500 rounded-lg hover:bg-red-100"><BsTrash3Fill size={15}/></button>
+                </div>
+                <span className={`text-[10px] font-black px-2 py-1 rounded-md ${album.is_hidden ? 'bg-gray-100 text-gray-400' : 'bg-green-50 text-green-600'}`}>
+                  {album.is_hidden ? 'HIDDEN' : 'PUBLIC'}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* --- Modal: Edit Album --- */}
+      {showEditModal && (
+        <div className="fixed inset-0 bg-[#343d52]/60 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] shadow-2xl overflow-y-auto">
+            <div className="p-5 border-b flex justify-between items-center sticky top-0 bg-white z-10">
+              <h2 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                <BsPencilSquare className="text-orange-500" /> แก้ไขอัลบั้ม
+              </h2>
+              <button onClick={() => setShowEditModal(false)}><BsX size={28} /></button>
+            </div>
+            
+            <form onSubmit={handleUpdateAlbum} className="p-6">
+              <div className="mb-6">
+                <label className="text-[11px] font-bold text-gray-400 uppercase mb-2 block">ชื่ออัลบั้ม</label>
+                <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} className="w-full px-4 py-3 bg-gray-50 border rounded-xl outline-none focus:border-orange-500" required />
+              </div>
+
+              <div className="mb-6">
+                <label className="text-[11px] font-bold text-gray-400 uppercase mb-2 block">รูปภาพในอัลบั้ม ({existingPhotos.length})</label>
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                  {existingPhotos.map((photo) => (
+                    <div key={photo.id} className="relative aspect-square rounded-lg overflow-hidden group">
+                      <img src={toAssetUrl(photo.file_path)} className="w-full h-full object-cover" />
+                      <button 
+                        type="button"
+                        onClick={() => handleDeletePhoto(photo.id)}
+                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <BsX size={16}/>
+                      </button>
+                    </div>
+                  ))}
+                  {/* ปุ่มเพิ่มรูปใหม่ใน Grid */}
+                  <label className="aspect-square border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:bg-orange-50 hover:border-orange-200 transition-all">
+                    <BsPlusLg className="text-gray-400" />
+                    <span className="text-[10px] text-gray-400 font-bold mt-1">ADD NEW</span>
+                    <input type="file" multiple accept="image/*" className="hidden" onChange={(e) => setSelectedFiles(Array.from(e.target.files))} />
+                  </label>
+                </div>
+                {selectedFiles.length > 0 && (
+                  <p className="text-xs text-orange-600 font-bold mt-2 animate-pulse">
+                    + มีการเลือกรูปภาพใหม่เพิ่ม {selectedFiles.length} รูป
+                  </p>
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <button type="button" onClick={() => setShowEditModal(false)} className="flex-1 py-3 border rounded-xl font-bold text-gray-500">ยกเลิก</button>
+                <button type="submit" disabled={loading} className="flex-2 py-3 bg-orange-500 text-white rounded-xl font-bold hover:bg-orange-600 transition-all shadow-lg">
+                  {loading ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 
-      {/* --- Modal: Create Album --- */}
+      {/* ... (Modal สร้างใหม่ ShowModal ส่วนเดิมของคุณ) ... */}
       {showModal && (
         <div className="fixed inset-0 bg-[#343d52]/60 z-100 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">

@@ -212,3 +212,86 @@ exports.getPhotosByAlbumId = async (req, res) => {
         });
     }
 };
+
+
+
+// 7. แก้ไขชื่ออัลบั้มและอัปโหลดรูปเพิ่ม
+exports.updateAlbum = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title } = req.body;
+        const files = req.files;
+
+        // 1. อัปเดตชื่ออัลบั้ม (ถ้ามีการส่งมา)
+        if (title) {
+            await db.query("UPDATE albums SET title = ? WHERE id = ?", [title, id]);
+        }
+
+        // 2. ถ้ามีการอัปโหลดรูปเพิ่ม
+        if (files && files.length > 0) {
+            const photoData = files.map(file => [
+                id,
+                `/uploads/${file.filename}`
+            ]);
+
+            await db.query(
+                "INSERT INTO album_photos (album_id, file_path) VALUES ?",
+                [photoData]
+            );
+        }
+
+        res.json({
+            success: true,
+            message: "อัปเดตอัลบั้มเรียบร้อยแล้ว"
+        });
+
+    } catch (error) {
+        console.error("Update Album Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "เกิดข้อผิดพลาดในการอัปเดตอัลบั้ม"
+        });
+    }
+};
+
+
+// 8. ลบรูปภาพเฉพาะใบที่เลือก
+exports.deletePhoto = async (req, res) => {
+    try {
+        const { photoId } = req.params;
+
+        // 1. ดึงข้อมูลรูปเพื่อหา Path ไฟล์จริง
+        const [photos] = await db.query("SELECT file_path FROM album_photos WHERE id = ?", [photoId]);
+        
+        if (photos.length === 0) {
+            return res.status(404).json({ success: false, message: "ไม่พบรูปภาพ" });
+        }
+
+        const photo = photos[0];
+
+        // 2. ลบไฟล์จริงออกจากเครื่อง
+        if (photo.file_path) {
+            const filename = path.basename(photo.file_path);
+            const filePath = path.join(__dirname, "../../uploads", filename);
+
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+
+        // 3. ลบข้อมูลออกจาก Database
+        await db.query("DELETE FROM album_photos WHERE id = ?", [photoId]);
+
+        res.json({
+            success: true,
+            message: "ลบรูปภาพสำเร็จ"
+        });
+
+    } catch (error) {
+        console.error("Delete Photo Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "เกิดข้อผิดพลาดในการลบรูปภาพ"
+        });
+    }
+};

@@ -348,3 +348,32 @@ exports.getBookingStats = async (req, res) => {
     });
   }
 };
+
+
+
+exports.deleteBooking = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const [bookings] = await db.query('SELECT id FROM bookings WHERE id = ?', [id]);
+    if (bookings.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'ไม่พบการจองที่ต้องการลบ'
+      });
+    }
+
+    await db.query('DELETE FROM bookings WHERE id = ?', [id]);
+
+    res.json({
+      success: true,
+      message: 'ลบข้อมูลการจองสำเร็จ'
+    });
+  } catch (error) {
+    console.error('Delete booking error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการลบข้อมูลการจอง'
+    });
+  }
+};
