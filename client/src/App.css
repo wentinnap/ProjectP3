@@ -1,1 +1,9 @@
 @import "tailwindcss";
+
+@theme {
+  /* ฟอนต์ไม่มีหัวสำหรับเนื้อหาทั่วไป (ยังคงเป็น Kanit) */
+  --font-sans: "Kanit", ui-sans-serif, system-ui, sans-serif;
+  
+  /* ฟอนต์มีหัวสำหรับหัวข้อ (เปลี่ยนเป็น Noto Serif Thai) */
+  --font-serif: "Noto Serif Thai", serif;
+}
