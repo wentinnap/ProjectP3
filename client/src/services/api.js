@@ -209,4 +209,10 @@ export const notificationAPI = {
     }
   }
 };
+
+export const systemAPI = {
+  getDashboardOverview: () => api.get("/system/admin/dashboard-stats"),
+  getLogs: (params) => api.get("/system/admin/logs", { params }),
+};
+
 export default api;
