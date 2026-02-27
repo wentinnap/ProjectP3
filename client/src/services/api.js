@@ -190,4 +190,48 @@ export const albumAPI = {
   delete: (id) => api.delete(`/albums/${id}`),
 };
 
+
+// ---------------- NOTIFICATION ----------------
+export const notificationAPI = {
+  // ดึงรายการสรุปเหตุการณ์ที่แอดมินต้องจัดการ
+  getSummary: async () => {
+    try {
+      // วิธีที่ง่ายที่สุด: ยิง API สองตัวพร้อมกัน (Q&A และ Booking Stats)
+      const [qnaRes, bookingRes] = await Promise.all([
+        qnaAPI.getAllAdmin(),
+        bookingAPI.getStats()
+      ]);
+
+      const qnaPending = qnaRes.data?.data?.filter(item => !item.answer) || [];
+      
+      // รวมข้อมูลเป็น Format สำหรับ Notification Center
+      return {
+        unreadCount: qnaPending.length + (bookingRes.data?.data?.pending_count || 0),
+        items: [
+          ...qnaPending.map(item => ({
+            id: `qna-${item.id}`,
+            type: 'qna',
+            title: 'มีคำถามใหม่',
+            desc: item.question,
+            time: item.created_at,
+            link: '/admin/qna'
+          })),
+          // ถ้ามี Pending Booking ก็ส่ง notification หลอกๆ ไปด้วย
+          ...(bookingRes.data?.data?.pending_count > 0 ? [{
+            id: 'booking-pending',
+            type: 'booking',
+            title: 'มีรายการจองคิว',
+            desc: `มี ${bookingRes.data.data.pending_count} รายการที่รอคุณตรวจสอบ`,
+            time: new Date().toISOString(),
+            link: '/admin/bookings'
+          }] : [])
+        ]
+      };
+    } catch (error) {
+      console.error("Fetch Summary Error:", error);
+      throw error;
+    }
+  }
+};
+
 export default api;

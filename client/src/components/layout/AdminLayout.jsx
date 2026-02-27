@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import NotificationDropdown from '../common/NotificationDropdown'; // ✅ นำเข้ากระดิ่งที่เราสร้างไว้
 import { 
   LayoutDashboard, Calendar, 
-  MessageCircleQuestion, LogOut, Bell,
+  MessageCircleQuestion, LogOut,
   Newspaper, CalendarClock, Image as ImageIcon, Menu, 
-  ChevronRight, Settings
+  ChevronRight
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -106,7 +107,7 @@ const AdminLayout = () => {
       {/* --- Main Area --- */}
       <div className="flex-1 flex flex-col min-w-0 h-full relative">
         
-        {/* Header - (ลบช่อง Search ออกแล้ว) */}
+        {/* Header */}
         <header className="h-20 bg-white/80 backdrop-blur-md border-b border-orange-100/50 flex items-center justify-between px-10 z-40 shrink-0">
           <div className="flex items-center gap-6">
             <button 
@@ -123,10 +124,8 @@ const AdminLayout = () => {
           </div>
           
           <div className="flex items-center gap-3">
-              <button className="relative p-3 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-xl transition-all">
-                <Bell size={22} />
-                <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-orange-600 rounded-full border-2 border-white"></span>
-              </button>
+              {/* ✅ เปลี่ยนจาก Icon Bell ธรรมดา เป็น NotificationDropdown ที่ดึง API */}
+              <NotificationDropdown />
 
               <div className="h-10 w-px bg-gray-100 mx-2"></div>
 
