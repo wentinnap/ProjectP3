@@ -3,28 +3,44 @@ const db = require('../config/database');
 
 exports.getAdminStats = async (req, res) => {
   try {
-    // ใช้ [rows] แทนการเจาะจงลึก เพื่อป้องกัน error หากไม่มีข้อมูล
-    const [newsRes] = await db.query('SELECT COUNT(*) as count FROM news');
-    const [eventsRes] = await db.query('SELECT COUNT(*) as count FROM events');
-    const [qaRes] = await db.query('SELECT COUNT(*) as count FROM qna');
-    
-    const [totalRes] = await db.query('SELECT COUNT(*) as count FROM bookings');
-    const [pendingRes] = await db.query('SELECT COUNT(*) as count FROM bookings WHERE status = "pending"');
-    const [approvedRes] = await db.query('SELECT COUNT(*) as count FROM bookings WHERE status = "approved"');
-    const [rejectedRes] = await db.query('SELECT COUNT(*) as count FROM bookings WHERE status = "rejected"');
+    // ยิงพร้อมกันเพื่อลดเวลาโหลด
+    const [
+      [newsRes],
+      [eventsRes],
+      [qaRes],
+      [bookingStats]
+    ] = await Promise.all([
+      db.query('SELECT COUNT(*) as count FROM news'),
+      db.query('SELECT COUNT(*) as count FROM events'),
+      db.query('SELECT COUNT(*) as count FROM qna'),
+      db.query(`
+        SELECT 
+          COUNT(*) as total,
+          SUM(status = 'pending') as pending,
+          SUM(status = 'approved') as approved,
+          SUM(status = 'rejected') as rejected,
+          SUM(status = 'cancelled') as cancelled
+        FROM bookings
+      `)
+    ]);
+
+    const toNum = (val) => Number(val || 0);
 
     res.json({
       success: true,
       data: {
-        news_count: newsRes[0]?.count || 0,
-        events_count: eventsRes[0]?.count || 0,
-        qa_count: qaRes[0]?.count || 0,
-        total_bookings: totalRes[0]?.count || 0,
-        pending_count: pendingRes[0]?.count || 0,
-        approved_count: approvedRes[0]?.count || 0,
-        rejected_count: rejectedRes[0]?.count || 0
+        news_count: toNum(newsRes[0]?.count),
+        events_count: toNum(eventsRes[0]?.count),
+        qa_count: toNum(qaRes[0]?.count),
+
+        total_bookings: toNum(bookingStats[0]?.total),
+        pending_count: toNum(bookingStats[0]?.pending),
+        approved_count: toNum(bookingStats[0]?.approved),
+        rejected_count: toNum(bookingStats[0]?.rejected),
+        cancelled_count: toNum(bookingStats[0]?.cancelled)
       }
     });
+
   } catch (error) {
     console.error('Get stats error:', error);
     res.status(500).json({ success: false, message: 'Server Error' });
