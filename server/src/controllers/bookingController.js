@@ -416,3 +416,36 @@ exports.deleteBookingType = async (req, res) => {
     res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการลบประเภทพิธี' });
   }
 };
+
+// ✅ แก้ไขใหม่: อัปเดตรายละเอียดและเวลาของประเภทพิธี (Admin)
+exports.updateBookingType = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, duration_minutes, is_active } = req.body;
+
+    // ตรวจสอบว่ามี ID นี้อยู่จริงไหม
+    const [exists] = await db.query('SELECT id FROM booking_types WHERE id = ?', [id]);
+    if (exists.length === 0) {
+      return res.status(404).json({ success: false, message: 'ไม่พบประเภทพิธีที่ต้องการแก้ไข' });
+    }
+
+    // อัปเดตข้อมูล (รองรับการแก้ไขทั้ง ชื่อ, รายละเอียด, และเวลา)
+    await db.query(
+      `UPDATE booking_types 
+       SET name = ?, description = ?, duration_minutes = ?, is_active = ? 
+       WHERE id = ?`,
+      [name, description || null, duration_minutes || 60, is_active ?? true, id]
+    );
+
+    res.json({ 
+      success: true, 
+      message: 'อัปเดตข้อมูลพิธีเรียบร้อยแล้ว' 
+    });
+  } catch (error) {
+    console.error('Update booking type error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'เกิดข้อผิดพลาดในการอัปเดตข้อมูลพิธี' 
+    });
+  }
+};

@@ -43,7 +43,7 @@ const Home = () => {
         <section className="relative h-[600px] md:h-[700px] flex items-center justify-center text-white overflow-hidden">
           <div 
             className="absolute inset-0 bg-cover bg-center bg-no-repeat bg-fixed z-0 scale-105"
-            style={{ backgroundImage: "url('/hero.png')" }}
+            style={{ backgroundImage: "url('/about.jpg')" }}
           ></div>
           <div className="absolute inset-0 bg-linear-to-b from-gray-900/40 via-gray-900/20 to-gray-900/40 z-1"></div>
 

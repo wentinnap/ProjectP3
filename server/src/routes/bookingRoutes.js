@@ -34,4 +34,7 @@ router.post('/types', authenticate, isAdmin, bookingController.createBookingType
 // ✅ [เพิ่มใหม่] ลบประเภทพิธี (หรือปิดการใช้งาน)
 router.delete('/types/:id', authenticate, isAdmin, bookingController.deleteBookingType);
 
+
+// ตัวอย่างการเพิ่ม Route สำหรับ Admin
+router.put('/types/:id', authMiddleware, adminMiddleware, bookingController.updateBookingType);
 module.exports = router;
