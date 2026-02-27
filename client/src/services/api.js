@@ -125,6 +125,7 @@ export const newsAPI = {
 
 // ---------------- BOOKING ----------------
 // ---------------- BOOKING ----------------
+// ---------------- BOOKING ----------------
 export const bookingAPI = {
   // Public & User
   getTypes: () => api.get("/bookings/types"),
@@ -137,11 +138,11 @@ export const bookingAPI = {
   updateStatus: (id, data) => api.put(`/bookings/admin/${id}/status`, data),
   getStats: () => api.get("/bookings/admin/stats"),
   
-  // ✅ เพิ่มใหม่: ลบรายการจอง (Admin)
   deleteBooking: (id) => api.delete(`/bookings/admin/${id}`),
 
-  // ✅ เพิ่มใหม่: จัดการประเภทพิธี (Admin Booking Types)
+  // ✅ เพิ่ม/แก้ไข: จัดการประเภทพิธี (Booking Types)
   createType: (data) => api.post("/bookings/types", data),
+  updateType: (id, data) => api.put(`/bookings/types/${id}`, data), // เพิ่มบรรทัดนี้เพื่อแก้ไข
   deleteType: (id) => api.delete(`/bookings/types/${id}`),
 };
 
