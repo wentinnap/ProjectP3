@@ -1,9 +1,14 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Menu, X, User, LogOut, Calendar, Newspaper, LayoutDashboard, ChevronDown, Sparkles, Landmark, HeartHandshake, CalendarClock, MessageCircleQuestion } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { Image
+import { 
+  Menu, X, User, LogOut, Calendar, Newspaper, 
+  LayoutDashboard, ChevronDown, Sparkles, Landmark, 
+  HeartHandshake, CalendarClock, MessageCircleQuestion,
+  Image as ImageIcon // เปลี่ยนชื่อเพื่อไม่ให้ซ้ำกับตัวแปรอื่น
 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+// ✅ นำเข้า Notification จากโฟลเดอร์ common (ตรวจสอบชื่อโฟลเดอร์ให้เป็น n)
+import NotificationDropdown from '../commom/NotificationDropdown';
 
 // เมนู Navbar
 const NAV_LINKS = [
@@ -15,7 +20,7 @@ const NAV_LINKS = [
     children: [
       { to: '/news', label: 'ข่าวสารประชาสัมพันธ์', icon: Newspaper },
       { to: '/events', label: 'ปฏิทินกิจกรรม', icon: CalendarClock },
-      { to: '/gallery', label: 'แกลเลอรี่รูปภาพ', icon: Image },
+      { to: '/gallery', label: 'แกลเลอรี่รูปภาพ', icon: ImageIcon },
     ]
   },
   { to: '/booking', label: 'จองพิธี', icon: Calendar },
@@ -53,7 +58,6 @@ function NavLink({ to, label, icon: Icon, onClick }) {
   );
 }
 
-// Component สำหรับ Dropdown (Desktop)
 function NavDropdown({ item }) {
   const location = useLocation();
   const isActive = item.children.some(child => location.pathname === child.to);
@@ -80,7 +84,6 @@ function NavDropdown({ item }) {
         <ChevronDown size={14} className="opacity-50 group-hover:rotate-180 transition-transform duration-300" />
       </button>
 
-      {/* Dropdown Menu */}
       <div className="absolute top-full left-0 pt-2 w-60 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 z-50">
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-2 overflow-hidden">
           {item.children.map((child) => (
@@ -220,22 +223,15 @@ function Navbar() {
             
             {/* Logo Section */}
             <Link to="/" className="flex items-center gap-3 group shrink-0 relative z-50 pr-4">
-              
-              {/* Logo Image Placeholder */}
               <div className="relative w-10 h-10 md:w-11 md:h-11 bg-white rounded-xl flex items-center justify-center shadow-md overflow-hidden border border-orange-100 group-hover:scale-105 transition-transform duration-300">
-                  {/* ใส่รูปโลโก้จริงที่นี่ เช่น <img src="/logo.png" className="w-full h-full object-contain" /> */}
                   <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
-                  
               </div>
-
-              {/* Text Logo */}
               <div className="flex flex-col justify-center">
                 <span className={`text-xl md:text-2xl font-bold tracking-tight transition-colors duration-300 whitespace-nowrap leading-none ${
                     scrolled ? 'text-gray-800' : 'text-gray-900 drop-shadow-sm md:text-white md:drop-shadow-md lg:text-gray-900 lg:drop-shadow-none'
                 }`}>
                   วัดกำแพง
                 </span>
-                {/* ลบ Smart Temple ออกแล้ว */}
               </div>
             </Link>
 
@@ -250,8 +246,12 @@ function Navbar() {
               ))}
             </div>
 
-            {/* Auth Section */}
+            {/* Auth & Notification Section */}
             <div className="flex items-center gap-2 md:gap-3 shrink-0 pl-2">
+              
+              {/* ✅ เพิ่ม NotificationDropdown เฉพาะตอนที่ login แล้ว */}
+              {user && <NotificationDropdown />}
+
               <div className="hidden lg:flex items-center gap-3">
                 {user ? (
                   <>
@@ -310,7 +310,17 @@ function Navbar() {
             <div className="absolute inset-0 bg-black/20 backdrop-blur-sm" onClick={closeMobileMenu}></div>
             <div className="absolute top-20 left-4 right-4 bg-white rounded-3xl shadow-2xl overflow-hidden animate-in slide-in-from-top-10 duration-300 border border-white/50 max-h-[85vh] flex flex-col">
                 <div className="p-2 overflow-y-auto">
-                    <div className="bg-gray-50/50 rounded-2xl p-2 space-y-1">
+                    {/* ส่วนของการแจ้งเตือนใน Mobile (ถ้าต้องการ) */}
+                    {user && (
+                      <div className="px-4 py-2 border-b border-gray-50 lg:hidden">
+                         <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-gray-400">การแจ้งเตือน</span>
+                            <NotificationDropdown />
+                         </div>
+                      </div>
+                    )}
+
+                    <div className="bg-gray-50/50 rounded-2xl p-2 space-y-1 mt-2">
                         {NAV_LINKS.map((link) => {
                             if (link.children) {
                                 return (

@@ -192,44 +192,100 @@ export const albumAPI = {
 
 
 // ---------------- NOTIFICATION ----------------
+// ---------------- NOTIFICATION ----------------
 export const notificationAPI = {
-  // ดึงรายการสรุปเหตุการณ์ที่แอดมินต้องจัดการ
-  getSummary: async () => {
+  /**
+   * ดึงรายการแจ้งเตือนแบบรวม (Summary) 
+   * @param {Object} params - { userId: number }
+   */
+  getSummary: async (params) => {
     try {
-      // วิธีที่ง่ายที่สุด: ยิง API สองตัวพร้อมกัน (Q&A และ Booking Stats)
-      const [qnaRes, bookingRes] = await Promise.all([
-        qnaAPI.getAllAdmin(),
-        bookingAPI.getStats()
-      ]);
-
-      const qnaPending = qnaRes.data?.data?.filter(item => !item.answer) || [];
+      const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
       
-      // รวมข้อมูลเป็น Format สำหรับ Notification Center
-      return {
-        unreadCount: qnaPending.length + (bookingRes.data?.data?.pending_count || 0),
-        items: [
+      if (!token) return { unreadCount: 0, items: [] };
+
+      // 1. กรณีเป็น ADMIN: แจ้งเตือนเรื่องการจองใหม่ และ Q&A ที่ยังไม่ได้ตอบ
+      if (user.role === 'admin') {
+        const [qnaRes, bookingRes] = await Promise.all([
+          qnaAPI.getAllAdmin(),
+          bookingAPI.getStats()
+        ]);
+
+        const qnaPending = qnaRes.data?.data?.filter(item => !item.answer) || [];
+        const bookingPending = bookingRes.data?.data?.pending_count || 0;
+
+        const items = [
           ...qnaPending.map(item => ({
             id: `qna-${item.id}`,
             type: 'qna',
-            title: 'มีคำถามใหม่',
-            desc: item.question,
-            time: item.created_at,
-            link: '/admin/qna'
+            title: 'คำถามใหม่ที่ยังไม่ได้ตอบ',
+            message: item.question,
+            time_ago: item.created_at,
+            link: '/admin/qna',
+            is_new: true
           })),
-          // ถ้ามี Pending Booking ก็ส่ง notification หลอกๆ ไปด้วย
-          ...(bookingRes.data?.data?.pending_count > 0 ? [{
-            id: 'booking-pending',
-            type: 'booking',
-            title: 'มีรายการจองคิว',
-            desc: `มี ${bookingRes.data.data.pending_count} รายการที่รอคุณตรวจสอบ`,
-            time: new Date().toISOString(),
-            link: '/admin/bookings'
+          ...(bookingPending > 0 ? [{
+            id: 'booking-admin-pending',
+            type: 'new_booking',
+            title: 'รายการจองรอการตรวจสอบ',
+            message: `มีรายการจอง ${bookingPending} รายการ รอคุณอนุมัติ`,
+            time_ago: 'Update: Just now',
+            link: '/admin/bookings',
+            is_new: true
           }] : [])
-        ]
-      };
+        ];
+
+        return { data: { unreadCount: items.length, items } };
+      } 
+      
+      // 2. กรณีเป็น USER: แจ้งเตือนข่าวสารใหม่ (เฉพาะคน) และสถานะการจองของตนเอง
+      else {
+        const [bookingRes, newsRes] = await Promise.all([
+          bookingAPI.getUserBookings(), // ดึงการจองของฉัน
+          newsAPI.getAll({ limit: 5 })  // ดึงข่าวล่าสุด
+        ]);
+
+        const myBookings = bookingRes.data?.data || [];
+        const latestNews = newsRes.data?.data || [];
+
+        // กรองข่าว (สมมติว่า backend มีฟิลด์ is_global หรือ target_user)
+        // หรือดึงข่าวล่าสุดที่ผู้ใช้ยังไม่เคยเห็น
+        const newsItems = latestNews.map(news => ({
+          id: `news-${news.id}`,
+          type: 'news',
+          title: 'ข่าวสารประชาสัมพันธ์ใหม่',
+          message: news.title,
+          time_ago: news.created_at,
+          link: `/news/${news.id}`,
+          is_new: true // ในโปรเจกต์จริงควรเช็กจาก database ว่าอ่านหรือยัง
+        }));
+
+        // แจ้งสถานะการจอง (เฉพาะรายการที่เพิ่งอัปเดต เช่น อนุมัติแล้ว/ยกเลิกแล้ว)
+        const bookingStatusItems = myBookings
+          .filter(b => b.status !== 'pending') // แจ้งเฉพาะที่สถานะเปลี่ยน
+          .map(b => ({
+            id: `status-${b.id}`,
+            type: 'booking_status',
+            title: 'อัปเดตสถานะการจอง',
+            message: `รายการจอง "${b.ceremony_name}" ของคุณคือ: ${b.status}`,
+            time_ago: b.updated_at,
+            link: '/profile',
+            is_new: true
+          }));
+
+        const combinedItems = [...newsItems, ...bookingStatusItems];
+
+        return {
+          data: {
+            unreadCount: combinedItems.length,
+            items: combinedItems.sort((a, b) => new Date(b.time_ago) - new Date(a.time_ago))
+          }
+        };
+      }
     } catch (error) {
       console.error("Fetch Summary Error:", error);
-      throw error;
+      return { data: { unreadCount: 0, items: [] } };
     }
   }
 };
