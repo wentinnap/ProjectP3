@@ -7,15 +7,17 @@ exports.getNotificationSummary = async (req, res) => {
         let notifications = [];
 
         if (userRole === 'admin') {
-            // ดึงข้อมูลพร้อมกัน (Parallel) เพื่อความเร็ว
+            // สำหรับ Admin: ดึงข้อมูลการจองที่รออนุมัติ และคำถามที่ยังไม่ได้ตอบ
             const [bookingRes, qnaRes] = await Promise.all([
                 db.query('SELECT id, full_name, created_at FROM bookings WHERE status = "pending" ORDER BY created_at DESC LIMIT 10'),
-                db.query('SELECT id, question, created_at FROM qna WHERE admin_response IS NULL OR admin_response = "" ORDER BY created_at DESC LIMIT 10')
+                // ✅ แก้ไขเป็น answer ตามโครงสร้างตาราง qna ของคุณ
+                db.query('SELECT id, question, created_at FROM qna WHERE answer IS NULL OR answer = "" ORDER BY created_at DESC LIMIT 10')
             ]);
 
             const pendingBookings = bookingRes[0] || [];
             const pendingQna = qnaRes[0] || [];
 
+            // จัดใส่ Array การแจ้งเตือนของ Admin
             pendingBookings.forEach(b => notifications.push({
                 id: `admin-bk-${b.id}`,
                 type: 'new_booking',
@@ -28,14 +30,14 @@ exports.getNotificationSummary = async (req, res) => {
             pendingQna.forEach(q => notifications.push({
                 id: `admin-qna-${q.id}`,
                 type: 'qna',
-                title: 'มีคำถามใหม่',
+                title: 'มีคำถามใหม่ที่ยังไม่ได้ตอบ',
                 message: q.question?.substring(0, 50) + (q.question?.length > 50 ? '...' : ''),
                 time_ago: q.created_at,
                 link: '/admin/qna'
             }));
 
         } else {
-            // สำหรับ User: ข่าว + สถานะการจอง
+            // สำหรับ User: ดึงข่าวสาร และสถานะการจองของตัวเอง
             const [newsRes, bookingRes] = await Promise.all([
                 db.query('SELECT id, title, created_at FROM news WHERE is_visible = 1 ORDER BY created_at DESC LIMIT 5'),
                 db.query('SELECT id, status, booking_date, updated_at FROM bookings WHERE user_id = ? ORDER BY updated_at DESC LIMIT 10', [userId])
@@ -47,7 +49,7 @@ exports.getNotificationSummary = async (req, res) => {
             news.forEach(n => notifications.push({
                 id: `user-news-${n.id}`,
                 type: 'news',
-                title: 'ข่าวสารใหม่',
+                title: 'ข่าวสารใหม่จากวัด',
                 message: n.title,
                 time_ago: n.created_at,
                 link: `/news/${n.id}`
@@ -64,23 +66,30 @@ exports.getNotificationSummary = async (req, res) => {
                     id: `user-bk-${b.id}`,
                     type: 'booking_status',
                     title: 'อัปเดตสถานะการจอง',
-                    message: `รายการวันที่ ${new Date(b.booking_date).toLocaleDateString('th-TH')} ${statusMap[b.status] || b.status}`,
+                    message: `รายการวันที่ ${new Date(b.booking_date).toLocaleDateString('th-TH')} สถานะ: ${statusMap[b.status] || b.status}`,
                     time_ago: b.updated_at,
                     link: '/profile'
                 });
             });
         }
 
-        // เรียงลำดับ (ล่าสุดไปเก่าสุด) และป้องกันค่า null
+        // เรียงลำดับจากล่าสุดไปเก่าสุด (Latest First)
         notifications.sort((a, b) => new Date(b.time_ago || 0) - new Date(a.time_ago || 0));
 
+        // ส่งข้อมูลกลับไปที่ Frontend
         res.json({
             unreadCount: notifications.length,
             items: notifications
         });
 
     } catch (error) {
-        console.error("Noti Error:", error);
-        res.status(500).json({ message: "Internal Server Error", items: [] });
+        // พ่น Error ออกมาดูที่ Render Logs หากเกิดปัญหา
+        console.error("Noti Error Details:", error);
+        res.status(500).json({ 
+            success: false, 
+            message: "Internal Server Error", 
+            error: error.message,
+            items: [] 
+        });
     }
 };
