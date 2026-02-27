@@ -28,7 +28,7 @@ const Footer = () => {
               </div>
               <div className="flex flex-col">
                 <span className="text-2xl font-bold text-white tracking-tight">วัดกำแพง</span>
-                <span className="text-[10px] font-medium tracking-[0.2em] text-orange-400 uppercase"></span>
+                <span className="text-[10px] font-medium tracking-[0.2em] text-orange-400 uppercase">SMART TEMPLE SYSTEM</span>
               </div>
             </Link>
             
@@ -36,20 +36,20 @@ const Footer = () => {
               ศูนย์รวมจิตใจพุทธศาสนิกชน ให้บริการจองพิธีกรรมทางศาสนาออนไลน์ สะดวก รวดเร็ว โปร่งใส พร้อมสืบสานวัฒนธรรมไทยให้ยั่งยืน
             </p>
 
+            {/* Social Icons - Match image style */}
             <div className="flex items-center gap-3 pt-2">
               {[
-                { icon: Facebook, href: "#", color: "hover:bg-[#1877F2] hover:border-[#1877F2]" },
-                { icon: Twitter, href: "#", color: "hover:bg-[#1DA1F2] hover:border-[#1DA1F2]" },
-                { icon: Instagram, href: "#", color: "hover:bg-[#E4405F] hover:border-[#E4405F]" },
-                { icon: Youtube, href: "#", color: "hover:bg-[#FF0000] hover:border-[#FF0000]" }
+                { icon: Facebook, color: "hover:bg-[#1877F2] hover:border-[#1877F2]" },
+                { icon: Twitter, color: "hover:bg-[#1DA1F2] hover:border-[#1DA1F2]" },
+                { icon: Instagram, color: "hover:bg-[#E4405F] hover:border-[#E4405F]" },
+                { icon: Youtube, color: "hover:bg-[#FF0000] hover:border-[#FF0000]" }
               ].map((social, idx) => (
-                <a 
+                <button 
                   key={idx} 
-                  href={social.href}
                   className={`w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-300 text-gray-400 hover:text-white hover:-translate-y-1 ${social.color}`}
                 >
                   <social.icon size={18} />
-                </a>
+                </button>
               ))}
             </div>
           </div>
@@ -93,7 +93,7 @@ const Footer = () => {
                   <MapPin size={20} className="text-orange-500" />
                 </div>
                 <span className="text-gray-400 leading-relaxed">
-                  	เลขที่ 19 หมู่ที่ 8 ซอยพิบูลสงคราม 22  <br/>อำเภอนนทบุรี จังหวัดนนทบุรี 11000
+                    เลขที่ 19 หมู่ที่ 8 ซอยพิบูลสงคราม 22 <br/>อำเภอนนทบุรี จังหวัดนนทบุรี 11000
                 </span>
               </li>
               <li className="flex items-center gap-3">
@@ -102,7 +102,7 @@ const Footer = () => {
                 </div>
                 <div>
                    <span className="block text-gray-400 text-xs">โทรศัพท์</span>
-                   <span className="text-white font-medium hover:text-green-400 transition-colors cursor-pointer">053-123-456</span>
+                   <span className="text-white font-medium hover:text-green-400 transition-colors cursor-pointer tracking-wider">053-123-456</span>
                 </div>
               </li>
               <li className="flex items-center gap-3">
@@ -117,40 +117,30 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Column 4: Newsletter / Hours (3 cols) */}
+          {/* Column 4: Hours (3 cols) - ส่วนนี้ปรับปรุงให้ดูดีขึ้นแทนส่วน Newsletter */}
           <div className="lg:col-span-3 space-y-6">
             <h3 className="text-white font-bold text-lg relative inline-block">
               เวลาทำการ
               <span className="absolute -bottom-2 left-0 w-12 h-1 bg-orange-500 rounded-full"></span>
             </h3>
             
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm">
-                <div className="flex justify-between items-center border-b border-white/10 pb-3 mb-3">
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm space-y-4">
+                <div className="flex justify-between items-center border-b border-white/10 pb-3">
                     <span className="text-gray-400">ทุกวัน</span>
                     <span className="text-orange-400 font-bold">06:00 - 18:00</span>
                 </div>
                 <div className="flex justify-between items-center">
                     <span className="text-gray-400">วันพระ</span>
-                    <span className="text-amber-300 font-bold flex items-center gap-1">
-                        <Sparkles size={14} />
+                    <span className="text-amber-300 font-bold flex items-center gap-1.5">
+                        <Sparkles size={14} className="animate-pulse" />
                         เปิดตลอด 24 ชม.
                     </span>
                 </div>
             </div>
 
-            <div className="pt-2">
-                <p className="text-sm text-gray-500 mb-2">รับข่าวสารทางอีเมล</p>
-                <div className="relative">
-                    <input 
-                        type="email" 
-                        placeholder="อีเมลของคุณ..." 
-                        className="w-full bg-gray-800 border border-gray-700 rounded-xl px-4 py-3 text-gray-300 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all pr-12"
-                    />
-                    <button className="absolute right-1 top-1 bottom-1 bg-linear-to-r from-orange-500 to-amber-500 text-white p-2 rounded-lg hover:brightness-110 transition-all">
-                        <ArrowRight size={18} />
-                    </button>
-                </div>
-            </div>
+            <p className="text-[11px] text-gray-500 leading-relaxed italic">
+              * เวลาทำการอาจมีการเปลี่ยนแปลงตามความเหมาะสมของพิธีกรรมและงานเทศกาลสำคัญ
+            </p>
           </div>
         </div>
 
