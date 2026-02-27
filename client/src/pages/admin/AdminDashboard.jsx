@@ -30,12 +30,12 @@ const AdminDashboard = () => {
   const approved = Number(stats?.approved_count || 0);
   const getPercent = (val) => (total > 0 ? Math.round((val / total) * 100) : 0);
 
-  const barData = [
-    { name: 'จอง', value: total },
-    { name: 'ข่าว', value: Number(stats?.news_count || 0) },
-    { name: 'กิจกรรม', value: Number(stats?.events_count || 0) },
-    { name: 'Q&A', value: Number(stats?.qa_count || 0) },
-  ];
+ const barData = [
+  { name: 'จอง', value: total },
+  { name: 'ข่าว', value: Number(stats?.news_count || 0) }, // ต้องเป็น news_count เหมือน Backend
+  { name: 'กิจกรรม', value: Number(stats?.events_count || 0) },
+  { name: 'Q&A', value: Number(stats?.qa_count || 0) },
+];
 
   return (
     <div className="p-6 space-y-8 animate-in fade-in duration-500">

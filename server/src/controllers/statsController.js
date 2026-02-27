@@ -18,7 +18,7 @@ exports.getAdminStats = async (req, res) => {
     const [[{ approved_count }]] = await db.query('SELECT COUNT(*) as approved_count FROM bookings WHERE status = "approved"');
     const [[{ rejected_count }]] = await db.query('SELECT COUNT(*) as rejected_count FROM bookings WHERE status = "rejected"');
 
-    // ส่งข้อมูลทั้งหมดกลับไปให้ Frontend
+    // ✅ ส่งค่ากลับไปให้ครบและชื่อต้องตรงกับที่ Frontend ใช้
     res.json({
       success: true,
       data: {
