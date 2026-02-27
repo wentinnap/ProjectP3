@@ -10,19 +10,21 @@ const NotificationDropdown = () => {
   const [data, setData] = useState({ unreadCount: 0, items: [] });
   const [loading, setLoading] = useState(false);
 
-  // ฟังก์ชันดึงข้อมูลที่รองรับทั้ง Admin และ User
+  // ฟังก์ชันดึงข้อมูลแจ้งเตือน
   const fetchNotifications = useCallback(async () => {
     if (!user?.id) return;
     setLoading(true);
     try {
       const res = await notificationAPI.getSummary();
-      // เช็คให้ชัวร์ว่า items เป็น array เสมอเพื่อไม่ให้ .map พัง
+      // แก้ไขปัญหา .map error โดยการเช็ค Array.isArray เสมอ
+      const items = Array.isArray(res?.items) ? res.items : [];
       setData({
         unreadCount: res?.unreadCount || 0,
-        items: Array.isArray(res?.items) ? res.items : []
+        items: items
       });
     } catch (err) {
-      console.error("Notification UI Error:", err);
+      console.error("UI Fetch Error:", err);
+      setData({ unreadCount: 0, items: [] });
     } finally {
       setLoading(false);
     }
@@ -30,7 +32,7 @@ const NotificationDropdown = () => {
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000); // อัปเดตทุก 1 นาที
+    const interval = setInterval(fetchNotifications, 60000);
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 
@@ -46,7 +48,7 @@ const NotificationDropdown = () => {
 
   return (
     <div className="relative font-sans">
-      {/*ปุ่มกระดิ่ง*/}
+      {/* ปุ่มกระดิ่งแจ้งเตือน */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2.5 bg-white border border-gray-100 text-gray-500 hover:text-orange-500 rounded-2xl transition-all shadow-sm active:scale-95"
@@ -65,7 +67,7 @@ const NotificationDropdown = () => {
           <div className="fixed inset-0 z-40" onClick={() => setIsOpen(false)}></div>
           <div className="absolute right-0 mt-4 w-80 md:w-96 bg-white rounded-4xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] border border-gray-50 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
             
-            {/* Header */}
+            {/* ส่วนหัวแจ้งเตือน */}
             <div className="p-6 pb-4 flex justify-between items-center border-b border-gray-50">
               <div>
                 <h3 className="font-black text-gray-800 text-lg tracking-tight">การแจ้งเตือน</h3>
@@ -81,8 +83,8 @@ const NotificationDropdown = () => {
               </button>
             </div>
 
-            {/* List รายการ (เอาปุ่มดูทั้งหมดออกแล้ว) */}
-            <div className="max-h-[420px] overflow-y-auto p-2 scrollbar-hide mb-2">
+            {/* ส่วนรายการแจ้งเตือน */}
+            <div className="max-h-[400px] overflow-y-auto p-2 scrollbar-hide mb-4">
               {data.items.length > 0 ? (
                 data.items.map((item) => {
                   const style = getStyle(item.type);
@@ -98,12 +100,12 @@ const NotificationDropdown = () => {
                       </div>
                       <div className="flex-1 min-w-0 pt-0.5">
                         <div className="flex justify-between items-start">
-                           <p className="text-[14px] font-bold text-gray-800 mb-0.5 group-hover:text-orange-600 transition-colors">{item.title}</p>
-                           <span className="w-2 h-2 bg-red-500 rounded-full mt-1.5 shrink-0"></span>
+                          <p className="text-[14px] font-bold text-gray-800 mb-0.5 group-hover:text-orange-600 transition-colors">{item.title}</p>
+                          <span className="w-2 h-2 bg-red-500 rounded-full mt-1.5 shrink-0"></span>
                         </div>
                         <p className="text-xs text-gray-500 line-clamp-2 leading-relaxed">{item.message}</p>
-                        <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase tracking-tighter">
-                          {item.time_ago ? new Date(item.time_ago).toLocaleString('th-TH') : "เมื่อสักครู่"}
+                        <p className="text-[10px] text-gray-400 mt-2 font-bold uppercase">
+                          {item.time_ago ? new Date(item.time_ago).toLocaleDateString('th-TH') : "เมื่อสักครู่"}
                         </p>
                       </div>
                     </Link>
@@ -111,10 +113,10 @@ const NotificationDropdown = () => {
                 })
               ) : (
                 <div className="py-20 text-center">
-                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-200">
-                    <Bell size={28} />
+                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Bell size={28} className="text-gray-200" />
                   </div>
-                  <p className="text-gray-400 font-bold text-sm">ยังไม่มีการแจ้งเตือนใหม่</p>
+                  <p className="text-gray-400 font-bold text-sm">ยังไม่มีการแจ้งเตือนในขณะนี้</p>
                 </div>
               )}
             </div>
