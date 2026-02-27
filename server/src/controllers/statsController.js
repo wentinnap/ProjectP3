@@ -1,9 +1,7 @@
-// controllers/statsController.js
 const db = require('../config/database');
 
 exports.getAdminStats = async (req, res) => {
   try {
-    // ยิงพร้อมกันเพื่อลดเวลาโหลด
     const [
       [newsRes],
       [eventsRes],
@@ -19,7 +17,7 @@ exports.getAdminStats = async (req, res) => {
           SUM(status = 'pending') as pending,
           SUM(status = 'approved') as approved,
           SUM(status = 'rejected') as rejected,
-          SUM(status = 'cancelled') as cancelled
+          SUM(status = 'canceled') as canceled
         FROM bookings
       `)
     ]);
@@ -37,7 +35,7 @@ exports.getAdminStats = async (req, res) => {
         pending_count: toNum(bookingStats[0]?.pending),
         approved_count: toNum(bookingStats[0]?.approved),
         rejected_count: toNum(bookingStats[0]?.rejected),
-        cancelled_count: toNum(bookingStats[0]?.cancelled)
+        canceled_count: toNum(bookingStats[0]?.canceled)
       }
     });
 
