@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const bookingController = require('../controllers/bookingController');
+const statsController = require('../controllers/statsController');
 const { authenticate, isAdmin } = require('../middleware/auth');
 
 
@@ -38,5 +39,6 @@ router.delete('/types/:id', authenticate, isAdmin, bookingController.deleteBooki
 
 // ตัวอย่างการเพิ่ม Route สำหรับ Admin
 router.put('/types/:id', authenticate, isAdmin, bookingController.updateBookingType);
+router.get('/admin/stats', authenticate, isAdmin, statsController.getAdminStats);
 
 module.exports = router;
