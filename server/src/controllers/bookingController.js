@@ -377,3 +377,42 @@ exports.deleteBooking = async (req, res) => {
     });
   }
 };
+
+// ✅ เพิ่มใหม่: สร้างประเภทพิธี (Admin)
+exports.createBookingType = async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name) {
+      return res.status(400).json({ success: false, message: 'กรุณาระบุชื่อประเภทพิธี' });
+    }
+
+    await db.query('INSERT INTO booking_types (name, is_active) VALUES (?, TRUE)', [name]);
+
+    res.status(201).json({ success: true, message: 'เพิ่มประเภทพิธีเรียบร้อยแล้ว' });
+  } catch (error) {
+    console.error('Create booking type error:', error);
+    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการสร้างประเภทพิธี' });
+  }
+};
+
+// ✅ เพิ่มใหม่: ลบประเภทพิธี (Admin)
+exports.deleteBookingType = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // ตรวจสอบว่ามีการใช้งานประเภทนี้อยู่ในตาราง bookings หรือไม่ก่อนลบ
+    const [usage] = await db.query('SELECT id FROM bookings WHERE booking_type_id = ? LIMIT 1', [id]);
+    
+    if (usage.length > 0) {
+      // หากมีการใช้งานแล้ว แนะนำให้ใช้วิธีปิดการใช้งาน (is_active = FALSE) แทนการลบจริง
+      await db.query('UPDATE booking_types SET is_active = FALSE WHERE id = ?', [id]);
+      return res.json({ success: true, message: 'ปิดการใช้งานประเภทพิธีเรียบร้อย (เนื่องจากมีการใช้งานในประวัติแล้ว)' });
+    }
+
+    await db.query('DELETE FROM booking_types WHERE id = ?', [id]);
+    res.json({ success: true, message: 'ลบประเภทพิธีเรียบร้อยแล้ว' });
+  } catch (error) {
+    console.error('Delete booking type error:', error);
+    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการลบประเภทพิธี' });
+  }
+};
