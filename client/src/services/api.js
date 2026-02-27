@@ -192,84 +192,92 @@ export const albumAPI = {
 
 
 // ---------------- NOTIFICATION ----------------
-// ---------------- NOTIFICATION ----------------
-export const notificationAPI = {
-  // สำหรับ ADMIN: ดูคำถามที่ยังไม่ตอบ และ ยอดการจองที่รออนุมัติ
-  getAdminSummary: async () => {
-    try {
-      const [qnaRes, bookingRes] = await Promise.all([
-        qnaAPI.getAllAdmin().catch(() => ({ data: [] })),
-        bookingAPI.getStats().catch(() => ({ data: {} }))
-      ]);
+getUserSummary: async () => {
+  try {
+    const [newsRes, bookingRes] = await Promise.all([
+      newsAPI.getAll({ limit: 5 }).catch(() => ({ data: [] })),
+      bookingAPI.getUserBookings().catch(() => ({ data: [] }))
+    ]);
 
-      const qnaData = qnaRes?.data?.data || qnaRes?.data || [];
-      const pendingCount = bookingRes?.data?.data?.pending_count || 0;
+    // ---------------------------
+    // Normalize Data Safely
+    // ---------------------------
 
-      const items = [
-        ...(Array.isArray(qnaData) ? qnaData.filter(i => !i.answer).map(i => ({
-          id: `admin-qna-${i.id}`,
-          type: 'qna',
-          title: 'คำถามใหม่จากสมาชิก',
-          message: i.question,
-          time_ago: i.created_at,
-          link: '/admin/qna'
-        })) : []),
-        ...(pendingCount > 0 ? [{
-          id: 'admin-booking-stats',
-          type: 'new_booking',
-          title: 'รายการจองรอการตรวจสอบ',
-          message: `มีทั้งหมด ${pendingCount} รายการใหม่ที่รอคุณอนุมัติ`,
-          time_ago: 'Now',
-          link: '/admin/bookings'
-        }] : [])
-      ];
-      return { unreadCount: items.length, items };
-    } catch (error) {
-      return { unreadCount: 0, items: [] };
-    }
-  },
+    const rawNews =
+      newsRes?.data?.data ||
+      newsRes?.data ||
+      [];
 
-  // สำหรับ USER: ดูข่าวสารล่าสุด และ สถานะการจองของตัวเองที่เปลี่ยนไป
-  getUserSummary: async () => {
-    try {
-      const [newsRes, bookingRes] = await Promise.all([
-        newsAPI.getAll({ limit: 5 }).catch(() => ({ data: [] })),
-        bookingAPI.getUserBookings().catch(() => ({ data: [] }))
-      ]);
+    const rawBookings =
+      bookingRes?.data?.data ||
+      bookingRes?.data ||
+      [];
 
-      const rawNews = newsRes?.data?.data || newsRes?.data || [];
-      const rawBookings = bookingRes?.data?.data || bookingRes?.data || [];
+    // ---------------------------
+    // 1️⃣ NEWS
+    // ---------------------------
 
-      // 1. ข่าวสาร (ดึงจากตาราง news)
-      const newsItems = Array.isArray(rawNews) ? rawNews.map(n => ({
-        id: `user-news-${n.id}`,
-        type: 'news',
-        title: 'ประกาศจากทางวัด',
-        message: n.title,
-        time_ago: n.created_at,
-        link: `/news/${n.id}`
-      })) : [];
+    const newsItems = Array.isArray(rawNews)
+      ? rawNews.map((n) => ({
+          id: `user-news-${n.id}`,
+          type: "news",
+          title: "ประกาศจากทางวัด",
+          message: n.title || "มีข่าวสารใหม่",
+          time_ago: n.created_at || n.createdAt || null,
+          link: `/news/${n.id}`,
+        }))
+      : [];
 
-      // 2. อัปเดตการจอง (แจ้งเมื่อ status เป็น approved/rejected)
-      const bookingItems = Array.isArray(rawBookings) ? rawBookings
-        .filter(b => b.status === 'approved' || b.status === 'rejected')
-        .map(b => ({
-          id: `user-bk-${b.id}`,
-          type: 'booking_status',
-          title: 'อัปเดตสถานะการจอง',
-          message: `รายการของคุณได้รับการ ${b.status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธ'}`,
-          time_ago: b.updated_at,
-          link: '/profile'
-        })) : [];
+    // ---------------------------
+    // 2️⃣ BOOKING STATUS UPDATE
+    // ---------------------------
 
-      const combined = [...newsItems, ...bookingItems].sort((a, b) => 
-        new Date(b.time_ago) - new Date(a.time_ago)
-      );
+    const bookingItems = Array.isArray(rawBookings)
+      ? rawBookings
+          .map((b) => {
+            const status = (b.status || "").toLowerCase();
 
-      return { unreadCount: combined.length, items: combined };
-    } catch (error) {
-      return { unreadCount: 0, items: [] };
-    }
+            if (status === "pending") return null;
+
+            let statusText = "มีการอัปเดตสถานะ";
+            if (status === "approved") statusText = "อนุมัติแล้ว";
+            if (status === "rejected") statusText = "ปฏิเสธแล้ว";
+            if (status === "cancelled") statusText = "ถูกยกเลิก";
+
+            return {
+              id: `user-bk-${b.id}`,
+              type: "booking_status",
+              title: "อัปเดตสถานะการจอง",
+              message: `รายการของคุณได้รับการ ${statusText}`,
+              time_ago:
+                b.updated_at ||
+                b.updatedAt ||
+                b.created_at ||
+                b.createdAt ||
+                null,
+              link: "/profile",
+            };
+          })
+          .filter(Boolean)
+      : [];
+
+    // ---------------------------
+    // 3️⃣ SAFE SORT
+    // ---------------------------
+
+    const safeDate = (d) => (d ? new Date(d) : new Date(0));
+
+    const combined = [...newsItems, ...bookingItems].sort(
+      (a, b) => safeDate(b.time_ago) - safeDate(a.time_ago)
+    );
+
+    return {
+      unreadCount: combined.length,
+      items: combined,
+    };
+  } catch (error) {
+    console.error("User Notification Error:", error);
+    return { unreadCount: 0, items: [] };
   }
 };
 export default api;

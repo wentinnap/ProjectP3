@@ -9,7 +9,6 @@ import {
 import { useState, useEffect } from 'react';
 // ✅ นำเข้า Notification จากโฟลเดอร์ common (ตรวจสอบชื่อโฟลเดอร์ให้เป็น n)
 import NotificationDropdown from '../commom/NotificationDropdown';
-
 // เมนู Navbar
 const NAV_LINKS = [
   { to: '/', label: 'หน้าแรก', icon: Sparkles },
