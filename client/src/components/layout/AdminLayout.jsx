@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import NotificationDropdown from '../common/NotificationDropdown'; 
+import NotificationDropdown from '../commom/NotificationDropdown'; 
 import { 
   LayoutDashboard, Calendar, 
   MessageCircleQuestion, LogOut,
