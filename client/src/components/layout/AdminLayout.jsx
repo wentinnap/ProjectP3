@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import NotificationDropdown from '../common/NotificationDropdown'; // ✅ นำเข้ากระดิ่งที่เราสร้างไว้
+import NotificationDropdown from '../commom/NotificationDropdown'; // ✅ นำเข้ากระดิ่งที่เราสร้างไว้
 import { 
   LayoutDashboard, Calendar, 
   MessageCircleQuestion, LogOut,
