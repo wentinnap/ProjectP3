@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bookingController = require('../controllers/bookingController');
 const { authenticate, isAdmin } = require('../middleware/auth');
-const { authMiddleware, adminMiddleware } = require("../middleware/auth")
+
 
 // ==========================================
 // 1. Public Routes (เส้นทางสาธารณะ)
@@ -37,6 +37,6 @@ router.delete('/types/:id', authenticate, isAdmin, bookingController.deleteBooki
 
 
 // ตัวอย่างการเพิ่ม Route สำหรับ Admin
-router.put('/types/:id', authMiddleware, adminMiddleware, bookingController.updateBookingType);
+router.put('/types/:id', authenticate, isAdmin, bookingController.updateBookingType);
 
 module.exports = router;

@@ -379,14 +379,18 @@ exports.deleteBooking = async (req, res) => {
 };
 
 // ✅ เพิ่มใหม่: สร้างประเภทพิธี (Admin)
+// ✅ ปรับปรุง: สร้างประเภทพิธี (Admin) ให้รับข้อมูลครบถ้วน
 exports.createBookingType = async (req, res) => {
   try {
-    const { name } = req.body;
+    const { name, description, duration_minutes } = req.body;
     if (!name) {
       return res.status(400).json({ success: false, message: 'กรุณาระบุชื่อประเภทพิธี' });
     }
 
-    await db.query('INSERT INTO booking_types (name, is_active) VALUES (?, TRUE)', [name]);
+    await db.query(
+      'INSERT INTO booking_types (name, description, duration_minutes, is_active) VALUES (?, ?, ?, TRUE)', 
+      [name, description || null, duration_minutes || 60]
+    );
 
     res.status(201).json({ success: true, message: 'เพิ่มประเภทพิธีเรียบร้อยแล้ว' });
   } catch (error) {
