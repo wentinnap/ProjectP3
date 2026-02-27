@@ -152,12 +152,6 @@ const ResetPassword = () => {
                 )}
               </motion.button>
             </form>
-
-            <div className="mt-8 text-center border-t border-gray-50 pt-8">
-              <p className="text-gray-400 text-sm font-medium">
-                พบปัญหาในการใช้งาน? <button className="text-green-600 font-bold hover:underline">ติดต่อเรา</button>
-              </p>
-            </div>
           </div>
         </div>
       </motion.div>
