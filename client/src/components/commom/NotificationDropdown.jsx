@@ -12,10 +12,7 @@ const NotificationDropdown = () => {
   const dropdownRef = useRef(null);
 
   const fetchNoti = useCallback(async () => {
-    // เช็ก ID ของ user ให้ครอบคลุมทุกชื่อ field
-    const userId = user?.id || user?._id || user?.user_id;
-    if (!userId) return;
-
+    if (!user) return;
     try {
       setLoading(true);
       const res = user.role === "admin" 
@@ -24,6 +21,7 @@ const NotificationDropdown = () => {
       
       setData({
         unreadCount: res?.unreadCount || 0,
+        // มั่นใจว่า items เป็น array เสมอ
         items: Array.isArray(res?.items) ? res.items : [],
       });
     } catch (err) {
@@ -33,7 +31,7 @@ const NotificationDropdown = () => {
     }
   }, [user]);
 
-  // ปิดเมื่อคลิกข้างนอก
+  // ปิดเมื่อคลิกข้างนอก (Click Outside)
   useEffect(() => {
     const handler = (e) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setIsOpen(false);
@@ -88,7 +86,7 @@ const NotificationDropdown = () => {
           </div>
 
           <div className="max-h-[420px] overflow-y-auto p-2">
-            {data.items.length > 0 ? (
+            {data.items && data.items.length > 0 ? (
               data.items.map((item) => (
                 <Link 
                   key={item.id} to={item.link} onClick={() => setIsOpen(false)}

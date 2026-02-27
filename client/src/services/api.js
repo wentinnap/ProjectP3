@@ -193,10 +193,11 @@ export const albumAPI = {
 // ---------------- NOTIFICATION ----------------
 // ---------------- NOTIFICATION API ----------------
 // ---------------- NOTIFICATION ----------------
+// ---------------- NOTIFICATION API ----------------
 export const notificationAPI = {
-  // ฟังก์ชันช่วยสกัด Array เพื่อกันพัง
+  // ฟังก์ชันช่วยสกัดข้อมูลให้เป็น Array (หัวใจสำคัญที่แก้ map error)
   extractArray(res) {
-    // เช็ก res.data.data (สำหรับ pagination) หรือ res.data (สำหรับ array ปกติ)
+    // ดึงจาก res.data.data หรือ res.data หรือถ้าไม่มีเลยให้เป็น []
     const data = res?.data?.data || res?.data || [];
     return Array.isArray(data) ? data : [];
   },
@@ -208,10 +209,11 @@ export const notificationAPI = {
         bookingAPI.getUserBookings().catch(() => ({ data: [] })),
       ]);
 
+      // ใช้ extractArray เพื่อให้แน่ใจว่าเป็น Array แน่นอน
       const rawNews = this.extractArray(newsRes);
       const rawBookings = this.extractArray(bookingRes);
 
-      // 1️⃣ NEWS - ข่าวสาร
+      // 1️⃣ ข่าวสาร
       const newsItems = rawNews.map((n) => ({
         id: `user-news-${n.id || n._id}`,
         type: "news",
@@ -221,7 +223,7 @@ export const notificationAPI = {
         link: `/news/${n.id || n._id}`,
       }));
 
-      // 2️⃣ BOOKING - สถานะการจอง
+      // 2️⃣ สถานะการจอง (โชว์ทุกรายการที่ผู้ใช้จอง)
       const bookingItems = rawBookings.map((b) => {
         const status = (b.status || "").toLowerCase();
         let statusText = "รอตรวจสอบ";
@@ -232,18 +234,22 @@ export const notificationAPI = {
         return {
           id: `user-bk-${b.id || b._id}`,
           type: "booking_status",
-          title: "อัปเดตสถานะการจอง",
+          title: "สถานะการจองพิธี",
           message: `${b.booking_type_name || 'รายการของคุณ'}ได้รับการ ${statusText}`,
           time_ago: b.updated_at || b.created_at || null,
           link: "/profile",
         };
       });
 
+      // รวมและเรียงลำดับตามเวลาล่าสุด
       const combined = [...newsItems, ...bookingItems].sort(
         (a, b) => new Date(b.time_ago || 0) - new Date(a.time_ago || 0)
       );
 
-      return { unreadCount: combined.length, items: combined };
+      return {
+        unreadCount: combined.length,
+        items: combined,
+      };
     } catch (error) {
       console.error("User Notification Error:", error);
       return { unreadCount: 0, items: [] };
