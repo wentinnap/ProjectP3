@@ -194,62 +194,60 @@ export const albumAPI = {
 // ---------------- NOTIFICATION API ----------------
 // ---------------- NOTIFICATION ----------------
 // ---------------- NOTIFICATION API ----------------
+// ---------------- NOTIFICATION API (ฉบับสมบูรณ์) ----------------
+// ---------------- NOTIFICATION API ----------------
 export const notificationAPI = {
-  // ฟังก์ชันช่วยสกัดข้อมูลให้เป็น Array (หัวใจสำคัญที่แก้ map error)
+  // ฟังก์ชันช่วยสกัดข้อมูลให้เป็น Array เสมอ (ป้องกัน Error n.map)
   extractArray(res) {
-    // ดึงจาก res.data.data หรือ res.data หรือถ้าไม่มีเลยให้เป็น []
     const data = res?.data?.data || res?.data || [];
     return Array.isArray(data) ? data : [];
   },
 
   async getUserSummary() {
     try {
+      // ดึงข้อมูล ข่าวสาร และ การจอง พร้อมกัน
       const [newsRes, bookingRes] = await Promise.all([
         newsAPI.getAll({ limit: 5 }).catch(() => ({ data: [] })),
         bookingAPI.getUserBookings().catch(() => ({ data: [] })),
       ]);
 
-      // ใช้ extractArray เพื่อให้แน่ใจว่าเป็น Array แน่นอน
-      const rawNews = this.extractArray(newsRes);
-      const rawBookings = this.extractArray(bookingRes);
+      const rawNews = this.extractArray(newsRes); //
+      const rawBookings = this.extractArray(bookingRes); //
 
-      // 1️⃣ ข่าวสาร
+      // 1️⃣ แปลงข้อมูลข่าวสาร (ใช้ฟิลด์ title, created_at ตามตาราง news)
       const newsItems = rawNews.map((n) => ({
-        id: `user-news-${n.id || n._id}`,
+        id: `user-news-${n.id}`,
         type: "news",
         title: "ประกาศจากทางวัด",
-        message: n.title || "มีข่าวสารใหม่",
-        time_ago: n.created_at || n.createdAt || null,
-        link: `/news/${n.id || n._id}`,
+        message: n.title || "มีข่าวสารอัปเดตใหม่",
+        time_ago: n.created_at,
+        link: `/news/${n.id}`,
       }));
 
-      // 2️⃣ สถานะการจอง (โชว์ทุกรายการที่ผู้ใช้จอง)
+      // 2️⃣ แปลงข้อมูลการจอง (ใช้ฟิลด์ status, full_name ตามตาราง bookings)
       const bookingItems = rawBookings.map((b) => {
         const status = (b.status || "").toLowerCase();
         let statusText = "รอตรวจสอบ";
-        if (status === "approved") statusText = "อนุมัติแล้ว";
-        if (status === "rejected") statusText = "ปฏิเสธแล้ว";
-        if (status === "cancelled") statusText = "ยกเลิกแล้ว";
+        if (status === "approved") statusText = "อนุมัติเรียบร้อยแล้ว"; //
+        if (status === "rejected") statusText = "ปฏิเสธคำขอ"; //
+        if (status === "cancelled") statusText = "ยกเลิกแล้ว"; //
 
         return {
-          id: `user-bk-${b.id || b._id}`,
+          id: `user-bk-${b.id}`,
           type: "booking_status",
           title: "สถานะการจองพิธี",
-          message: `${b.booking_type_name || 'รายการของคุณ'}ได้รับการ ${statusText}`,
-          time_ago: b.updated_at || b.created_at || null,
+          message: `รายการของคุณ ${b.full_name || ''} ได้รับการ ${statusText}`,
+          time_ago: b.updated_at || b.created_at,
           link: "/profile",
         };
       });
 
-      // รวมและเรียงลำดับตามเวลาล่าสุด
+      // รวมและเรียงลำดับเวลาล่าสุดขึ้นก่อน
       const combined = [...newsItems, ...bookingItems].sort(
         (a, b) => new Date(b.time_ago || 0) - new Date(a.time_ago || 0)
       );
 
-      return {
-        unreadCount: combined.length,
-        items: combined,
-      };
+      return { unreadCount: combined.length, items: combined };
     } catch (error) {
       console.error("User Notification Error:", error);
       return { unreadCount: 0, items: [] };
@@ -266,25 +264,26 @@ export const notificationAPI = {
       const rawBookings = this.extractArray(bookingRes);
       const rawQna = this.extractArray(qnaRes);
 
+      // กรองเฉพาะรายการที่ยังไม่ได้จัดการ (pending หรือยังไม่มีคำตอบ)
       const bookingItems = rawBookings
         .filter((b) => (b.status || "").toLowerCase() === "pending")
         .map((b) => ({
-          id: `admin-bk-${b.id || b._id}`,
+          id: `admin-bk-${b.id}`,
           type: "new_booking",
           title: "มีคำขอจองใหม่",
-          message: `มีรายการจองใหม่จากคุณ ${b.user_name || 'ผู้ใช้'}`,
-          time_ago: b.created_at || b.createdAt,
+          message: `จากคุณ ${b.full_name || b.user_name || 'ผู้ใช้'}`,
+          time_ago: b.created_at,
           link: "/admin/bookings",
         }));
 
       const qnaItems = rawQna
         .filter((q) => !q.answer)
         .map((q) => ({
-          id: `admin-qna-${q.id || q._id}`,
+          id: `admin-qna-${q.id}`,
           type: "qna",
           title: "มีคำถามใหม่",
-          message: q.question || "มีคำถามใหม่รอการตอบ",
-          time_ago: q.created_at || q.createdAt,
+          message: q.question || "มีคำถามรอการตอบ",
+          time_ago: q.created_at,
           link: "/admin/qna",
         }));
 
@@ -294,9 +293,8 @@ export const notificationAPI = {
 
       return { unreadCount: combined.length, items: combined };
     } catch (error) {
-      console.error("Admin Notification Error:", error);
       return { unreadCount: 0, items: [] };
     }
-  },
+  }
 };
 export default api;
