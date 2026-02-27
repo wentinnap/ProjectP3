@@ -190,94 +190,80 @@ export const albumAPI = {
   delete: (id) => api.delete(`/albums/${id}`),
 };
 
-
 // ---------------- NOTIFICATION ----------------
-getUserSummary: async () => {
-  try {
-    const [newsRes, bookingRes] = await Promise.all([
-      newsAPI.getAll({ limit: 5 }).catch(() => ({ data: [] })),
-      bookingAPI.getUserBookings().catch(() => ({ data: [] }))
-    ]);
+export const notificationAPI = {
+  async getUserSummary() {
+    try {
+      const [newsRes, bookingRes] = await Promise.all([
+        newsAPI.getAll({ limit: 5 }).catch(() => ({ data: [] })),
+        bookingAPI.getUserBookings().catch(() => ({ data: [] })),
+      ]);
 
-    // ---------------------------
-    // Normalize Data Safely
-    // ---------------------------
+      const rawNews =
+        newsRes?.data?.data ||
+        newsRes?.data ||
+        [];
 
-    const rawNews =
-      newsRes?.data?.data ||
-      newsRes?.data ||
-      [];
+      const rawBookings =
+        bookingRes?.data?.data ||
+        bookingRes?.data ||
+        [];
 
-    const rawBookings =
-      bookingRes?.data?.data ||
-      bookingRes?.data ||
-      [];
+      // 1️⃣ NEWS
+      const newsItems = Array.isArray(rawNews)
+        ? rawNews.map((n) => ({
+            id: `user-news-${n.id}`,
+            type: "news",
+            title: "ประกาศจากทางวัด",
+            message: n.title || "มีข่าวสารใหม่",
+            time_ago: n.created_at || n.createdAt || null,
+            link: `/news/${n.id}`,
+          }))
+        : [];
 
-    // ---------------------------
-    // 1️⃣ NEWS
-    // ---------------------------
+      // 2️⃣ BOOKING STATUS
+      const bookingItems = Array.isArray(rawBookings)
+        ? rawBookings
+            .map((b) => {
+              const status = (b.status || "").toLowerCase();
+              if (status === "pending") return null;
 
-    const newsItems = Array.isArray(rawNews)
-      ? rawNews.map((n) => ({
-          id: `user-news-${n.id}`,
-          type: "news",
-          title: "ประกาศจากทางวัด",
-          message: n.title || "มีข่าวสารใหม่",
-          time_ago: n.created_at || n.createdAt || null,
-          link: `/news/${n.id}`,
-        }))
-      : [];
+              let statusText = "มีการอัปเดตสถานะ";
+              if (status === "approved") statusText = "อนุมัติแล้ว";
+              if (status === "rejected") statusText = "ปฏิเสธแล้ว";
+              if (status === "cancelled") statusText = "ถูกยกเลิก";
 
-    // ---------------------------
-    // 2️⃣ BOOKING STATUS UPDATE
-    // ---------------------------
+              return {
+                id: `user-bk-${b.id}`,
+                type: "booking_status",
+                title: "อัปเดตสถานะการจอง",
+                message: `รายการของคุณได้รับการ ${statusText}`,
+                time_ago:
+                  b.updated_at ||
+                  b.updatedAt ||
+                  b.created_at ||
+                  b.createdAt ||
+                  null,
+                link: "/profile",
+              };
+            })
+            .filter(Boolean)
+        : [];
 
-    const bookingItems = Array.isArray(rawBookings)
-      ? rawBookings
-          .map((b) => {
-            const status = (b.status || "").toLowerCase();
+      const safeDate = (d) => (d ? new Date(d) : new Date(0));
 
-            if (status === "pending") return null;
+      const combined = [...newsItems, ...bookingItems].sort(
+        (a, b) => safeDate(b.time_ago) - safeDate(a.time_ago)
+      );
 
-            let statusText = "มีการอัปเดตสถานะ";
-            if (status === "approved") statusText = "อนุมัติแล้ว";
-            if (status === "rejected") statusText = "ปฏิเสธแล้ว";
-            if (status === "cancelled") statusText = "ถูกยกเลิก";
-
-            return {
-              id: `user-bk-${b.id}`,
-              type: "booking_status",
-              title: "อัปเดตสถานะการจอง",
-              message: `รายการของคุณได้รับการ ${statusText}`,
-              time_ago:
-                b.updated_at ||
-                b.updatedAt ||
-                b.created_at ||
-                b.createdAt ||
-                null,
-              link: "/profile",
-            };
-          })
-          .filter(Boolean)
-      : [];
-
-    // ---------------------------
-    // 3️⃣ SAFE SORT
-    // ---------------------------
-
-    const safeDate = (d) => (d ? new Date(d) : new Date(0));
-
-    const combined = [...newsItems, ...bookingItems].sort(
-      (a, b) => safeDate(b.time_ago) - safeDate(a.time_ago)
-    );
-
-    return {
-      unreadCount: combined.length,
-      items: combined,
-    };
-  } catch (error) {
-    console.error("User Notification Error:", error);
-    return { unreadCount: 0, items: [] };
-  }
+      return {
+        unreadCount: combined.length,
+        items: combined,
+      };
+    } catch (error) {
+      console.error("User Notification Error:", error);
+      return { unreadCount: 0, items: [] };
+    }
+  },
 };
 export default api;
