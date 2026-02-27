@@ -192,11 +192,12 @@ export const albumAPI = {
 
 // ---------------- NOTIFICATION ----------------
 // services/api.js
+// ---------------- NOTIFICATION ----------------
 export const notificationAPI = {
-  // ดึงข้อมูลแจ้งเตือนสรุปชุดเดียวจาก Backend
+  // ✅ เปลี่ยนจาก axios.get เป็น api.get เพื่อใช้ config และ token ที่ตั้งค่าไว้ข้างต้น
   async getSummary() {
     try {
-      const response = await axios.get('/api/notifications/summary');
+      const response = await api.get('/notifications/summary'); 
       return {
         unreadCount: response.data.unreadCount || 0,
         items: response.data.items || []
