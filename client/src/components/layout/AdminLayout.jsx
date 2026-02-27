@@ -29,7 +29,6 @@ const AdminLayout = () => {
     { icon: ImageIcon, label: 'จัดการรูปภาพ', path: '/admin/albums' },
   ];
 
-  // หาชื่อเมนูปัจจุบันเพื่อแสดงใน Header
   const currentMenu = menuItems.find(item => item.path === location.pathname)?.label || 'Admin Panel';
 
   return (
@@ -92,17 +91,13 @@ const AdminLayout = () => {
           })}
         </nav>
 
-        {/* Bottom Actions */}
-        <div className="p-4 space-y-2">
-            <button className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-gray-500 hover:text-white hover:bg-white/5 transition-all group">
-                <Settings size={22} className="group-hover:rotate-90 transition-transform duration-500" />
-                {isSidebarOpen && <span className="text-[15px] font-bold">ตั้งค่าระบบ</span>}
-            </button>
+        {/* Logout Bottom */}
+        <div className="p-4">
             <button 
                 onClick={handleLogout} 
-                className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-gray-500 hover:text-red-400 hover:bg-red-400/10 transition-all font-bold"
+                className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-gray-500 hover:text-red-400 hover:bg-red-400/10 transition-all font-bold group"
             >
-                <LogOut size={22} />
+                <LogOut size={22} className="group-hover:-translate-x-1 transition-transform" />
                 {isSidebarOpen && <span className="text-[15px]">ออกจากระบบ</span>}
             </button>
         </div>
@@ -111,7 +106,7 @@ const AdminLayout = () => {
       {/* --- Main Area --- */}
       <div className="flex-1 flex flex-col min-w-0 h-full relative">
         
-        {/* Header - ลบช่อง Search ออกแล้ว */}
+        {/* Header - (ลบช่อง Search ออกแล้ว) */}
         <header className="h-20 bg-white/80 backdrop-blur-md border-b border-orange-100/50 flex items-center justify-between px-10 z-40 shrink-0">
           <div className="flex items-center gap-6">
             <button 
@@ -120,8 +115,6 @@ const AdminLayout = () => {
             >
               <Menu size={22} />
             </button>
-            
-            {/* แสดงชื่อเมนูปัจจุบันแทนช่องค้นหาเพื่อให้ Header ดูมีข้อมูล */}
             <div className="hidden sm:flex items-center gap-2">
               <span className="text-gray-400 text-sm font-medium">เมนู</span>
               <ChevronRight size={14} className="text-gray-300" />
@@ -130,7 +123,6 @@ const AdminLayout = () => {
           </div>
           
           <div className="flex items-center gap-3">
-              {/* Notification */}
               <button className="relative p-3 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-xl transition-all">
                 <Bell size={22} />
                 <span className="absolute top-3 right-3 w-2.5 h-2.5 bg-orange-600 rounded-full border-2 border-white"></span>
@@ -138,7 +130,6 @@ const AdminLayout = () => {
 
               <div className="h-10 w-px bg-gray-100 mx-2"></div>
 
-              {/* User Menu */}
               <div className="flex items-center gap-4 pl-2 group cursor-pointer">
                 <div className="text-right hidden md:block">
                     <p className="text-[13px] font-black text-gray-900 leading-none">{user?.full_name}</p>
@@ -161,9 +152,6 @@ const AdminLayout = () => {
              <Outlet />
           </motion.div>
         </main>
-
-        {/* Subtle Background Pattern */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-100/10 rounded-full blur-[120px] pointer-events-none -z-10"></div>
       </div>
     </div>
   );
