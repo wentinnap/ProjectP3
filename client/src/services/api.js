@@ -193,75 +193,81 @@ export const albumAPI = {
 
 // ---------------- NOTIFICATION ----------------
 // ---------------- NOTIFICATION ----------------
-// ---------------- NOTIFICATION ----------------
 export const notificationAPI = {
-  getSummary: async () => {
+  // สำหรับ ADMIN: ดูคำถามที่ยังไม่ตอบ และ ยอดการจองที่รออนุมัติ
+  getAdminSummary: async () => {
     try {
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      if (!user.id) return { unreadCount: 0, items: [] };
+      const [qnaRes, bookingRes] = await Promise.all([
+        qnaAPI.getAllAdmin().catch(() => ({ data: [] })),
+        bookingAPI.getStats().catch(() => ({ data: {} }))
+      ]);
 
-      if (user.role === 'admin') {
-        // ส่วนของ Admin (ข้ามไปก่อนเพราะปกติ)
-        const [qnaRes, bookingRes] = await Promise.all([
-          qnaAPI.getAllAdmin(),
-          bookingAPI.getStats()
-        ]);
-        const qnaData = qnaRes.data?.data || qnaRes.data || [];
-        const bookingCount = bookingRes.data?.data?.pending_count || 0;
-        
-        const items = [
-          ...(Array.isArray(qnaData) ? qnaData.filter(i => !i.answer).map(i => ({
-            id: `qna-${i.id}`, type: 'qna', title: 'คำถามใหม่', message: i.question, time_ago: i.created_at, link: '/admin/qna'
-          })) : []),
-          ...(bookingCount > 0 ? [{
-            id: 'adm-bk', type: 'new_booking', title: 'การจองใหม่', message: `มี ${bookingCount} รายการรอตรวจ`, time_ago: 'Now', link: '/admin/bookings'
-          }] : [])
-        ];
-        return { unreadCount: items.length, items };
-      } 
-      
-      // === แก้ไขส่วน USER ให้ดึงจากตาราง NEWS และ BOOKINGS จริงๆ ===
-      else {
-        const [bookingRes, newsRes] = await Promise.all([
-          bookingAPI.getUserBookings(),
-          newsAPI.getAll({ limit: 5 })
-        ]);
+      const qnaData = qnaRes?.data?.data || qnaRes?.data || [];
+      const pendingCount = bookingRes?.data?.data?.pending_count || 0;
 
-        // เจาะจงโครงสร้างข้อมูลจากรูป image_09e79e และ image_09e458
-        const rawBookings = bookingRes.data?.data || bookingRes.data || [];
-        const rawNews = newsRes.data?.data || newsRes.data || [];
+      const items = [
+        ...(Array.isArray(qnaData) ? qnaData.filter(i => !i.answer).map(i => ({
+          id: `admin-qna-${i.id}`,
+          type: 'qna',
+          title: 'คำถามใหม่จากสมาชิก',
+          message: i.question,
+          time_ago: i.created_at,
+          link: '/admin/qna'
+        })) : []),
+        ...(pendingCount > 0 ? [{
+          id: 'admin-booking-stats',
+          type: 'new_booking',
+          title: 'รายการจองรอการตรวจสอบ',
+          message: `มีทั้งหมด ${pendingCount} รายการใหม่ที่รอคุณอนุมัติ`,
+          time_ago: 'Now',
+          link: '/admin/bookings'
+        }] : [])
+      ];
+      return { unreadCount: items.length, items };
+    } catch (error) {
+      return { unreadCount: 0, items: [] };
+    }
+  },
 
-        // 1. ดึงข่าว (จากตาราง news)
-        const newsItems = Array.isArray(rawNews) ? rawNews.map(news => ({
-          id: `news-${news.id}`,
-          type: 'news',
-          title: 'ข่าวประชาสัมพันธ์',
-          message: news.title, // หัวข้อข่าวจากตาราง
-          time_ago: news.created_at,
-          link: `/news/${news.id}`
+  // สำหรับ USER: ดูข่าวสารล่าสุด และ สถานะการจองของตัวเองที่เปลี่ยนไป
+  getUserSummary: async () => {
+    try {
+      const [newsRes, bookingRes] = await Promise.all([
+        newsAPI.getAll({ limit: 5 }).catch(() => ({ data: [] })),
+        bookingAPI.getUserBookings().catch(() => ({ data: [] }))
+      ]);
+
+      const rawNews = newsRes?.data?.data || newsRes?.data || [];
+      const rawBookings = bookingRes?.data?.data || bookingRes?.data || [];
+
+      // 1. ข่าวสาร (ดึงจากตาราง news)
+      const newsItems = Array.isArray(rawNews) ? rawNews.map(n => ({
+        id: `user-news-${n.id}`,
+        type: 'news',
+        title: 'ประกาศจากทางวัด',
+        message: n.title,
+        time_ago: n.created_at,
+        link: `/news/${n.id}`
+      })) : [];
+
+      // 2. อัปเดตการจอง (แจ้งเมื่อ status เป็น approved/rejected)
+      const bookingItems = Array.isArray(rawBookings) ? rawBookings
+        .filter(b => b.status === 'approved' || b.status === 'rejected')
+        .map(b => ({
+          id: `user-bk-${b.id}`,
+          type: 'booking_status',
+          title: 'อัปเดตสถานะการจอง',
+          message: `รายการของคุณได้รับการ ${b.status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธ'}`,
+          time_ago: b.updated_at,
+          link: '/profile'
         })) : [];
 
-        // 2. ดึงสถานะการจอง (จากตาราง bookings) 
-        // จะแจ้งเตือนเฉพาะอันที่ status ไม่ใช่ 'pending' (คือ approved หรือ rejected แล้ว)
-        const bookingItems = Array.isArray(rawBookings) ? rawBookings
-          .filter(b => b.status !== 'pending') 
-          .map(b => ({
-            id: `status-${b.id}`,
-            type: 'booking_status',
-            title: 'อัปเดตสถานะการจอง',
-            message: `รายการของคุณได้รับการ ${b.status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธ'}`,
-            time_ago: b.updated_at,
-            link: '/profile'
-          })) : [];
+      const combined = [...newsItems, ...bookingItems].sort((a, b) => 
+        new Date(b.time_ago) - new Date(a.time_ago)
+      );
 
-        const combined = [...newsItems, ...bookingItems].sort((a, b) => 
-          new Date(b.time_ago) - new Date(a.time_ago)
-        );
-
-        return { unreadCount: combined.length, items: combined };
-      }
+      return { unreadCount: combined.length, items: combined };
     } catch (error) {
-      console.error("API Error:", error);
       return { unreadCount: 0, items: [] };
     }
   }
