@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { bookingAPI, analyticsAPI } from "../../services/api";
 import {
-  PieChart, Pie, Cell, BarChart, Bar, XAxis, Tooltip,
+  PieChart, Pie, Cell, XAxis, Tooltip,
   ResponsiveContainer, YAxis, LineChart, Line, CartesianGrid
 } from "recharts";
 import {
@@ -9,6 +9,20 @@ import {
 } from "lucide-react";
 
 const COLORS = ["#f97316", "#3b82f6", "#10b981", "#6366f1"];
+
+// ฟังก์ชันสำหรับแปลงวันที่จาก 20260228 เป็นวันที่อ่านง่าย
+const formatDate = (dateString) => {
+  if (!dateString || dateString.length !== 8) return dateString;
+  const year = dateString.substring(0, 4);
+  const month = dateString.substring(4, 6);
+  const day = dateString.substring(6, 8);
+  
+  // แสดงผลแบบ "28 Feb" (อ่านง่ายสำหรับกราฟ)
+  return new Date(`${year}-${month}-${day}`).toLocaleDateString('th-TH', { 
+    day: 'numeric', 
+    month: 'short' 
+  });
+};
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
@@ -126,19 +140,26 @@ const AdminDashboard = () => {
           <h3 className="font-bold mb-4 md:mb-6 text-sm md:text-base">
             สถิติผู้ใช้งานรายวัน
           </h3>
-          <div className="h-52 md:h-64 w-full">
+          {/* เพิ่ม min-h เพื่อกัน Error width(-1) */}
+          <div className="h-52 md:h-64 w-full min-h-52 md:min-h-64">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={dailyUsers}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="date" hide />
-                <YAxis hide />
-                <Tooltip />
+                <XAxis 
+                  dataKey="date" 
+                  tickFormatter={formatDate} // แปลงวันที่แกน X
+                  tick={{fontSize: 12}}
+                  minTickGap={20}
+                />
+                <YAxis width={30} tick={{fontSize: 12}} />
+                <Tooltip labelFormatter={formatDate} /> {/* แปลงวันที่ในกล่อง Tooltip */}
                 <Line
                   type="monotone"
                   dataKey="users"
                   stroke="#f97316"
                   strokeWidth={3}
-                  dot={false}
+                  dot={{ r: 4, fill: "#f97316" }}
+                  activeDot={{ r: 6 }}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -150,7 +171,8 @@ const AdminDashboard = () => {
           <h3 className="font-bold mb-4 flex items-center gap-2 text-sm md:text-base">
             <Smartphone size={18} /> อุปกรณ์ที่ใช้
           </h3>
-          <div className="h-44 md:h-48 w-full">
+          {/* เพิ่ม min-h เพื่อกัน Error width(-1) */}
+          <div className="h-44 md:h-48 w-full min-h-44 md:min-h-48">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
@@ -159,9 +181,10 @@ const AdminDashboard = () => {
                   nameKey="device"
                   innerRadius={40}
                   outerRadius={60}
+                  paddingAngle={5}
                 >
                   {deviceData.map((_, index) => (
-                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                    <Cell key={index} fill={COLORS[index % COLORS.length]} stroke="none" />
                   ))}
                 </Pie>
                 <Tooltip />
