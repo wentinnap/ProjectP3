@@ -11,9 +11,13 @@ const eventRoutes = require("./src/routes/eventRoutes");
 const qnaRoutes = require("./src/routes/qnaRoutes");
 const albumRoutes = require("./src/routes/albumRoutes");
 const notificationRoutes = require('./src/routes/notificationRoutes');
+const { BetaAnalyticsDataClient } = require("@google-analytics/data");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const analyticsDataClient = new BetaAnalyticsDataClient({
+  keyFilename: "service-account.json",
+});
 
 // =====================
 
@@ -61,6 +65,7 @@ app.use("/api/albums", albumRoutes);
 app.use('/api/notifications', notificationRoutes);
 
 
+
 // =====================
 // 404 handler
 // =====================
@@ -90,6 +95,63 @@ app.use((err, req, res, next) => {
     message: err.message || "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์",
     ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
   });
+});
+
+app.get("/api/analytics", async (req, res) => {
+  try {
+    const { startDate = "7daysAgo", endDate = "today" } = req.query;
+
+    const [response] = await analyticsDataClient.runReport({
+      property: "properties/13680791741",
+      dateRanges: [
+        { startDate, endDate },
+      ],
+      metrics: [
+        { name: "activeUsers" },
+        { name: "screenPageViews" },
+      ],
+    });
+
+    const result = response.rows?.[0]?.metricValues || [];
+
+    res.json({
+      activeUsers: result[0]?.value || 0,
+      pageViews: result[1]?.value || 0,
+    });
+
+  } catch (error) {
+    console.error("GA Error:", error);
+    res.status(500).json({ error: "Failed to fetch analytics" });
+  }
+});
+
+app.get("/api/analytics/top-pages", async (req, res) => {
+  try {
+    const [response] = await analyticsDataClient.runReport({
+      property: "properties/13680791741",
+      dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
+      dimensions: [{ name: "pagePath" }],
+      metrics: [{ name: "screenPageViews" }],
+      orderBys: [
+        {
+          metric: { metricName: "screenPageViews" },
+          desc: true,
+        },
+      ],
+      limit: 5,
+    });
+
+    const pages = response.rows?.map(row => ({
+      page: row.dimensionValues[0].value,
+      views: row.metricValues[0].value,
+    })) || [];
+
+    res.json(pages);
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch top pages" });
+  }
 });
 
 // =====================

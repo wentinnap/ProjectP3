@@ -164,4 +164,21 @@ export const notificationAPI = {
   }
 };
 
+// ---------------- ANALYTICS ----------------
+export const analyticsAPI = {
+  getOverview: (params) => api.get("/analytics", { params }),
+
+  getTopPages: (params) =>
+    api.get("/analytics/top-pages", { params }),
+
+  getDailyStats: (params) =>
+    api.get("/analytics/daily", { params }),
+
+  getByCountry: (params) =>
+    api.get("/analytics/countries", { params }),
+
+  getByDevice: (params) =>
+    api.get("/analytics/devices", { params }),
+};
+
 export default api;
