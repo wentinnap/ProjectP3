@@ -5,3 +5,4 @@ build
 .vite
 coverage
 .DS_Store
+service-account.json
