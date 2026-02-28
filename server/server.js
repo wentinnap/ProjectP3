@@ -66,40 +66,6 @@ app.use("/api/events", eventRoutes);
 app.use("/api/qna", qnaRoutes);
 app.use("/api/albums", albumRoutes);
 app.use('/api/notifications', notificationRoutes);
-
-
-
-// =====================
-// 404 handler
-// =====================
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: "Endpoint not found",
-  });
-});
-
-// =====================
-// Global error handler
-// =====================
-app.use((err, req, res, next) => {
-  console.error("Error:", err);
-
-  // ✅ ถ้าเป็น error จาก multer (อัปโหลดรูป)
-  if (err.code === "LIMIT_FILE_SIZE") {
-    return res.status(400).json({
-      success: false,
-      message: "ไฟล์รูปใหญ่เกิน 3MB",
-    });
-  }
-
-  return res.status(err.status || 500).json({
-    success: false,
-    message: err.message || "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์",
-    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
-  });
-});
-
 app.get("/api/analytics", async (req, res) => {
   try {
     const { startDate = "7daysAgo", endDate = "today" } = req.query;
@@ -220,6 +186,40 @@ app.get("/api/analytics/devices", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch devices" });
   }
 });
+
+
+
+// =====================
+// 404 handler
+// =====================
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Endpoint not found",
+  });
+});
+
+// =====================
+// Global error handler
+// =====================
+app.use((err, req, res, next) => {
+  console.error("Error:", err);
+
+  // ✅ ถ้าเป็น error จาก multer (อัปโหลดรูป)
+  if (err.code === "LIMIT_FILE_SIZE") {
+    return res.status(400).json({
+      success: false,
+      message: "ไฟล์รูปใหญ่เกิน 3MB",
+    });
+  }
+
+  return res.status(err.status || 500).json({
+    success: false,
+    message: err.message || "เกิดข้อผิดพลาดภายในเซิร์ฟเวอร์",
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+  });
+});
+
 
 // =====================
 // Start server
