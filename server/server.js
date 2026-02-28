@@ -156,6 +156,70 @@ app.get("/api/analytics/top-pages", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch top pages" });
   }
 });
+app.get("/api/analytics/daily", async (req, res) => {
+  try {
+    const [response] = await analyticsDataClient.runReport({
+      property: "properties/13680791741",
+      dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
+      dimensions: [{ name: "date" }],
+      metrics: [{ name: "activeUsers" }],
+      orderBys: [{ dimension: { dimensionName: "date" } }],
+    });
+
+    const data =
+      response.rows?.map((row) => ({
+        date: row.dimensionValues[0].value,
+        users: row.metricValues[0].value,
+      })) || [];
+
+    res.json(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch daily stats" });
+  }
+});
+app.get("/api/analytics/countries", async (req, res) => {
+  try {
+    const [response] = await analyticsDataClient.runReport({
+      property: "properties/13680791741",
+      dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
+      dimensions: [{ name: "country" }],
+      metrics: [{ name: "activeUsers" }],
+    });
+
+    const data =
+      response.rows?.map((row) => ({
+        country: row.dimensionValues[0].value,
+        users: row.metricValues[0].value,
+      })) || [];
+
+    res.json(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch countries" });
+  }
+});
+app.get("/api/analytics/devices", async (req, res) => {
+  try {
+    const [response] = await analyticsDataClient.runReport({
+      property: "properties/13680791741",
+      dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
+      dimensions: [{ name: "deviceCategory" }],
+      metrics: [{ name: "activeUsers" }],
+    });
+
+    const data =
+      response.rows?.map((row) => ({
+        device: row.dimensionValues[0].value,
+        users: row.metricValues[0].value,
+      })) || [];
+
+    res.json(data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to fetch devices" });
+  }
+});
 
 // =====================
 // Start server
