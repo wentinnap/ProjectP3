@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { 
   BsImages
 } from "react-icons/bs";
-import { Plus, Trash2, X, Image as ImageIcon, UploadCloud, Edit3, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, X, Image as ImageIcon, UploadCloud, Edit3, Eye, EyeOff, FolderOpen } from "lucide-react";
 
 const AdminAlbums = () => {
   const [albums, setAlbums] = useState([]);
@@ -151,49 +151,73 @@ const AdminAlbums = () => {
         </div>
       </div>
 
-      {/* --- Album Grid --- */}
-      <div className="max-w-7xl mx-auto grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-        {albums.map((album) => (
-          <div key={album.id} className="group bg-white rounded-3xl sm:rounded-4xl shadow-md sm:shadow-xl shadow-slate-200/50 border border-white overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-            <div className="relative aspect-video sm:aspect-4/3 overflow-hidden">
-              <img 
-                src={toAssetUrl(album.cover_img || "/placeholder.png")} 
-                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                alt={album.title} 
-              />
-              <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-black/60 backdrop-blur-md text-white text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-full border border-white/20 uppercase">
-                {album.photo_count} Photos
-              </div>
-              {album.is_hidden === 1 && (
-                <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center backdrop-blur-[2px]">
-                   <EyeOff className="text-white/80" size={32} />
-                </div>
-              )}
-            </div>
-            
-            <div className="p-4 sm:p-6">
-              <h3 className="font-bold text-slate-800 truncate mb-4 sm:mb-5 text-base sm:text-lg tracking-tight">{album.title}</h3>
-              <div className="flex items-center justify-between">
-                <div className="flex gap-2">
-                  <button onClick={() => handleEditClick(album)} className="p-2.5 sm:p-3 bg-blue-50 text-blue-600 rounded-xl sm:rounded-2xl hover:bg-blue-600 hover:text-white transition-all shadow-sm">
-                    <Edit3 size={16}/>
-                  </button>
-                  <button onClick={() => handleToggleHide(album.id, album.is_hidden)} className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-all shadow-sm ${album.is_hidden ? 'bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white'}`}>
-                    {album.is_hidden ? <EyeOff size={16}/> : <Eye size={16}/>}
-                  </button>
-                  <button onClick={() => handleDelete(album.id)} className="p-2.5 sm:p-3 bg-red-50 text-red-500 rounded-xl sm:rounded-2xl hover:bg-red-600 hover:text-white transition-all shadow-sm">
-                    <Trash2 size={16}/>
-                  </button>
-                </div>
-                <div className={`h-2 w-2 rounded-full ${album.is_hidden ? 'bg-slate-300' : 'bg-emerald-500 animate-pulse'}`}></div>
-              </div>
-            </div>
+      {/* --- Album Grid & Empty State --- */}
+      <div className="max-w-7xl mx-auto">
+        {loading && albums.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-slate-400">
+             <div className="w-10 h-10 border-4 border-orange-500/20 border-t-orange-500 rounded-full animate-spin mb-4"></div>
+             <p className="font-bold uppercase tracking-widest text-xs">กำลังโหลดข้อมูล...</p>
           </div>
-        ))}
+        ) : albums.length > 0 ? (
+          <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
+            {albums.map((album) => (
+              <div key={album.id} className="group bg-white rounded-3xl sm:rounded-4xl shadow-md sm:shadow-xl shadow-slate-200/50 border border-white overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                <div className="relative aspect-video sm:aspect-4/3 overflow-hidden">
+                  <img 
+                    src={toAssetUrl(album.cover_img || "/placeholder.png")} 
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                    alt={album.title} 
+                  />
+                  <div className="absolute top-3 right-3 sm:top-4 sm:right-4 bg-black/60 backdrop-blur-md text-white text-[9px] sm:text-[10px] font-black px-2 sm:px-3 py-1 rounded-full border border-white/20 uppercase">
+                    {album.photo_count} Photos
+                  </div>
+                  {album.is_hidden === 1 && (
+                    <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center backdrop-blur-[2px]">
+                       <EyeOff className="text-white/80" size={32} />
+                    </div>
+                  )}
+                </div>
+                
+                <div className="p-4 sm:p-6">
+                  <h3 className="font-bold text-slate-800 truncate mb-4 sm:mb-5 text-base sm:text-lg tracking-tight">{album.title}</h3>
+                  <div className="flex items-center justify-between">
+                    <div className="flex gap-2">
+                      <button onClick={() => handleEditClick(album)} className="p-2.5 sm:p-3 bg-blue-50 text-blue-600 rounded-xl sm:rounded-2xl hover:bg-blue-600 hover:text-white transition-all shadow-sm">
+                        <Edit3 size={16}/>
+                      </button>
+                      <button onClick={() => handleToggleHide(album.id, album.is_hidden)} className={`p-2.5 sm:p-3 rounded-xl sm:rounded-2xl transition-all shadow-sm ${album.is_hidden ? 'bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white'}`}>
+                        {album.is_hidden ? <EyeOff size={16}/> : <Eye size={16}/>}
+                      </button>
+                      <button onClick={() => handleDelete(album.id)} className="p-2.5 sm:p-3 bg-red-50 text-red-500 rounded-xl sm:rounded-2xl hover:bg-red-600 hover:text-white transition-all shadow-sm">
+                        <Trash2 size={16}/>
+                      </button>
+                    </div>
+                    <div className={`h-2 w-2 rounded-full ${album.is_hidden ? 'bg-slate-300' : 'bg-emerald-500 animate-pulse'}`}></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-24 px-6 bg-white rounded-[2.5rem] border-2 border-dashed border-slate-100 shadow-sm animate-in fade-in zoom-in duration-500">
+            <div className="p-6 bg-slate-50 rounded-full mb-6">
+              <FolderOpen size={48} className="text-slate-300" />
+            </div>
+            <h3 className="text-xl font-extrabold text-slate-800 mb-2 tracking-tight">ไม่พบอัลบั้มรูปภาพ</h3>
+            <p className="text-slate-500 text-sm mb-8 text-center max-w-xs font-medium">
+              คุณยังไม่มีอัลบั้มรูปภาพในขณะนี้ เริ่มต้นสร้างอัลบั้มแรกของคุณได้เลย
+            </p>
+            <button
+              onClick={() => { setTitle(""); setSelectedFiles([]); setShowModal(true); }}
+              className="flex items-center gap-2 bg-slate-800 text-white px-8 py-3.5 rounded-2xl font-bold hover:bg-slate-700 transition-all active:scale-95 shadow-lg text-sm"
+            >
+              <Plus size={18} /> สร้างอัลบั้มแรกของคุณ
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* --- Modal Container Helper --- */}
-      {/* สร้างฟังก์ชันแสดง Modal ที่แชร์ Style เดียวกัน */}
+      {/* --- Modals --- */}
       {(showEditModal || showModal) && (
         <div className="fixed inset-0 bg-slate-900/70 z-100 flex items-end sm:items-center justify-center p-0 sm:p-4 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white rounded-t-4xl sm:rounded-[2.5rem] w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] shadow-2xl overflow-hidden flex flex-col animate-in slide-in-from-bottom sm:zoom-in-95 duration-300">
@@ -233,7 +257,7 @@ const AdminAlbums = () => {
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 sm:gap-4">
                     {existingPhotos.map((photo) => (
                       <div key={photo.id} className="relative aspect-square rounded-lg sm:rounded-[1.25rem] overflow-hidden group border-2 border-slate-100 shadow-sm">
-                        <img src={toAssetUrl(photo.file_path)} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-500" />
+                        <img src={toAssetUrl(photo.file_path)} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-500" alt="album-photo" />
                         <div className="absolute inset-0 bg-black/20 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity flex items-start justify-end p-1 sm:p-2">
                           <button 
                             type="button"
@@ -276,7 +300,7 @@ const AdminAlbums = () => {
                 <div className="mb-6 p-3 sm:p-4 bg-orange-50 border border-orange-100 rounded-xl sm:rounded-2xl flex items-center gap-3 animate-pulse">
                   <div className="p-2 bg-orange-500 text-white rounded-lg shrink-0"><UploadCloud size={16}/></div>
                   <p className="text-[10px] sm:text-xs text-orange-700 font-black">
-                     มีการเลือกรูปภาพใหม่ {selectedFiles.length} รูป (กดบันทึกเพื่ออัปโหลด)
+                      มีการเลือกรูปภาพใหม่ {selectedFiles.length} รูป (กดบันทึกเพื่ออัปโหลด)
                   </p>
                   <button type="button" onClick={() => setSelectedFiles([])} className="ml-auto text-orange-400 hover:text-orange-600"><X size={16}/></button>
                 </div>
