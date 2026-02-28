@@ -13,7 +13,6 @@ import {
   Send,
   MessageSquare,
   Calendar,
-  User,
   CheckCircle2,
   AlertCircle
 } from "lucide-react";
@@ -124,41 +123,43 @@ const AdminQnA = () => {
   };
 
   return (
-    <div className="min-h-screen pb-10 animate-in fade-in duration-500 p-4 lg:p-8">
+    <div className="min-h-screen pb-10 animate-in fade-in duration-500 p-3 sm:p-4 lg:p-8 bg-slate-50/50">
       {/* --- Page Header --- */}
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-10">
-        <div>
-          <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
-            <div className="p-2.5 bg-cyan-100 rounded-2xl text-cyan-600 shadow-sm">
-              <MessageCircleQuestion size={30} />
-            </div>
-            จัดการถาม-ตอบ (Q&A)
-          </h2>
-          <p className="text-slate-500 mt-1 ml-1 font-medium italic">ดูแลและตอบข้อซักถามจากญาติโยมและผู้เยี่ยมชมเว็บไซต์</p>
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8 md:mb-10">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="p-2.5 sm:p-3 bg-cyan-100 rounded-2xl text-cyan-600 shadow-sm shrink-0">
+            <MessageCircleQuestion className="w-7 h-7 sm:w-8 sm:h-8" />
+          </div>
+          <div>
+            <h2 className="text-xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">
+              จัดการถาม-ตอบ (Q&A)
+            </h2>
+            <p className="text-slate-500 text-xs sm:text-sm font-medium italic">ดูแลและตอบข้อซักถามจากญาติโยม</p>
+          </div>
         </div>
       </div>
 
       <div className="max-w-6xl mx-auto">
         {/* --- Filter Bar --- */}
-        <div className="bg-white p-6 rounded-4xl border border-slate-100 shadow-xl shadow-slate-200/50 mb-10 transition-all hover:shadow-2xl hover:shadow-slate-200/60">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-            <div className="lg:col-span-2 relative group">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-cyan-500 transition-colors" size={20} />
+        <div className="bg-white p-4 sm:p-6 rounded-4xl sm:rounded-4xl border border-slate-100 shadow-xl shadow-slate-200/50 mb-6 md:mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="sm:col-span-2 relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-cyan-500 transition-colors" size={18} />
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border border-transparent rounded-2xl text-sm font-medium focus:bg-white focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500 outline-none transition-all"
-                placeholder="ค้นหาตามข้อความคำถามหรือคำตอบ..."
+                className="w-full pl-11 pr-4 py-3 sm:py-3.5 bg-slate-50 border border-transparent rounded-xl sm:rounded-2xl text-sm font-medium focus:bg-white focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500 outline-none transition-all"
+                placeholder="ค้นหาข้อความ..."
               />
             </div>
 
-            <div className="flex items-center gap-2 bg-slate-50 px-4 rounded-2xl border border-transparent focus-within:bg-white focus-within:border-cyan-500 transition-all">
-              <Filter size={18} className="text-slate-400" />
+            <div className="flex items-center gap-2 bg-slate-50 px-3 rounded-xl sm:rounded-2xl border border-transparent focus-within:bg-white focus-within:border-cyan-500 transition-all">
+              <Filter size={16} className="text-slate-400 shrink-0" />
               <select
                 value={answerStatus}
                 onChange={(e) => setAnswerStatus(e.target.value)}
-                className="w-full py-3.5 bg-transparent text-sm font-bold text-slate-600 outline-none cursor-pointer"
+                className="w-full py-3 bg-transparent text-xs sm:text-sm font-bold text-slate-600 outline-none cursor-pointer"
               >
                 <option value="all">สถานะ: ทั้งหมด</option>
                 <option value="unanswered">🔴 รอดำเนินการ</option>
@@ -166,16 +167,16 @@ const AdminQnA = () => {
               </select>
             </div>
 
-            <div className="flex items-center gap-2 bg-slate-50 px-4 rounded-2xl border border-transparent focus-within:bg-white focus-within:border-cyan-500 transition-all">
-              <Eye size={18} className="text-slate-400" />
+            <div className="flex items-center gap-2 bg-slate-50 px-3 rounded-xl sm:rounded-2xl border border-transparent focus-within:bg-white focus-within:border-cyan-500 transition-all">
+              <Eye size={16} className="text-slate-400 shrink-0" />
               <select
                 value={visibility}
                 onChange={(e) => setVisibility(e.target.value)}
-                className="w-full py-3.5 bg-transparent text-sm font-bold text-slate-600 outline-none cursor-pointer"
+                className="w-full py-3 bg-transparent text-xs sm:text-sm font-bold text-slate-600 outline-none cursor-pointer"
               >
                 <option value="all">การแสดง: ทั้งหมด</option>
-                <option value="visible">สาธารณะ (Public)</option>
-                <option value="hidden">ซ่อน (Hidden)</option>
+                <option value="visible">สาธารณะ</option>
+                <option value="hidden">ซ่อน</option>
               </select>
             </div>
           </div>
@@ -183,51 +184,50 @@ const AdminQnA = () => {
 
         {/* --- List Section --- */}
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-32 gap-4">
-            <div className="w-12 h-12 border-[5px] border-cyan-100 border-t-cyan-500 rounded-full animate-spin"></div>
-            <p className="text-slate-400 font-black uppercase tracking-[0.2em] text-xs">Fetching Inquiries...</p>
+          <div className="flex flex-col items-center justify-center py-24 gap-4">
+            <div className="w-10 h-10 border-4 border-cyan-100 border-t-cyan-500 rounded-full animate-spin"></div>
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Loading Inquiries...</p>
           </div>
         ) : filtered.length > 0 ? (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {filtered.map((item) => {
               const hasAnswer = !!(item.answer && item.answer.trim());
               return (
                 <div
                   key={item.id}
-                  className="bg-white border border-slate-100 rounded-[2.25rem] overflow-hidden shadow-lg shadow-slate-200/40 hover:shadow-2xl hover:shadow-slate-200/60 transition-all group animate-in slide-in-from-bottom-4 duration-500"
+                  className="bg-white border border-slate-100 rounded-3xl sm:rounded-[2.25rem] overflow-hidden shadow-md hover:shadow-xl transition-all group animate-in slide-in-from-bottom-2 duration-500"
                 >
-                  <div className="p-6 md:p-8">
-                    <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+                  <div className="p-5 sm:p-8">
+                    <div className="flex flex-col md:flex-row justify-between items-start gap-4 md:gap-6">
                       
                       {/* Left: Content Area */}
-                      <div className="flex-1 space-y-5 w-full">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <span className="bg-slate-800 text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider shadow-sm">
-                            ID: #{item.id}
+                      <div className="flex-1 space-y-4 w-full">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="bg-slate-800 text-white text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                            #{item.id}
                           </span>
-                          <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50 px-3 py-1 rounded-full border border-slate-100">
-                            <Calendar size={12} className="text-cyan-500" />
-                            {new Date(item.created_at).toLocaleDateString("th-TH", { dateStyle: 'long' })}
+                          <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400 uppercase bg-slate-50 px-2.5 py-0.5 rounded-full border border-slate-100">
+                            <Calendar size={10} className="text-cyan-500" />
+                            {new Date(item.created_at).toLocaleDateString("th-TH", { dateStyle: 'medium' })}
                           </div>
-                          {!hasAnswer && (
-                            <span className="flex items-center gap-1.5 bg-red-50 text-red-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter ring-1 ring-red-100 shadow-sm animate-pulse">
-                              <AlertCircle size={12} /> Pending
+                          {!hasAnswer ? (
+                            <span className="flex items-center gap-1 bg-red-50 text-red-600 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase animate-pulse ring-1 ring-red-100">
+                              <AlertCircle size={10} /> Pending
                             </span>
-                          )}
-                          {hasAnswer && (
-                             <span className="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-tighter ring-1 ring-emerald-100 shadow-sm">
-                             <CheckCircle2 size={12} /> Answered
-                           </span>
+                          ) : (
+                            <span className="flex items-center gap-1 bg-emerald-50 text-emerald-600 text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase ring-1 ring-emerald-100">
+                              <CheckCircle2 size={10} /> Answered
+                            </span>
                           )}
                         </div>
 
                         {/* Question Bubble */}
-                        <div className="flex gap-4">
-                          <div className="w-12 h-12 rounded-2xl bg-cyan-50 text-cyan-600 flex items-center justify-center font-black text-lg shrink-0 border border-cyan-100 shadow-sm">
+                        <div className="flex gap-3 sm:gap-4">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-cyan-50 text-cyan-600 flex items-center justify-center font-black text-base sm:text-lg shrink-0 border border-cyan-100">
                             Q
                           </div>
-                          <div className="pt-1">
-                            <h3 className="text-slate-800 text-lg font-extrabold leading-tight tracking-tight group-hover:text-cyan-600 transition-colors">
+                          <div className="pt-0.5">
+                            <h3 className="text-slate-800 text-base sm:text-lg font-extrabold leading-tight tracking-tight group-hover:text-cyan-600 transition-colors">
                               {item.question}
                             </h3>
                           </div>
@@ -235,48 +235,45 @@ const AdminQnA = () => {
 
                         {/* Answer Bubble */}
                         {hasAnswer ? (
-                          <div className="flex gap-4 bg-slate-50/80 p-6 rounded-[1.75rem] border border-slate-100 ml-0 md:ml-16 relative overflow-hidden">
+                          <div className="flex gap-3 bg-slate-50/80 p-4 sm:p-6 rounded-2xl sm:rounded-[1.75rem] border border-slate-100 ml-0 md:ml-16 relative overflow-hidden">
                             <div className="absolute top-0 left-0 w-1 h-full bg-cyan-500/30"></div>
-                            <div className="w-8 h-8 rounded-xl bg-white text-slate-400 border border-slate-200 flex items-center justify-center font-black text-xs shrink-0 shadow-sm">
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-white text-slate-400 border border-slate-200 flex items-center justify-center font-black text-[10px] shrink-0">
                               A
                             </div>
-                            <p className="text-slate-600 text-[15px] font-medium leading-relaxed whitespace-pre-wrap italic">
+                            <p className="text-slate-600 text-sm sm:text-[15px] font-medium leading-relaxed whitespace-pre-wrap italic">
                               {item.answer}
                             </p>
                           </div>
                         ) : (
-                          <div className="ml-0 md:ml-16 p-4 border-2 border-dashed border-slate-100 rounded-3xl flex items-center justify-center bg-slate-50/30 text-slate-300 font-bold text-sm">
-                             ยังไม่มีการตอบกลับสำหรับคำถามนี้
+                          <div className="ml-0 md:ml-16 p-4 border-2 border-dashed border-slate-100 rounded-2xl flex items-center justify-center bg-slate-50/30 text-slate-300 font-bold text-xs">
+                            ยังไม่มีการตอบกลับ
                           </div>
                         )}
                       </div>
 
-                      {/* Right: Modern Actions */}
-                      <div className="flex flex-row md:flex-col items-center justify-end gap-3 shrink-0 w-full md:w-auto pt-6 md:pt-0 border-t md:border-t-0 md:border-l border-slate-50 md:pl-8">
+                      {/* Right: Actions */}
+                      <div className="flex flex-row md:flex-col items-center justify-center gap-2 sm:gap-3 shrink-0 w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 md:border-l border-slate-50 md:pl-8">
                         <button
                           onClick={() => handleToggleVisibility(item.id)}
-                          className={`flex-1 md:flex-none p-4 rounded-2xl transition-all shadow-sm hover:scale-105 active:scale-95 ${
+                          className={`flex-1 md:flex-none p-3 sm:p-4 rounded-xl sm:rounded-2xl transition-all shadow-sm active:scale-95 ${
                             item.is_visible 
                             ? 'text-emerald-600 bg-emerald-50 hover:bg-emerald-600 hover:text-white' 
                             : 'text-slate-400 bg-slate-100 hover:bg-slate-500 hover:text-white'
                           }`}
-                          title={item.is_visible ? "ซ่อนจากหน้าเว็บ" : "แสดงบนหน้าเว็บ"}
                         >
-                          {item.is_visible ? <Eye size={20} /> : <EyeOff size={20} />}
+                          {item.is_visible ? <Eye size={18} /> : <EyeOff size={18} />}
                         </button>
                         <button
                           onClick={() => openModal(item)}
-                          className="flex-1 md:flex-none p-4 text-cyan-600 bg-cyan-50 hover:bg-cyan-600 hover:text-white rounded-2xl transition-all shadow-sm hover:scale-105 active:scale-95"
-                          title="ตอบคำถาม"
+                          className="flex-1 md:flex-none p-3 sm:p-4 text-cyan-600 bg-cyan-50 hover:bg-cyan-600 hover:text-white rounded-xl sm:rounded-2xl transition-all shadow-sm active:scale-95"
                         >
-                          <Edit size={20} />
+                          <Edit size={18} />
                         </button>
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="flex-1 md:flex-none p-4 text-red-500 bg-red-50 hover:bg-red-500 hover:text-white rounded-2xl transition-all shadow-sm hover:scale-105 active:scale-95"
-                          title="ลบคำถาม"
+                          className="flex-1 md:flex-none p-3 sm:p-4 text-red-500 bg-red-50 hover:bg-red-500 hover:text-white rounded-xl sm:rounded-2xl transition-all shadow-sm active:scale-95"
                         >
-                          <Trash2 size={20} />
+                          <Trash2 size={18} />
                         </button>
                       </div>
                     </div>
@@ -286,74 +283,67 @@ const AdminQnA = () => {
             })}
           </div>
         ) : (
-          <div className="bg-white rounded-[3rem] py-32 border border-dashed border-slate-200 flex flex-col items-center gap-6 shadow-sm">
-            <div className="w-24 h-24 bg-slate-50 rounded-4xl flex items-center justify-center shadow-sm">
-              <MessageSquare className="text-slate-200" size={48} />
-            </div>
+          <div className="bg-white rounded-4xl py-20 border border-dashed border-slate-200 flex flex-col items-center gap-4 shadow-sm">
+            <MessageSquare className="text-slate-100" size={60} />
             <div className="text-center">
-              <h4 className="text-slate-800 font-black text-xl tracking-tight">ไม่พบข้อมูลที่ต้องการ</h4>
-              <p className="text-slate-400 font-bold mt-1 uppercase tracking-tighter text-xs">No questions found matching your criteria</p>
+              <h4 className="text-slate-800 font-black text-lg">ไม่พบข้อมูล</h4>
+              <p className="text-slate-400 font-bold uppercase text-[10px]">No questions found</p>
             </div>
           </div>
         )}
 
         {/* --- Answer Modal --- */}
         {open && (
-          <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-100 p-4 animate-in fade-in duration-300">
-            <div className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-xl overflow-hidden animate-in zoom-in-95 duration-300 border border-white/20">
-              <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                <h2 className="font-black text-slate-800 text-xl tracking-tight flex items-center gap-3">
-                  <div className="p-2 bg-cyan-500 text-white rounded-xl">
-                    <Send size={18} />
-                  </div>
-                  ส่งคำตอบ/แก้ไขคำตอบ
+          <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-end sm:items-center justify-center z-100 p-0 sm:p-4 animate-in fade-in duration-300">
+            <div className="bg-white rounded-t-4xl sm:rounded-[2.5rem] shadow-2xl w-full max-w-xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-300">
+              <div className="px-6 sm:px-8 py-5 sm:py-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h2 className="font-black text-slate-800 text-lg sm:text-xl tracking-tight flex items-center gap-2">
+                  <Send size={18} className="text-cyan-500" />
+                  ส่งคำตอบ
                 </h2>
-                <button onClick={closeModal} className="p-2 hover:bg-white rounded-full transition-all shadow-sm">
-                  <X size={22} className="text-slate-400" />
+                <button onClick={closeModal} className="p-2 hover:bg-slate-200 rounded-full transition-colors">
+                  <X size={20} className="text-slate-400" />
                 </button>
               </div>
 
-              <form onSubmit={handleSaveAnswer} className="p-8 space-y-6">
-                <div className="bg-cyan-50/50 border border-cyan-100 rounded-3xl p-6 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-4 opacity-5">
-                     <MessageSquare size={80} />
-                  </div>
-                  <span className="text-[10px] font-black text-cyan-600 uppercase tracking-[0.2em] block mb-2">Question Inquiry</span>
-                  <p className="text-slate-700 font-extrabold text-base leading-relaxed italic relative z-10">
+              <form onSubmit={handleSaveAnswer} className="p-6 sm:p-8 space-y-5 sm:space-y-6 max-h-[85vh] overflow-y-auto">
+                <div className="bg-cyan-50/50 border border-cyan-100 rounded-2xl p-4 sm:p-6">
+                  <span className="text-[9px] font-black text-cyan-600 uppercase tracking-widest block mb-1">Inquiry</span>
+                  <p className="text-slate-700 font-bold text-sm sm:text-base italic leading-relaxed">
                     "{editingItem?.question}"
                   </p>
                 </div>
 
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase mb-3 block tracking-[0.2em] ml-1">คำตอบของคุณ (Admin Response)</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase mb-2 block tracking-widest">คำตอบของคุณ</label>
                   <textarea
                     value={answerText}
                     onChange={(e) => setAnswerText(e.target.value)}
-                    className="w-full px-6 py-5 bg-slate-50 border border-slate-200 rounded-3xl focus:bg-white focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 outline-none transition-all text-[15px] h-48 resize-none font-medium text-slate-700 leading-relaxed shadow-inner"
-                    placeholder="พิมพ์ข้อความที่ต้องการตอบกลับ..."
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl focus:bg-white focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/10 outline-none transition-all text-sm h-40 sm:h-48 resize-none font-medium text-slate-700 leading-relaxed shadow-inner"
+                    placeholder="พิมพ์ข้อความตอบกลับ..."
                     required
                   />
                 </div>
 
-                <div className="flex gap-4 pt-2">
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
                   <button
                     type="button"
                     onClick={closeModal}
-                    className="flex-1 py-4 text-slate-500 font-bold hover:bg-slate-50 rounded-[1.25rem] transition-all text-sm uppercase tracking-widest border border-transparent hover:border-slate-100"
+                    className="order-2 sm:order-1 flex-1 py-3.5 text-slate-500 font-bold hover:bg-slate-50 rounded-xl transition-all text-xs uppercase tracking-widest"
                     disabled={saving}
                   >
                     ยกเลิก
                   </button>
                   <button
                     type="submit"
-                    className="flex-2 py-4 bg-slate-800 text-white font-black rounded-[1.25rem] hover:bg-slate-700 transition-all shadow-xl shadow-slate-200 text-sm uppercase tracking-[0.2em] flex items-center justify-center gap-3 active:scale-[0.98] disabled:opacity-50"
+                    className="order-1 sm:order-2 flex-2 py-3.5 bg-slate-800 text-white font-black rounded-xl hover:bg-slate-700 transition-all shadow-lg text-xs uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-50"
                     disabled={saving}
                   >
                     {saving ? (
-                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                     ) : (
                       <>
-                        <Send size={18} />
+                        <Send size={16} />
                         บันทึกคำตอบ
                       </>
                     )}

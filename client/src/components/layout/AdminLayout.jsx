@@ -1,12 +1,18 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import NotificationDropdown from '../commom/NotificationDropdown'; 
-import { 
-  LayoutDashboard, Calendar, 
-  MessageCircleQuestion, LogOut,
-  Newspaper, CalendarClock, Image as ImageIcon, Menu, 
-  ExternalLink, Home
+import NotificationDropdown from '../commom/NotificationDropdown';
+import {
+  LayoutDashboard,
+  Calendar,
+  MessageCircleQuestion,
+  LogOut,
+  Newspaper,
+  CalendarClock,
+  Image as ImageIcon,
+  Menu,
+  ExternalLink,
+  Home
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 
@@ -14,7 +20,23 @@ const AdminLayout = () => {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // เปิด sidebar อัตโนมัติเมื่อจอ ≥ md
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -30,107 +52,151 @@ const AdminLayout = () => {
     { icon: ImageIcon, label: 'จัดการรูปภาพ', path: '/admin/albums' },
   ];
 
-  const currentMenu = menuItems.find(item => item.path === location.pathname)?.label || 'Admin Panel';
+  const currentMenu =
+    menuItems.find(item => item.path === location.pathname)?.label ||
+    'Admin Panel';
 
   return (
-    <div className="h-screen w-full bg-[#FCFAF8] flex overflow-hidden font-sans">
-      
-      {/* --- Sidebar --- */}
-      <aside className={`${isSidebarOpen ? 'w-72' : 'w-24'} bg-[#1e1b18] text-white transition-all duration-500 ease-in-out flex flex-col h-full z-50 shrink-0 shadow-2xl relative`}>
-        <div className="p-8 flex items-center gap-3 border-b border-white/5">
-          <div className="bg-linear-to-br from-orange-500 to-amber-600 p-2.5 rounded-2xl shadow-lg shadow-orange-500/20">
-              <LayoutDashboard size={24} className="text-white" />
+    <div className="h-screen w-full bg-[#FCFAF8] flex overflow-hidden font-sans relative">
+
+      {/* Overlay (Mobile) */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-40 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed md:relative
+          ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          w-72 md:w-72
+          h-full
+          bg-[#1e1b18] text-white
+          transition-all duration-300
+          z-50 flex flex-col shadow-2xl
+        `}
+      >
+        {/* Logo */}
+        <div className="p-6 flex items-center gap-3 border-b border-white/5">
+          <div className="bg-linear-to-br from-orange-500 to-amber-600 p-2.5 rounded-xl">
+            <LayoutDashboard size={22} />
           </div>
-          {isSidebarOpen && (
-            <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-black tracking-tighter text-xl text-white">
-              SMART TEMPLE
-            </motion.span>
-          )}
+          <span className="font-black tracking-tight text-lg">
+            SMART TEMPLE
+          </span>
         </div>
 
-        {/* User Profile Info */}
-        <div className={`p-8 flex flex-col items-center ${isSidebarOpen ? 'bg-white/5' : ''} border-b border-white/5 mx-4 my-6 rounded-4xl transition-all`}>
-          <div className="w-16 h-16 bg-linear-to-tr from-orange-500 to-amber-300 rounded-2xl flex items-center justify-center border-2 border-white/10 overflow-hidden text-2xl font-black shadow-xl rotate-3">
-             {user?.full_name?.charAt(0).toUpperCase()}
+        {/* Profile */}
+        <div className="p-6 flex flex-col items-center border-b border-white/5">
+          <div className="w-14 h-14 bg-linear-to-tr from-orange-500 to-amber-300 rounded-xl flex items-center justify-center text-xl font-bold">
+            {user?.full_name?.charAt(0).toUpperCase()}
           </div>
-          {isSidebarOpen && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center mt-4">
-              <p className="text-sm font-bold text-gray-200 truncate w-44">{user?.full_name}</p>
-            </motion.div>
-          )}
+          <p className="text-sm font-semibold mt-3 text-gray-200 truncate w-full text-center">
+            {user?.full_name}
+          </p>
         </div>
 
-        <nav className="flex-1 px-4 overflow-y-auto space-y-2">
-          {/* ✅ เพิ่มปุ่มไปหน้าหลักใน Sidebar */}
-          <Link to="/" className="flex items-center gap-4 px-5 py-4 rounded-2xl text-amber-400 hover:bg-amber-400/10 transition-all mb-4 border border-amber-400/10">
-            <Home size={22} />
-            {isSidebarOpen && <span className="text-[15px] font-bold">ไปหน้าหลักเว็บไซต์</span>}
+        {/* Menu */}
+        <nav className="flex-1 px-4 py-4 overflow-y-auto space-y-2">
+          <Link
+            to="/"
+            className="flex items-center gap-4 px-4 py-3 rounded-xl text-amber-400 hover:bg-amber-400/10 transition-all"
+            onClick={() => window.innerWidth < 768 && setIsSidebarOpen(false)}
+          >
+            <Home size={20} />
+            <span className="font-semibold text-sm">
+              ไปหน้าหลักเว็บไซต์
+            </span>
           </Link>
 
-          <div className="h-px bg-white/5 mx-4 my-4"></div>
+          <div className="h-px bg-white/10 my-3" />
 
-          {menuItems.map((item) => {
+          {menuItems.map(item => {
             const isActive = location.pathname === item.path;
+
             return (
-              <Link key={item.path} to={item.path} className={`flex items-center gap-4 px-5 py-4 rounded-2xl transition-all ${isActive ? 'bg-orange-600 text-white shadow-lg' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}>
-                <item.icon size={22} />
-                {isSidebarOpen && <span className="text-[15px] font-bold">{item.label}</span>}
+              <Link
+                key={item.path}
+                to={item.path}
+                onClick={() =>
+                  window.innerWidth < 768 && setIsSidebarOpen(false)
+                }
+                className={`flex items-center gap-4 px-4 py-3 rounded-xl transition-all text-sm font-semibold
+                ${
+                  isActive
+                    ? 'bg-orange-600 text-white'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <item.icon size={20} />
+                {item.label}
               </Link>
             );
           })}
         </nav>
 
+        {/* Logout */}
         <div className="p-4">
-            <button onClick={handleLogout} className="w-full flex items-center gap-4 px-5 py-4 rounded-2xl text-gray-500 hover:text-red-400 hover:bg-red-400/10 font-bold transition-all border border-transparent hover:border-red-400/10">
-                <LogOut size={22} />
-                {isSidebarOpen && <span className="text-[15px]">ออกจากระบบ</span>}
-            </button>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-gray-400 hover:text-red-400 hover:bg-red-400/10 transition-all font-semibold text-sm"
+          >
+            <LogOut size={20} />
+            ออกจากระบบ
+          </button>
         </div>
       </aside>
 
-      {/* --- Main Area --- */}
-      <div className="flex-1 flex flex-col min-w-0 h-full relative">
-        <header className="h-20 bg-white/80 backdrop-blur-md border-b border-orange-100/50 flex items-center justify-between px-10 z-40 shrink-0">
-          <div className="flex items-center gap-6">
-            <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-3 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-100 transition-colors shadow-sm">
+      {/* Main Area */}
+      <div className="flex-1 flex flex-col min-w-0 h-full">
+
+        {/* Header */}
+        <header className="h-16 bg-white border-b flex items-center justify-between px-4 md:px-8">
+
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="p-2 bg-orange-50 text-orange-600 rounded-lg md:hidden"
+            >
               <Menu size={22} />
             </button>
-            <div className="hidden sm:flex items-center gap-2">
-              <span className="text-gray-900 font-bold tracking-tight">{currentMenu}</span>
-            </div>
+
+            <span className="font-bold text-gray-900 text-sm md:text-base">
+              {currentMenu}
+            </span>
           </div>
-          
-          <div className="flex items-center gap-5">
-              {/* ✅ เพิ่มปุ่มลัดไปหน้า Home ใน Header */}
-              <Link 
-                to="/" 
-                className="hidden lg:flex items-center gap-2 px-4 py-2 text-orange-600 font-bold text-sm bg-orange-50 hover:bg-orange-100 rounded-xl transition-all border border-orange-100"
-              >
-                <ExternalLink size={16} />
-                ดูหน้าเว็บ
-              </Link>
 
-              <div className="h-8 w-px bg-gray-100 hidden lg:block"></div>
+          <div className="flex items-center gap-4">
+            <Link
+              to="/"
+              className="hidden md:flex items-center gap-2 px-3 py-2 text-orange-600 text-sm font-semibold bg-orange-50 hover:bg-orange-100 rounded-lg"
+            >
+              <ExternalLink size={16} />
+              ดูหน้าเว็บ
+            </Link>
 
-              <NotificationDropdown />
+            <NotificationDropdown />
 
-              <div className="h-10 w-px bg-gray-100"></div>
-
-              <div className="flex items-center gap-4 group cursor-pointer">
-                <div className="text-right hidden md:block">
-                    <p className="text-[13px] font-black text-gray-900 leading-none">{user?.full_name}</p>
-                    <p className="text-[11px] font-bold text-orange-500 mt-1 uppercase tracking-tighter">Administrator</p>
-                </div>
-                <div className="w-11 h-11 rounded-2xl bg-orange-100 text-orange-600 border border-orange-200 flex items-center justify-center font-black transition-transform group-hover:scale-105 shadow-sm shadow-orange-200/50">
-                  {user?.full_name?.charAt(0)}
-                </div>
-              </div>
+            <div className="hidden md:block text-right">
+              <p className="text-xs font-bold">{user?.full_name}</p>
+              <p className="text-[10px] text-orange-500 uppercase">
+                Administrator
+              </p>
+            </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-8 md:p-12 bg-[#FCFAF8] custom-scrollbar">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-7xl mx-auto">
-             <Outlet />
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-12 bg-[#FCFAF8]">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-7xl mx-auto"
+          >
+            <Outlet />
           </motion.div>
         </main>
       </div>
