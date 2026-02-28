@@ -15,8 +15,8 @@ const { BetaAnalyticsDataClient } = require("@google-analytics/data");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const client = new BetaAnalyticsDataClient({
-  credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON)
+const analyticsDataClient = new BetaAnalyticsDataClient({
+  credentials: JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT_JSON),
 });
 
 // =====================
