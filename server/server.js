@@ -68,7 +68,7 @@ app.get("/api/analytics", async (req, res) => {
     const { startDate = "7daysAgo", endDate = "today" } = req.query;
 
     const [response] = await analyticsDataClient.runReport({
-      property: "properties/13680791741",
+      property: "properties/526349239",
       dateRanges: [
         { startDate, endDate },
       ],
@@ -94,7 +94,7 @@ app.get("/api/analytics", async (req, res) => {
 app.get("/api/analytics/top-pages", async (req, res) => {
   try {
     const [response] = await analyticsDataClient.runReport({
-      property: "properties/13680791741",
+      property: "properties/526349239",
       dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
       dimensions: [{ name: "pagePath" }],
       metrics: [{ name: "screenPageViews" }],
@@ -122,7 +122,7 @@ app.get("/api/analytics/top-pages", async (req, res) => {
 app.get("/api/analytics/daily", async (req, res) => {
   try {
     const [response] = await analyticsDataClient.runReport({
-      property: "properties/13680791741",
+      property: "properties/526349239",
       dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
       dimensions: [{ name: "date" }],
       metrics: [{ name: "activeUsers" }],
@@ -144,7 +144,7 @@ app.get("/api/analytics/daily", async (req, res) => {
 app.get("/api/analytics/countries", async (req, res) => {
   try {
     const [response] = await analyticsDataClient.runReport({
-      property: "properties/13680791741",
+      property: "properties/526349239",
       dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
       dimensions: [{ name: "country" }],
       metrics: [{ name: "activeUsers" }],
@@ -165,7 +165,7 @@ app.get("/api/analytics/countries", async (req, res) => {
 app.get("/api/analytics/devices", async (req, res) => {
   try {
     const [response] = await analyticsDataClient.runReport({
-      property: "properties/13680791741",
+      property: "properties/526349239",
       dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
       dimensions: [{ name: "deviceCategory" }],
       metrics: [{ name: "activeUsers" }],
