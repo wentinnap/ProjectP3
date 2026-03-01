@@ -3,15 +3,10 @@
 
   <url>
     <loc>https://wat-kampaeng.vercel.app/</loc>
-    <priority>1.0</priority>
   </url>
 
   <url>
     <loc>https://wat-kampaeng.vercel.app/about</loc>
-  </url>
-
-  <url>
-    <loc>https://wat-kampaeng.vercel.app/donate</loc>
   </url>
 
   <url>
@@ -20,10 +15,6 @@
 
   <url>
     <loc>https://wat-kampaeng.vercel.app/events</loc>
-  </url>
-
-  <url>
-    <loc>https://wat-kampaeng.vercel.app/qna</loc>
   </url>
 
   <url>
