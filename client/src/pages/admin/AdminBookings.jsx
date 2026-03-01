@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 const AdminBookings = () => {
-  // --- States (คงเดิมจากโค้ดคุณ) ---
+  // --- States ---
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending');
@@ -19,6 +19,8 @@ const AdminBookings = () => {
   const [bookingTypes, setBookingTypes] = useState([]);
   const [adminResponse, setAdminResponse] = useState('');
   const [newType, setNewType] = useState({ name: '', description: '', duration: 60 });
+  
+  // State สำหรับการแก้ไข (Edit Mode)
   const [editingId, setEditingId] = useState(null);
   const [editForm, setEditForm] = useState({ name: '', description: '', duration: 60 });
 
@@ -47,7 +49,7 @@ const AdminBookings = () => {
     } catch (error) { console.error('Error fetching types'); }
   };
 
-  // --- Handlers (คงเดิม) ---
+  // --- Handlers ---
   const openBookingDetail = (booking) => {
     setSelectedBooking(booking);
     setAdminResponse(booking.admin_response || '');
@@ -88,6 +90,7 @@ const AdminBookings = () => {
   };
 
   const handleUpdateType = async (id) => {
+    if (!editForm.name.trim()) return toast.warning('กรุณาระบุชื่อพิธี');
     try {
       await bookingAPI.updateType(id, {
         name: editForm.name,
@@ -95,7 +98,7 @@ const AdminBookings = () => {
         duration_minutes: editForm.duration
       });
       toast.success('แก้ไขข้อมูลสำเร็จ');
-      setEditingId(null);
+      setEditingId(null); // ปิดโหมดแก้ไข
       fetchTypes();
     } catch (error) { toast.error('แก้ไขไม่สำเร็จ'); }
   };
@@ -111,7 +114,11 @@ const AdminBookings = () => {
 
   const startEdit = (t) => {
     setEditingId(t.id);
-    setEditForm({ name: t.name, description: t.description || '', duration: t.duration_minutes || 60 });
+    setEditForm({ 
+      name: t.name, 
+      description: t.description || '', 
+      duration: t.duration_minutes || 60 
+    });
   };
 
   const filteredBookings = bookings.filter(b => 
@@ -156,7 +163,7 @@ const AdminBookings = () => {
       </div>
 
       <div className="max-w-7xl mx-auto">
-        {/* Filter Tabs - ทำให้เลื่อนได้ในมือถือ */}
+        {/* Filter Tabs */}
         <div className="flex gap-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
           {['pending', 'approved', 'rejected', 'all'].map((t) => (
             <button
@@ -175,12 +182,12 @@ const AdminBookings = () => {
 
         {/* --- BOOKINGS CONTENT --- */}
         {loading ? (
-            <div className="bg-white rounded-3xl p-10 text-center text-slate-400 border border-slate-100">กำลังโหลด...</div>
+            <div className="bg-white rounded-3xl p-10 text-center text-slate-400 border border-slate-100 italic">กำลังโหลดข้อมูล...</div>
         ) : filteredBookings.length === 0 ? (
-            <div className="bg-white rounded-3xl p-10 text-center text-slate-400 border border-slate-100">ไม่พบข้อมูลการจอง</div>
+            <div className="bg-white rounded-3xl p-10 text-center text-slate-400 border border-slate-100 italic">ไม่พบข้อมูลการจอง</div>
         ) : (
           <>
-            {/* Desktop View (Table) - ซ่อนในมือถือ */}
+            {/* Desktop View (Table) */}
             <div className="hidden lg:block bg-white rounded-4xl shadow-sm border border-slate-100 overflow-hidden">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -232,7 +239,7 @@ const AdminBookings = () => {
               </table>
             </div>
 
-            {/* Mobile View (Cards) - แสดงเฉพาะในมือถือ */}
+            {/* Mobile View (Cards) */}
             <div className="lg:hidden space-y-4">
               {filteredBookings.map((booking) => (
                 <div key={booking.id} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm active:scale-[0.98] transition-transform">
@@ -286,7 +293,7 @@ const AdminBookings = () => {
         )}
       </div>
 
-      {/* ✅ MODAL: BOOKING DETAILS (ปรับปรุง Responsive) */}
+      {/* MODAL 1: BOOKING DETAILS */}
       {showModal && selectedBooking && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-end sm:items-center justify-center z-110 p-0 sm:p-4">
           <div className="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] w-full max-w-2xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden animate-in slide-in-from-bottom sm:zoom-in duration-300">
@@ -352,7 +359,7 @@ const AdminBookings = () => {
               {/* Admin Response */}
               <div className="pt-4">
                 <textarea 
-                  className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-orange-500/20 text-sm h-24 mb-4"
+                  className="w-full p-4 bg-slate-50 rounded-2xl border-none outline-none focus:ring-2 focus:ring-orange-500/20 text-sm h-24 mb-4 resize-none"
                   placeholder="เขียนข้อความตอบกลับถึงผู้จอง..."
                   value={adminResponse}
                   onChange={(e) => setAdminResponse(e.target.value)}
@@ -379,58 +386,135 @@ const AdminBookings = () => {
         </div>
       )}
 
-      {/* MODAL 2: TYPE MANAGEMENT (ย่อส่วนการแสดงผลในมือถือ) */}
+      {/* MODAL 2: TYPE MANAGEMENT (แก้ไขปุ่มแก้ไขเรียบร้อย) */}
       {showTypeModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-end sm:items-center justify-center z-110 p-0 sm:p-4">
           <div className="bg-white rounded-t-[2.5rem] sm:rounded-[2.5rem] w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh] animate-in slide-in-from-bottom sm:zoom-in duration-300 overflow-hidden">
             <div className="p-6 sm:p-8 pb-4 flex justify-between items-center border-b border-slate-50">
               <h3 className="text-lg font-extrabold text-slate-800">ตั้งค่าประเภทพิธี</h3>
-              <button onClick={() => setShowTypeModal(false)} className="p-2"><X className="text-slate-400" /></button>
+              <button onClick={() => { setShowTypeModal(false); setEditingId(null); }} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                <X className="text-slate-400" />
+              </button>
             </div>
             
             <div className="p-6 sm:p-8 overflow-y-auto">
-              {/* Form เพิ่มใหม่ */}
-              <div className="bg-orange-50/50 p-5 rounded-3xl border border-orange-100 mb-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <input 
-                    placeholder="ชื่อพิธี" 
-                    className="px-4 py-3 rounded-xl border-none text-sm outline-none w-full"
-                    value={newType.name}
-                    onChange={(e) => setNewType({...newType, name: e.target.value})}
-                  />
-                  <input 
-                    type="number" 
-                    placeholder="นาที" 
-                    className="px-4 py-3 rounded-xl border-none text-sm outline-none w-full"
-                    value={newType.duration}
-                    onChange={(e) => setNewType({...newType, duration: e.target.value})}
-                  />
-                  <textarea 
-                    placeholder="รายละเอียด"
-                    className="sm:col-span-2 px-4 py-3 rounded-xl border-none text-sm outline-none h-20 resize-none"
-                    value={newType.description}
-                    onChange={(e) => setNewType({...newType, description: e.target.value})}
-                  />
+              {/* Form เพิ่มใหม่ (แสดงเฉพาะตอนไม่ได้แก้ไขใครอยู่) */}
+              {!editingId && (
+                <div className="bg-orange-50/50 p-5 rounded-3xl border border-orange-100 mb-6">
+                  <p className="text-[10px] font-black text-orange-600 uppercase mb-3 tracking-widest">เพิ่มประเภทพิธีใหม่</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <input 
+                      placeholder="ชื่อพิธี" 
+                      className="px-4 py-3 rounded-xl border border-orange-100 text-sm outline-none w-full focus:ring-2 focus:ring-orange-500/20"
+                      value={newType.name}
+                      onChange={(e) => setNewType({...newType, name: e.target.value})}
+                    />
+                    <div className="relative">
+                      <input 
+                        type="number" 
+                        placeholder="ระยะเวลา" 
+                        className="px-4 py-3 rounded-xl border border-orange-100 text-sm outline-none w-full focus:ring-2 focus:ring-orange-500/20"
+                        value={newType.duration}
+                        onChange={(e) => setNewType({...newType, duration: e.target.value})}
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-bold">นาที</span>
+                    </div>
+                    <textarea 
+                      placeholder="รายละเอียดเพิ่มเติม..."
+                      className="sm:col-span-2 px-4 py-3 rounded-xl border border-orange-100 text-sm outline-none h-20 resize-none focus:ring-2 focus:ring-orange-500/20"
+                      value={newType.description}
+                      onChange={(e) => setNewType({...newType, description: e.target.value})}
+                    />
+                  </div>
+                  <button onClick={handleAddType} className="w-full mt-4 py-3 bg-orange-500 text-white rounded-xl font-bold shadow-md hover:bg-orange-600 transition-all flex items-center justify-center gap-2">
+                    <Plus size={18} /> เพิ่มประเภทพิธี
+                  </button>
                 </div>
-                <button onClick={handleAddType} className="w-full mt-4 py-3 bg-orange-500 text-white rounded-xl font-bold shadow-md hover:bg-orange-600 transition-all">
-                  เพิ่มประเภทพิธี
-                </button>
-              </div>
+              )}
 
               {/* รายการที่มีอยู่ */}
               <div className="space-y-3">
+                <p className="text-[10px] font-black text-slate-400 uppercase mb-1 tracking-widest">รายการที่เปิดใช้งาน</p>
                 {bookingTypes.map(t => (
-                  <div key={t.id} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex justify-between items-center">
-                    <div>
-                      <h4 className="font-bold text-slate-700 text-sm">{t.name}</h4>
-                      <p className="text-xs text-slate-400">{t.duration_minutes} นาที</p>
-                    </div>
-                    <div className="flex gap-1">
-                      <button onClick={() => startEdit(t)} className="p-2 text-blue-500 hover:bg-blue-100 rounded-lg"><Edit3 size={16}/></button>
-                      <button onClick={() => handleDeleteType(t.id)} className="p-2 text-red-400 hover:bg-red-100 rounded-lg"><Trash2 size={16}/></button>
-                    </div>
+                  <div key={t.id} className={`p-4 rounded-2xl border transition-all ${editingId === t.id ? 'bg-white border-blue-500 ring-4 ring-blue-500/10 shadow-lg' : 'bg-slate-50 border-slate-100'}`}>
+                    {editingId === t.id ? (
+                      /* --- 🛠 โหมดแก้ไข --- */
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <input 
+                            className="px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
+                            value={editForm.name}
+                            onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                            placeholder="ชื่อพิธี"
+                          />
+                          <div className="relative">
+                            <input 
+                              type="number"
+                              className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-blue-500/20 outline-none"
+                              value={editForm.duration}
+                              onChange={(e) => setEditForm({...editForm, duration: e.target.value})}
+                            />
+                            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-bold">นาที</span>
+                          </div>
+                        </div>
+                        <textarea 
+                          className="w-full px-3 py-2 rounded-lg border border-slate-200 text-sm h-16 focus:ring-2 focus:ring-blue-500/20 outline-none resize-none"
+                          value={editForm.description}
+                          onChange={(e) => setEditForm({...editForm, description: e.target.value})}
+                          placeholder="คำอธิบาย"
+                        />
+                        <div className="flex gap-2">
+                          <button 
+                            onClick={() => handleUpdateType(t.id)}
+                            className="flex-1 bg-blue-600 text-white py-2.5 rounded-xl text-sm font-bold flex items-center justify-center gap-1 shadow-md shadow-blue-500/20"
+                          >
+                            <Save size={16} /> บันทึกการแก้ไข
+                          </button>
+                          <button 
+                            onClick={() => setEditingId(null)}
+                            className="px-4 py-2.5 bg-slate-200 text-slate-600 rounded-xl text-sm font-bold"
+                          >
+                            ยกเลิก
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      /* --- ⚪️ โหมดแสดงผลปกติ --- */
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="font-bold text-slate-700 text-sm">{t.name}</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="text-[11px] font-bold text-orange-500 bg-orange-50 px-2 py-0.5 rounded-md flex items-center gap-1">
+                              <Clock size={10} /> {t.duration_minutes} นาที
+                            </span>
+                            {t.description && <span className="text-[11px] text-slate-400 truncate max-w-[150px]">{t.description}</span>}
+                          </div>
+                        </div>
+                        <div className="flex gap-1">
+                          <button 
+                            onClick={() => startEdit(t)} 
+                            className="p-2 text-blue-500 hover:bg-blue-100 rounded-lg transition-colors"
+                            title="แก้ไข"
+                          >
+                            <Edit3 size={18}/>
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteType(t.id)} 
+                            className="p-2 text-red-400 hover:bg-red-100 rounded-lg transition-colors"
+                            title="ลบ"
+                          >
+                            <Trash2 size={18}/>
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
+                {bookingTypes.length === 0 && (
+                  <div className="text-center py-10 text-slate-400 text-sm border-2 border-dashed border-slate-100 rounded-3xl italic">
+                    ยังไม่มีข้อมูลประเภทพิธี
+                  </div>
+                )}
               </div>
             </div>
           </div>
