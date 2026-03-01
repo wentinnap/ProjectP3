@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://wat-kampaeng.vercel.app/sitemap.xml
