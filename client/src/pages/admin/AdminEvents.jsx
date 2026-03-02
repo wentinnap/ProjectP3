@@ -6,7 +6,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import {
   Plus, Edit, Trash2, Search, X, Calendar as CalendarIcon,
-  List, LayoutGrid, Eye, EyeOff
+  List, LayoutGrid
 } from "lucide-react";
 
 const AdminEvents = () => {
@@ -41,12 +41,9 @@ const AdminEvents = () => {
     }
   };
 
-  // --- ส่วนสำคัญ: จัดการข้อมูลปฏิทินให้มีสี ---
   const calendarEvents = useMemo(() => {
     if (!events) return [];
     return events.map(event => {
-      // Logic สำหรับ End Date: FullCalendar นับวันสิ้นสุดแบบ exclusive 
-      // ถ้ากิจกรรมจบวันที่ 10 ต้องส่งไปเป็นวันที่ 11 ถึงจะแสดงครอบคลุมช่องวันที่ 10
       let endDate = event.start_date;
       if (event.end_date) {
         const date = new Date(event.end_date);
@@ -54,7 +51,7 @@ const AdminEvents = () => {
         endDate = date.toISOString().split('T')[0];
       }
       
-      const eventColor = event.is_visible ? '#06b6d4' : '#94a3b8'; // สีฟ้าเข้ม หรือ สีเทา
+      const eventColor = event.is_visible ? '#06b6d4' : '#94a3b8';
 
       return {
         id: event.id.toString(),
@@ -64,7 +61,7 @@ const AdminEvents = () => {
         backgroundColor: eventColor,
         borderColor: eventColor,
         textColor: '#ffffff',
-        display: 'block', // บังคับให้แสดงเป็นแถบสี (แก้บัคสีไม่ขึ้น)
+        display: 'block',
         extendedProps: { ...event }
       };
     });
@@ -199,7 +196,6 @@ const AdminEvents = () => {
           <div className="bg-white rounded-3xl md:rounded-[2.5rem] p-4 md:p-8 shadow-xl shadow-slate-200/50 border border-white overflow-hidden">
             {viewMode === "calendar" ? (
               <div className="calendar-container custom-calendar animate-in zoom-in-95 duration-500">
-                 {/* Container สำหรับปฏิทิน - แก้ปัญหา Mobile ลากเลื่อนได้ */}
                 <div className="overflow-x-auto">
                     <div className="min-w-[700px]">
                         <FullCalendar
@@ -367,51 +363,84 @@ const AdminEvents = () => {
         </div>
       )}
 
-      {/* --- ปรับปรุง CSS สำหรับปฏิทิน --- */}
+      {/* --- CSS ปรับปรุงใหม่: ลบเส้นใต้ ลบวงเส้น และทำให้สวยแบบ Modern --- */}
       <style>{`
+        /* 1. จัดการตัวเลขวันที่และหัวตาราง (ลบเส้นใต้/ลบวงเส้น) */
+        .custom-calendar .fc-daygrid-day-number, 
+        .custom-calendar .fc-col-header-cell-cushion { 
+            text-decoration: none !important; 
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        .custom-calendar .fc-daygrid-day-number {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #64748b;
+            padding: 10px !important;
+            display: block;
+            width: 100%;
+            text-align: right;
+        }
+
+        /* 2. หัวตาราง (อา. จ. อ. ...) */
+        .fc-col-header-cell { 
+            background: #f8fafc; 
+            padding: 12px 0 !important; 
+            border-bottom: 2px solid #f1f5f9 !important;
+        }
+        
+        .fc-col-header-cell-cushion { 
+            font-size: 0.75rem; 
+            font-weight: 800; 
+            color: #94a3b8; 
+            text-transform: uppercase;
+        }
+
+        /* 3. ส่วน Header ปฏิทิน */
         .custom-calendar .fc .fc-toolbar-title { 
-            font-size: 1.1rem; font-weight: 800; color: #1e293b; 
+            font-size: 1.25rem; font-weight: 900; color: #1e293b; 
         }
-        @media (min-width: 768px) {
-          .custom-calendar .fc .fc-toolbar-title { font-size: 1.5rem; }
-        }
+
         .custom-calendar .fc .fc-button-primary { 
-          background: white; border: 1px solid #e2e8f0; color: #64748b; 
-          font-weight: 800; border-radius: 10px; padding: 6px 12px; font-size: 0.8rem;
-          text-transform: capitalize;
+            background: white; border: 1px solid #e2e8f0; color: #475569; 
+            font-weight: 800; border-radius: 12px; padding: 8px 14px; font-size: 0.8rem;
+            text-transform: capitalize; transition: all 0.2s;
         }
-        .custom-calendar .fc .fc-button-primary:hover { background: #f8fafc; color: #1e293b; }
+        
+        .custom-calendar .fc .fc-button-primary:hover { background: #f8fafc; color: #1e293b; border-color: #cbd5e1; }
+        
         .custom-calendar .fc .fc-button-primary:not(:disabled).fc-button-active { 
             background: #06b6d4; border-color: #06b6d4; color: white; 
         }
-        
-        /* ตารางปฏิทิน */
-        .fc-theme-standard td, .fc-theme-standard th { border: 1px solid #f1f5f9 !important; }
-        .fc-col-header-cell { background: #f8fafc; padding: 10px 0 !important; }
-        .fc-col-header-cell-cushion { 
-            font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-decoration: none !important;
-        }
-        
-        /* สไตล์ของ Event แถบสี */
+
+        /* 4. สไตล์ Event (แถบสี) */
         .fc-event { 
             cursor: pointer;
             border: none !important; 
             padding: 4px 8px !important; 
             border-radius: 8px !important;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin: 1px 2px !important;
+            margin: 1px 4px !important;
         }
-        .fc-event-title { 
-            font-weight: 800 !important; 
-            font-size: 0.7rem !important;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .fc-daygrid-event-dot { display: none !important; } /* ซ่อนจุดกลมถ้ามี */
         
-        /* วันปัจจุบัน */
-        .fc-day-today { background: #ecfeff !important; }
+        .fc-event-title { 
+            font-weight: 700 !important; 
+            font-size: 0.7rem !important;
+        }
+
+        /* 5. ตารางและวันปัจจุบัน */
+        .fc-theme-standard td, .fc-theme-standard th { border: 1px solid #f1f5f9 !important; }
+        .fc-day-today { background: rgba(6, 182, 212, 0.04) !important; }
+        
+        .fc-day-today .fc-daygrid-day-number {
+            color: #06b6d4 !important;
+            font-weight: 900;
+        }
+
+        /* ลบเส้นขอบสีฟ้าเวลาคลิกในบาง Browser */
+        :focus { outline: none !important; }
+        a { text-decoration: none !important; }
       `}</style>
     </div>
   );

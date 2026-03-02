@@ -9,8 +9,8 @@ import {
   Sparkles, Loader2
 } from 'lucide-react';
 
-// --- InputField Component ---
-const InputField = ({ label, name, type = "text", icon: Icon, placeholder, value, onChange, error }) => (
+// --- InputField Component (ปรับปรุงให้รองรับ Custom Validity) ---
+const InputField = ({ label, name, type = "text", icon: Icon, placeholder, value, onChange, error, required, requiredMsg }) => (
   <div className="space-y-1.5 w-full">
     <label className="text-xs md:text-sm font-bold text-gray-700 ml-1">{label}</label>
     <div className="relative group">
@@ -21,8 +21,16 @@ const InputField = ({ label, name, type = "text", icon: Icon, placeholder, value
         type={type}
         name={name}
         value={value}
-        onChange={onChange}
+        required={required}
         autoComplete="off"
+        // ส่วนสำคัญ: จัดการข้อความแจ้งเตือน
+        onChange={(e) => {
+          e.target.setCustomValidity(""); // ล้างค่า Error เมื่อเริ่มพิมพ์
+          onChange(e);
+        }}
+        onInvalid={(e) => {
+          if (requiredMsg) e.target.setCustomValidity(requiredMsg);
+        }}
         className={`w-full pl-10 md:pl-12 pr-4 py-3 md:py-3.5 bg-gray-50 border-2 rounded-xl md:rounded-2xl outline-none transition-all duration-300 text-sm md:text-base
           ${error 
             ? 'border-red-100 focus:border-red-500 focus:bg-white focus:ring-4 focus:ring-red-500/5' 
@@ -164,36 +172,40 @@ const Register = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5">
-              {/* Full Name & Phone - Grid on desktop, Stack on mobile */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
                 <InputField 
                   label="ชื่อ-นามสกุล" name="full_name" icon={UserCircle} placeholder="นายสมชาย ใจดี" 
                   value={formData.full_name} onChange={handleChange} error={errors.full_name}
+                  required requiredMsg="กรุณาระบุชื่อ-นามสกุลจริงด้วยครับ"
                 />
                 <InputField 
                   label="เบอร์โทรศัพท์" name="phone" icon={Smartphone} placeholder="08XXXXXXXX" 
                   value={formData.phone} onChange={handleChange} error={errors.phone}
+                  required requiredMsg="ขอเบอร์โทรศัพท์สำหรับติดต่อด้วยครับ"
                 />
               </div>
 
               <InputField 
                 label="ชื่อผู้ใช้งาน (Username)" name="username" icon={User} placeholder="somchai_88" 
                 value={formData.username} onChange={handleChange} error={errors.username}
+                required requiredMsg="อย่าลืมตั้งชื่อผู้ใช้งานนะครับ"
               />
               <InputField 
                 label="อีเมล" name="email" type="email" icon={Mail} placeholder="example@gmail.com" 
                 value={formData.email} onChange={handleChange} error={errors.email}
+                required requiredMsg="ระบุอีเมลเพื่อรับข่าวสารและยืนยันตัวตนครับ"
               />
 
-              {/* Password & Confirm - Grid on desktop, Stack on mobile */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
                 <InputField 
                   label="รหัสผ่าน" name="password" type="password" icon={Lock} placeholder="••••••••" 
                   value={formData.password} onChange={handleChange} error={errors.password}
+                  required requiredMsg="กำหนดรหัสผ่านเพื่อความปลอดภัยครับ"
                 />
                 <InputField 
                   label="ยืนยันรหัสผ่าน" name="confirmPassword" type="password" icon={ShieldCheck} placeholder="••••••••" 
                   value={formData.confirmPassword} onChange={handleChange} error={errors.confirmPassword}
+                  required requiredMsg="รบกวนยืนยันรหัสผ่านอีกครั้งครับ"
                 />
               </div>
 

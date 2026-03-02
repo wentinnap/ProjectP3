@@ -31,6 +31,12 @@ const Login = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
+    
+    // สำคัญ: ล้างข้อความแจ้งเตือน "โปรดกรอกฟิลด์นี้" เมื่อผู้ใช้เริ่มพิมพ์
+    if (e.target.willValidate) {
+      e.target.setCustomValidity("");
+    }
+
     setFormData({
       ...formData,
       [name]: type === 'checkbox' ? checked : value,
@@ -61,10 +67,17 @@ const Login = () => {
     }
   };
 
+  // ฟังก์ชันสำหรับจัดการข้อความแจ้งเตือนภาษาไทย
+  const handleInvalid = (e, message) => {
+    e.preventDefault(); // ป้องกัน Browser แสดงผลแบบ Default (ถ้าต้องการคุมเอง 100%) 
+    // แต่ในกรณีนี้เราแค่ต้องการเปลี่ยนคำ ให้ใช้บรรทัดล่างครับ
+    e.target.setCustomValidity(message);
+  };
+
   return (
     <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-0 sm:p-4 font-sans relative overflow-x-hidden">
       
-      {/* Background Decorative Elements - ซ่อนในมือถือขนาดเล็กมากเพื่อประสิทธิภาพ */}
+      {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <motion.div 
           animate={{ scale: [1, 1.2, 1], opacity: [0.1, 0.15, 0.1] }}
@@ -78,7 +91,7 @@ const Login = () => {
         />
       </div>
 
-      {/* Back to Home Button - ปรับให้ลอยในมือถือ */}
+      {/* Back to Home Button */}
       <motion.div
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -171,6 +184,7 @@ const Login = () => {
                     name="username"
                     value={formData.username}
                     onChange={handleChange}
+                    onInvalid={(e) => e.target.setCustomValidity("รบกวนระบุชื่อผู้ใช้งานด้วยครับ 🙏")}
                     placeholder="Username or Email"
                     className="w-full pl-10 md:pl-12 pr-4 py-3 md:py-4 bg-gray-50 border-2 border-transparent rounded-xl md:rounded-2xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 transition-all outline-none text-sm md:text-base font-medium"
                     required
@@ -192,6 +206,7 @@ const Login = () => {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
+                    onInvalid={(e) => e.target.setCustomValidity("อย่าลืมใส่รหัสผ่านนะครับ 🔒")}
                     placeholder="••••••••"
                     className="w-full pl-10 md:pl-12 pr-12 py-3 md:py-4 bg-gray-50 border-2 border-transparent rounded-xl md:rounded-2xl focus:bg-white focus:border-orange-500 focus:ring-4 focus:ring-orange-500/5 transition-all outline-none text-sm md:text-base font-medium"
                     required
