@@ -156,9 +156,9 @@ const Gallery = () => {
                   {totalPages > 1 && (
                     <div className="mt-16 flex justify-center">
                       <Pagination 
-                        currentPage={currentPage}
+                        Page={currentPage}
                         totalPages={totalPages}
-                        onPageChange={handlePageChange}
+                        onChange={handlePageChange}
                       />
                     </div>
                   )}

@@ -41,9 +41,12 @@ const AdminEvents = () => {
     }
   };
 
+  // --- ส่วนสำคัญ: จัดการข้อมูลปฏิทินให้มีสี ---
   const calendarEvents = useMemo(() => {
     if (!events) return [];
     return events.map(event => {
+      // Logic สำหรับ End Date: FullCalendar นับวันสิ้นสุดแบบ exclusive 
+      // ถ้ากิจกรรมจบวันที่ 10 ต้องส่งไปเป็นวันที่ 11 ถึงจะแสดงครอบคลุมช่องวันที่ 10
       let endDate = event.start_date;
       if (event.end_date) {
         const date = new Date(event.end_date);
@@ -51,13 +54,17 @@ const AdminEvents = () => {
         endDate = date.toISOString().split('T')[0];
       }
       
+      const eventColor = event.is_visible ? '#06b6d4' : '#94a3b8'; // สีฟ้าเข้ม หรือ สีเทา
+
       return {
         id: event.id.toString(),
         title: event.title,
         start: toDateInput(event.start_date),
         end: endDate,
-        backgroundColor: event.is_visible ? '#06b6d4' : '#94a3b8', 
-        borderColor: 'transparent',
+        backgroundColor: eventColor,
+        borderColor: eventColor,
+        textColor: '#ffffff',
+        display: 'block', // บังคับให้แสดงเป็นแถบสี (แก้บัคสีไม่ขึ้น)
         extendedProps: { ...event }
       };
     });
@@ -144,6 +151,7 @@ const AdminEvents = () => {
 
   return (
     <div className="min-h-screen bg-[#FDFCFB] pb-10 p-3 md:p-6 lg:p-8 animate-in fade-in duration-500">
+      {/* Header Section */}
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-cyan-100 rounded-2xl text-cyan-600 shadow-sm">
@@ -180,6 +188,7 @@ const AdminEvents = () => {
         </div>
       </div>
 
+      {/* Main Content */}
       <div className="max-w-7xl mx-auto">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-4">
@@ -189,22 +198,25 @@ const AdminEvents = () => {
         ) : (
           <div className="bg-white rounded-3xl md:rounded-[2.5rem] p-4 md:p-8 shadow-xl shadow-slate-200/50 border border-white overflow-hidden">
             {viewMode === "calendar" ? (
-              <div className="calendar-container custom-calendar animate-in zoom-in-95 duration-500 overflow-x-auto">
-                <div className="min-w-[600px] md:min-w-full">
-                  <FullCalendar
-                    plugins={[dayGridPlugin, interactionPlugin]}
-                    initialView="dayGridMonth"
-                    locale="th"
-                    events={calendarEvents}
-                    dateClick={handleDateClick}
-                    eventClick={handleEventClick}
-                    headerToolbar={{
-                      left: 'prev,next today',
-                      center: 'title',
-                      right: ''
-                    }}
-                    height="auto"
-                  />
+              <div className="calendar-container custom-calendar animate-in zoom-in-95 duration-500">
+                 {/* Container สำหรับปฏิทิน - แก้ปัญหา Mobile ลากเลื่อนได้ */}
+                <div className="overflow-x-auto">
+                    <div className="min-w-[700px]">
+                        <FullCalendar
+                        plugins={[dayGridPlugin, interactionPlugin]}
+                        initialView="dayGridMonth"
+                        locale="th"
+                        events={calendarEvents}
+                        dateClick={handleDateClick}
+                        eventClick={handleEventClick}
+                        headerToolbar={{
+                            left: 'prev,next today',
+                            center: 'title',
+                            right: ''
+                        }}
+                        height="auto"
+                        />
+                    </div>
                 </div>
               </div>
             ) : (
@@ -220,7 +232,6 @@ const AdminEvents = () => {
                   />
                 </div>
                 
-                {/* Mobile List View / Desktop Table View */}
                 <div className="overflow-x-auto -mx-4 md:mx-0">
                   <table className="w-full text-left min-w-[700px] md:min-w-full">
                     <thead className="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-wider border-b border-slate-100">
@@ -270,7 +281,7 @@ const AdminEvents = () => {
         )}
       </div>
 
-      {/* Responsive Modal */}
+      {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-100 p-0 sm:p-4 animate-in fade-in duration-300">
           <div className="bg-white rounded-t-4xl sm:rounded-4xl shadow-2xl w-full max-w-lg overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-300 max-h-[95vh] flex flex-col">
@@ -334,31 +345,73 @@ const AdminEvents = () => {
                   <span className="text-xs font-black text-slate-600">แสดงผลบนเว็บไซต์</span>
               </label>
 
-              <button 
-                type="submit" 
-                className="w-full py-4 bg-cyan-500 hover:bg-cyan-600 text-white font-black rounded-xl shadow-lg shadow-cyan-100 transition-all active:scale-[0.98]"
-              >
-                {editingEvent ? 'อัปเดตข้อมูล' : 'สร้างกิจกรรม'}
-              </button>
+              <div className="flex gap-3">
+                {editingEvent && (
+                  <button 
+                    type="button"
+                    onClick={() => handleDelete(editingEvent.id)}
+                    className="flex-1 py-4 bg-red-50 text-red-500 font-black rounded-xl hover:bg-red-100 transition-all"
+                  >
+                    ลบกิจกรรม
+                  </button>
+                )}
+                <button 
+                  type="submit" 
+                  className="flex-2 py-4 bg-cyan-500 hover:bg-cyan-600 text-white font-black rounded-xl shadow-lg shadow-cyan-100 transition-all active:scale-[0.98]"
+                >
+                  {editingEvent ? 'อัปเดตข้อมูล' : 'สร้างกิจกรรม'}
+                </button>
+              </div>
             </form>
           </div>
         </div>
       )}
 
+      {/* --- ปรับปรุง CSS สำหรับปฏิทิน --- */}
       <style>{`
-        .custom-calendar .fc .fc-toolbar-title { font-size: 1.1rem; font-weight: 800; color: #1e293b; }
+        .custom-calendar .fc .fc-toolbar-title { 
+            font-size: 1.1rem; font-weight: 800; color: #1e293b; 
+        }
         @media (min-width: 768px) {
           .custom-calendar .fc .fc-toolbar-title { font-size: 1.5rem; }
         }
         .custom-calendar .fc .fc-button-primary { 
           background: white; border: 1px solid #e2e8f0; color: #64748b; 
           font-weight: 800; border-radius: 10px; padding: 6px 12px; font-size: 0.8rem;
+          text-transform: capitalize;
         }
         .custom-calendar .fc .fc-button-primary:hover { background: #f8fafc; color: #1e293b; }
-        .custom-calendar .fc .fc-button-primary:not(:disabled).fc-button-active { background: #06b6d4; border-color: #06b6d4; color: white; }
+        .custom-calendar .fc .fc-button-primary:not(:disabled).fc-button-active { 
+            background: #06b6d4; border-color: #06b6d4; color: white; 
+        }
+        
+        /* ตารางปฏิทิน */
         .fc-theme-standard td, .fc-theme-standard th { border: 1px solid #f1f5f9 !important; }
-        .fc-event { border: none !important; padding: 2px 4px !important; font-size: 11px !important; border-radius: 4px !important; }
-        .fc-daygrid-dot-event:hover { background: rgba(0,0,0,0.05) !important; }
+        .fc-col-header-cell { background: #f8fafc; padding: 10px 0 !important; }
+        .fc-col-header-cell-cushion { 
+            font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-decoration: none !important;
+        }
+        
+        /* สไตล์ของ Event แถบสี */
+        .fc-event { 
+            cursor: pointer;
+            border: none !important; 
+            padding: 4px 8px !important; 
+            border-radius: 8px !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            margin: 1px 2px !important;
+        }
+        .fc-event-title { 
+            font-weight: 800 !important; 
+            font-size: 0.7rem !important;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .fc-daygrid-event-dot { display: none !important; } /* ซ่อนจุดกลมถ้ามี */
+        
+        /* วันปัจจุบัน */
+        .fc-day-today { background: #ecfeff !important; }
       `}</style>
     </div>
   );
