@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
-import { Facebook, MapPin, Phone, Mail, ArrowRight, Heart, Sparkles, Clock3, Lotus } from 'lucide-react'; // เพิ่ม Icon ใหม่
+// เปลี่ยน Lotus เป็น Flower2
+import { Facebook, MapPin, Phone, Mail, ArrowRight, Heart, Sparkles, Clock3, Flower2 } from 'lucide-react'; 
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
   const facebookUrl = "https://www.facebook.com/share/17Ef9GzgzY/?mibextid=wwXIfr";
 
-  // ฟังก์ชันสมมติ ตรวจสอบเวลาเปิดทำการ (6:00 - 18:00)
   const isCurrentlyOpen = () => {
     const now = new Date();
     const hours = now.getHours();
@@ -17,13 +17,13 @@ const Footer = () => {
   return (
     <footer className="bg-gray-900 text-gray-300 relative overflow-hidden font-sans border-t border-white/5">
       
-      {/* Decorative Top Gradient Line - Enhanced */}
+      {/* Decorative Top Gradient Line */}
       <div className="absolute top-0 left-0 right-0 h-1.5 bg-linear-to-r from-orange-600 via-amber-500 to-yellow-500 shadow-[0_0_25px_rgba(245,158,11,0.6)] z-10"></div>
 
-      {/* Background Pattern - subtle but present */}
+      {/* Background Pattern */}
       <div className="absolute inset-0 opacity-[0.04] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/az-subtle.png')]"></div>
       
-      {/* Glow Effects - Soft and atmospheric */}
+      {/* Glow Effects */}
       <div className="absolute -top-40 -left-40 w-[500px] h-[500px] bg-orange-600/15 rounded-full blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-0 -right-40 w-[400px] h-[400px] bg-amber-600/15 rounded-full blur-[100px] pointer-events-none"></div>
 
@@ -33,13 +33,11 @@ const Footer = () => {
           {/* Column 1: Brand Info */}
           <div className="lg:col-span-4 space-y-7">
             <Link to="/" className="inline-flex items-center gap-4 group relative">
-              {/* Logo with Ring Animation on Hover */}
               <div className="relative w-14 h-14 shrink-0">
                   <div className="absolute inset-0 bg-linear-to-br from-orange-500 to-amber-500 rounded-xl shadow-lg shadow-orange-900/50 border border-white/10 flex items-center justify-center group-hover:scale-105 transition-transform duration-300 z-10">
                     <span className="text-white text-3xl font-bold">ว</span>
                   </div>
-                  {/* Pinging ring on hover */}
-                  <div className="absolute -inset-1 bg-orange-400/50 rounded-xl blur-sm opacity-0 group-hover:opacity-100 group-hover:animate-ping-slow transition-opacity duration-500"></div>
+                  <div className="absolute -inset-1 bg-orange-400/50 rounded-xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               </div>
 
               <div className="flex flex-col">
@@ -52,14 +50,12 @@ const Footer = () => {
               ศูนย์รวมจิตใจพุทธศาสนิกชน ให้บริการจองพิธีกรรมทางศาสนาออนไลน์ สะดวก รวดเร็ว โปร่งใส พร้อมสืบสานวัฒนธรรมไทยให้ยั่งยืนสืบไป
             </p>
 
-            {/* Social Icons - Facebook only, with custom subtle pulse */}
             <div className="flex items-center gap-4 pt-2">
               <a 
                 href={facebookUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-11 h-11 rounded-full bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-300 text-gray-400 hover:text-white hover:-translate-y-1.5 hover:bg-[#1877F2] hover:border-[#1877F2] hover:shadow-lg hover:shadow-[#1877F2]/30 group"
-                aria-label="Facebook Page"
               >
                 <Facebook size={20} className="group-hover:scale-110 transition-transform" />
               </a>
@@ -70,7 +66,7 @@ const Footer = () => {
           {/* Column 2: Quick Links */}
           <div className="lg:col-span-2 space-y-7">
             <h3 className="text-white font-semibold text-lg relative inline-flex items-center gap-2">
-              <Lotus size={18} className="text-orange-500 opacity-70" /> {/* Added Thai-style Icon */}
+              <Flower2 size={18} className="text-orange-500 opacity-70" /> {/* แก้เป็น Flower2 */}
               เมนูลัด
               <span className="absolute -bottom-2.5 left-0 w-14 h-1 bg-orange-500 rounded-full"></span>
             </h3>
@@ -87,11 +83,9 @@ const Footer = () => {
                     to={item.to} 
                     className="text-gray-400 hover:text-orange-300 transition-all duration-300 flex items-center gap-2 group relative py-0.5 hover:scale-[1.03] origin-left"
                   >
-                    {/* Arrow animation */}
                     <ArrowRight size={15} className="absolute -left-6 opacity-0 group-hover:left-0 group-hover:opacity-100 transition-all duration-300 text-orange-500" />
                     <span className="group-hover:pl-6 transition-all duration-300 relative overflow-hidden">
                         {item.label}
-                        {/* Shine effect on hover */}
                         <span className="absolute top-0 -left-full w-full h-full bg-linear-to-r from-transparent via-white/20 to-transparent -skew-x-12 group-hover:left-full transition-all duration-500 ease-in-out"></span>
                     </span>
                   </Link>
@@ -103,7 +97,7 @@ const Footer = () => {
           {/* Column 3: Contact Info */}
           <div className="lg:col-span-3 space-y-7">
             <h3 className="text-white font-semibold text-lg relative inline-flex items-center gap-2">
-               <Lotus size={18} className="text-orange-500 opacity-70" />
+               <Flower2 size={18} className="text-orange-500 opacity-70" /> {/* แก้เป็น Flower2 */}
               ข้อมูลติดต่อ
               <span className="absolute -bottom-2.5 left-0 w-14 h-1 bg-orange-500 rounded-full"></span>
             </h3>
@@ -140,16 +134,15 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Column 4: Hours - Enhanced */}
+          {/* Column 4: Hours */}
           <div className="lg:col-span-3 space-y-7">
             <h3 className="text-white font-semibold text-lg relative inline-flex items-center gap-2">
-               <Lotus size={18} className="text-orange-500 opacity-70" />
+               <Flower2 size={18} className="text-orange-500 opacity-70" /> {/* แก้เป็น Flower2 */}
               เวลาทำการ
               <span className="absolute -bottom-2.5 left-0 w-14 h-1 bg-orange-500 rounded-full"></span>
             </h3>
             
             <div className="relative group overflow-hidden bg-white/5 border border-white/10 rounded-3xl p-7 backdrop-blur-sm space-y-5 shadow-inner shadow-black/20 hover:border-orange-500/30 transition-colors duration-500">
-                {/* Subtle background icon */}
                 <Clock3 size={80} className="absolute -bottom-6 -right-6 text-white/5 group-hover:text-orange-500/5 transition-colors duration-500 rotate-12" />
 
                 <div className="flex justify-between items-center border-b border-white/10 pb-4 relative z-10">
@@ -164,7 +157,6 @@ const Footer = () => {
                     </span>
                 </div>
 
-                {/* Status Indicator */}
                 <div className="absolute top-4 right-4 flex items-center gap-1.5 rounded-full px-3 py-1 bg-black/30 border border-white/5 text-[11px] font-medium relative z-10">
                     <span className={`w-2 h-2 rounded-full ${isOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>
                     {isOpen ? 'ขณะนี้เปิดทำการ' : 'ขณะนี้ปิดทำการ'}
@@ -172,12 +164,12 @@ const Footer = () => {
             </div>
 
             <p className="text-[12px] text-gray-500 leading-relaxed italic px-2">
-              * เวลาทำการอาจมีการเปลี่ยนแปลงตามความเหมาะสมของพิธีกรรมและงานเทศกาลสำคัญ กรุณาตรวจสอบข่าวสารล่าสุด
+              * เวลาทำการอาจมีการเปลี่ยนแปลงตามความเหมาะสมของพิธีกรรมและงานเทศกาลสำคัญ
             </p>
           </div>
         </div>
 
-        {/* Bottom Bar - Updated style */}
+        {/* Bottom Bar */}
         <div className="border-t border-white/10 pt-10 mt-10 flex flex-col md:flex-row justify-between items-center gap-6 text-[13px] text-gray-500 bg-black/10 rounded-t-2xl px-6">
             <p>© {currentYear} <span className="font-medium text-gray-400">วัดกำแพง</span>. All rights reserved.</p>
             <div className="flex items-center gap-6 font-medium">
