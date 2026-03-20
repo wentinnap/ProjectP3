@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { Facebook, Twitter, Instagram, Youtube, MapPin, Phone, Mail, ArrowRight, Heart, Sparkles } from 'lucide-react';
+import { Facebook, MapPin, Phone, Mail, ArrowRight, Heart, Sparkles } from 'lucide-react';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const facebookUrl = "https://www.facebook.com/share/17Ef9GzgzY/?mibextid=wwXIfr";
 
   return (
     <footer className="bg-gray-900 text-gray-300 relative overflow-hidden font-sans">
@@ -36,21 +37,17 @@ const Footer = () => {
               ศูนย์รวมจิตใจพุทธศาสนิกชน ให้บริการจองพิธีกรรมทางศาสนาออนไลน์ สะดวก รวดเร็ว โปร่งใส พร้อมสืบสานวัฒนธรรมไทยให้ยั่งยืน
             </p>
 
-            {/* Social Icons - Match image style */}
+            {/* Social Icons - Facebook Link Updated */}
             <div className="flex items-center gap-3 pt-2">
-              {[
-                { icon: Facebook, color: "hover:bg-[#1877F2] hover:border-[#1877F2]" },
-                { icon: Twitter, color: "hover:bg-[#1DA1F2] hover:border-[#1DA1F2]" },
-                { icon: Instagram, color: "hover:bg-[#E4405F] hover:border-[#E4405F]" },
-                { icon: Youtube, color: "hover:bg-[#FF0000] hover:border-[#FF0000]" }
-              ].map((social, idx) => (
-                <button 
-                  key={idx} 
-                  className={`w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-300 text-gray-400 hover:text-white hover:-translate-y-1 ${social.color}`}
-                >
-                  <social.icon size={18} />
-                </button>
-              ))}
+              <a 
+                href={facebookUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-300 text-gray-400 hover:text-white hover:-translate-y-1 hover:bg-[#1877F2] hover:border-[#1877F2]"
+                aria-label="Facebook"
+              >
+                <Facebook size={18} />
+              </a>
             </div>
           </div>
 
@@ -102,7 +99,7 @@ const Footer = () => {
                 </div>
                 <div>
                    <span className="block text-gray-400 text-xs">โทรศัพท์</span>
-                   <span className="text-white font-medium hover:text-green-400 transition-colors cursor-pointer tracking-wider">053-123-456</span>
+                   <span className="text-white font-medium hover:text-green-400 transition-colors cursor-pointer tracking-wider">091-935-6242</span>
                 </div>
               </li>
               <li className="flex items-center gap-3">
@@ -117,7 +114,7 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Column 4: Hours (3 cols) - ส่วนนี้ปรับปรุงให้ดูดีขึ้นแทนส่วน Newsletter */}
+          {/* Column 4: Hours */}
           <div className="lg:col-span-3 space-y-6">
             <h3 className="text-white font-bold text-lg relative inline-block">
               เวลาทำการ
