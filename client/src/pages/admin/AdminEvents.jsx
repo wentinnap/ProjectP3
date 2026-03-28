@@ -6,7 +6,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import {
   Plus, Edit, Trash2, Search, X, Calendar as CalendarIcon,
-  List, LayoutGrid
+  List, LayoutGrid, CheckCircle2, EyeOff, Info, Clock
 } from "lucide-react";
 
 const AdminEvents = () => {
@@ -59,7 +59,7 @@ const AdminEvents = () => {
         start: toDateInput(event.start_date),
         end: endDate,
         backgroundColor: eventColor,
-        borderColor: eventColor,
+        borderColor: 'transparent',
         textColor: '#ffffff',
         display: 'block',
         extendedProps: { ...event }
@@ -147,30 +147,32 @@ const AdminEvents = () => {
   }, [events, search]);
 
   return (
-    <div className="min-h-screen bg-[#FDFCFB] pb-10 p-3 md:p-6 lg:p-8 animate-in fade-in duration-500">
+    <div className="min-h-screen bg-[#fafafa] pb-12 p-4 md:p-8 lg:p-10 font-sans selection:bg-cyan-100 selection:text-cyan-900">
       {/* Header Section */}
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-cyan-100 rounded-2xl text-cyan-600 shadow-sm">
-            <CalendarIcon size={28} className="md:w-8 md:h-8" />
+      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 mb-10">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3 text-cyan-600 font-black text-xs uppercase tracking-[0.2em]">
+            <span className="w-8 h-0.5 bg-cyan-600"></span>
+            Event Management
           </div>
-          <div>
-            <h2 className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">จัดการกิจกรรม</h2>
-            <p className="text-slate-500 text-sm font-medium hidden sm:block">กำหนดการงานบุญ และกิจกรรมสำคัญ</p>
-          </div>
+          <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
+            จัดการกิจกรรม <span className="text-cyan-500">.</span>
+          </h2>
+          <p className="text-slate-500 font-medium max-w-md">บริหารจัดการตารางงานบุญ และกิจกรรมสำคัญของวัดให้เป็นระเบียบและเข้าถึงง่าย</p>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
-          <div className="flex bg-slate-100 p-1 rounded-2xl shadow-inner w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+          {/* View Switcher */}
+          <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200 w-full sm:w-auto">
             <button 
               onClick={() => setViewMode("calendar")}
-              className={`flex-1 sm:flex-none px-4 py-2 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all duration-300 ${viewMode === 'calendar' ? 'bg-white shadow-sm text-cyan-600' : 'text-slate-500'}`}
+              className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all duration-300 ${viewMode === 'calendar' ? 'bg-slate-900 shadow-lg shadow-slate-200 text-white' : 'text-slate-400 hover:text-slate-600'}`}
             >
               <LayoutGrid size={16} /> ปฏิทิน
             </button>
             <button 
               onClick={() => setViewMode("list")}
-              className={`flex-1 sm:flex-none px-4 py-2 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all duration-300 ${viewMode === 'list' ? 'bg-white shadow-sm text-cyan-600' : 'text-slate-500'}`}
+              className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl flex items-center justify-center gap-2 text-sm font-bold transition-all duration-300 ${viewMode === 'list' ? 'bg-slate-900 shadow-lg shadow-slate-200 text-white' : 'text-slate-400 hover:text-slate-600'}`}
             >
               <List size={16} /> รายการ
             </button>
@@ -178,9 +180,10 @@ const AdminEvents = () => {
 
           <button 
             onClick={() => handleOpenModal()} 
-            className="w-full sm:w-auto px-6 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-2xl font-bold shadow-lg flex items-center justify-center gap-2 active:scale-95 transition-transform"
+            className="w-full sm:w-auto px-8 py-4 bg-cyan-500 hover:bg-cyan-600 text-white rounded-2xl font-black shadow-xl shadow-cyan-200/60 flex items-center justify-center gap-3 active:scale-95 transition-all duration-300 group"
           >
-            <Plus size={18} strokeWidth={3} /> <span className="text-sm">เพิ่มกิจกรรม</span>
+            <Plus size={20} strokeWidth={3} className="group-hover:rotate-90 transition-transform duration-300" /> 
+            <span>เพิ่มกิจกรรมใหม่</span>
           </button>
         </div>
       </div>
@@ -188,16 +191,19 @@ const AdminEvents = () => {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto">
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-4">
-            <div className="w-10 h-10 border-4 border-cyan-100 border-t-cyan-500 rounded-full animate-spin"></div>
-            <p className="text-slate-400 font-bold text-[10px] tracking-widest">LOADING...</p>
+          <div className="flex flex-col items-center justify-center py-32 gap-6 bg-white rounded-[3rem] border border-slate-100 shadow-sm">
+            <div className="relative flex items-center justify-center">
+                <div className="w-16 h-16 border-4 border-cyan-50 border-t-cyan-500 rounded-full animate-spin"></div>
+                <CalendarIcon className="absolute text-cyan-200" size={20} />
+            </div>
+            <p className="text-slate-400 font-black text-xs tracking-[0.3em] uppercase animate-pulse">กำลังเตรียมข้อมูล</p>
           </div>
         ) : (
-          <div className="bg-white rounded-3xl md:rounded-[2.5rem] p-4 md:p-8 shadow-xl shadow-slate-200/50 border border-white overflow-hidden">
+          <div className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] p-6 md:p-10 shadow-2xl shadow-slate-200/40 border border-white overflow-hidden">
             {viewMode === "calendar" ? (
-              <div className="calendar-container custom-calendar animate-in zoom-in-95 duration-500">
+              <div className="calendar-container custom-calendar animate-in fade-in zoom-in-95 duration-700">
                 <div className="overflow-x-auto">
-                    <div className="min-w-[700px]">
+                    <div className="min-w-[800px]">
                         <FullCalendar
                         plugins={[dayGridPlugin, interactionPlugin]}
                         initialView="dayGridMonth"
@@ -211,63 +217,92 @@ const AdminEvents = () => {
                             right: ''
                         }}
                         height="auto"
+                        dayMaxEvents={3}
                         />
                     </div>
                 </div>
               </div>
             ) : (
-              <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
-                <div className="relative w-full sm:max-w-xs">
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input 
-                    type="text" 
-                    placeholder="ค้นหากิจกรรม..." 
-                    value={search}
-                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-100 rounded-2xl focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500 outline-none text-sm font-medium"
-                    onChange={(e) => setSearch(e.target.value)}
-                  />
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-700">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <div className="relative w-full sm:max-w-md group">
+                        <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-cyan-500 transition-colors" size={20} />
+                        <input 
+                            type="text" 
+                            placeholder="ค้นหาชื่อกิจกรรม หรือรายละเอียด..." 
+                            value={search}
+                            className="w-full pl-14 pr-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl focus:bg-white focus:border-cyan-100 focus:ring-4 focus:ring-cyan-500/5 outline-none text-sm font-bold text-slate-700 transition-all placeholder:text-slate-300"
+                            onChange={(e) => setSearch(e.target.value)}
+                        />
+                    </div>
+                    <div className="text-slate-400 text-xs font-bold bg-slate-50 px-4 py-2 rounded-full border border-slate-100">
+                        พบทั้งหมด {filteredEvents.length} รายการ
+                    </div>
                 </div>
                 
-                <div className="overflow-x-auto -mx-4 md:mx-0">
-                  <table className="w-full text-left min-w-[700px] md:min-w-full">
-                    <thead className="bg-slate-50/50 text-slate-400 text-[10px] font-black uppercase tracking-wider border-b border-slate-100">
+                <div className="overflow-x-auto -mx-6 md:mx-0 rounded-3xl border border-slate-100">
+                  <table className="w-full text-left min-w-[800px]">
+                    <thead className="bg-slate-50/80 backdrop-blur-md text-slate-500 text-[11px] font-black uppercase tracking-widest">
                       <tr>
-                        <th className="px-6 py-4">กิจกรรม</th>
-                        <th className="px-6 py-4">ช่วงเวลา</th>
-                        <th className="px-6 py-4 text-center">การแสดงผล</th>
-                        <th className="px-6 py-4 text-right">จัดการ</th>
+                        <th className="px-8 py-5">กิจกรรม</th>
+                        <th className="px-8 py-5">ช่วงเวลาดำเนินการ</th>
+                        <th className="px-8 py-5 text-center">สถานะ</th>
+                        <th className="px-8 py-5 text-right">จัดการ</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
-                      {filteredEvents.map(event => (
-                        <tr key={event.id} className="group hover:bg-slate-50/50 transition-colors">
-                          <td className="px-6 py-4">
-                            <div className="font-bold text-slate-700 group-hover:text-cyan-600 transition-colors">{event.title}</div>
-                            <p className="text-xs text-slate-400 mt-0.5 line-clamp-1 max-w-[200px]">{event.description || '-'}</p>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-xs font-bold text-slate-600">
-                              {new Date(event.start_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}
+                      {filteredEvents.length > 0 ? filteredEvents.map(event => (
+                        <tr key={event.id} className="group hover:bg-cyan-50/30 transition-all duration-300">
+                          <td className="px-8 py-6">
+                            <div className="flex flex-col">
+                                <span className="font-black text-slate-700 text-base group-hover:text-cyan-700 transition-colors">{event.title}</span>
+                                <span className="text-sm text-slate-400 mt-1 font-medium line-clamp-1 italic">{event.description || 'ไม่มีรายละเอียดเพิ่มเติม'}</span>
                             </div>
-                            {event.end_date && (
-                              <div className="text-[10px] text-slate-400 font-medium">
-                                ถึง {new Date(event.end_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: '2-digit' })}
-                              </div>
-                            )}
                           </td>
-                          <td className="px-6 py-4 text-center">
-                            <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter ${event.is_visible ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
-                              {event.is_visible ? 'Public' : 'Hidden'}
+                          <td className="px-8 py-6 whitespace-nowrap">
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-slate-100 rounded-lg text-slate-500 group-hover:bg-white transition-colors">
+                                    <Clock size={16} />
+                                </div>
+                                <div>
+                                    <div className="text-sm font-black text-slate-600">
+                                    {new Date(event.start_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                    </div>
+                                    {event.end_date && (
+                                    <div className="text-[11px] text-slate-400 font-bold flex items-center gap-1">
+                                        <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                        สิ้นสุด {new Date(event.end_date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                    </div>
+                                    )}
+                                </div>
+                            </div>
+                          </td>
+                          <td className="px-8 py-6 text-center">
+                            <span className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${event.is_visible ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-100 text-slate-400 border border-slate-200'}`}>
+                              {event.is_visible ? (
+                                <><CheckCircle2 size={12} strokeWidth={3} /> Public</>
+                              ) : (
+                                <><EyeOff size={12} strokeWidth={3} /> Hidden</>
+                              )}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-right">
-                            <div className="flex justify-end gap-1">
-                              <button onClick={() => handleOpenModal(event)} className="p-2 text-cyan-600 hover:bg-cyan-50 rounded-lg transition-colors"><Edit size={16}/></button>
-                              <button onClick={() => handleDelete(event.id)} className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={16}/></button>
+                          <td className="px-8 py-6 text-right">
+                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 translate-x-4 group-hover:translate-x-0">
+                              <button onClick={() => handleOpenModal(event)} className="p-2.5 text-cyan-600 bg-white shadow-sm border border-cyan-100 rounded-xl hover:bg-cyan-500 hover:text-white transition-all"><Edit size={18}/></button>
+                              <button onClick={() => handleDelete(event.id)} className="p-2.5 text-red-400 bg-white shadow-sm border border-red-50 rounded-xl hover:bg-red-500 hover:text-white transition-all"><Trash2 size={18}/></button>
                             </div>
                           </td>
                         </tr>
-                      ))}
+                      )) : (
+                        <tr>
+                            <td colSpan="4" className="px-8 py-20 text-center">
+                                <div className="flex flex-col items-center gap-3 text-slate-300">
+                                    <Info size={40} strokeWidth={1} />
+                                    <p className="font-bold">ไม่พบกิจกรรมที่ค้นหา</p>
+                                </div>
+                            </td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
@@ -277,85 +312,100 @@ const AdminEvents = () => {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Modern Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-100 p-0 sm:p-4 animate-in fade-in duration-300">
-          <div className="bg-white rounded-t-4xl sm:rounded-4xl shadow-2xl w-full max-w-lg overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-300 max-h-[95vh] flex flex-col">
-            <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white z-10">
-              <h2 className="font-extrabold text-lg text-slate-800 tracking-tight">
-                {editingEvent ? 'แก้ไขกิจกรรม' : 'สร้างกิจกรรมใหม่'}
-              </h2>
-              <button onClick={() => setShowModal(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X size={20}/></button>
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md flex items-end sm:items-center justify-center z-100 p-0 sm:p-4 animate-in fade-in duration-300">
+          <div className="bg-white rounded-t-[2.5rem] sm:rounded-[3rem] shadow-2xl w-full max-w-xl overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-500 max-h-[95vh] flex flex-col border border-white">
+            <div className="px-8 py-6 border-b border-slate-50 flex justify-between items-center sticky top-0 bg-white/80 backdrop-blur-md z-10">
+              <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-xl ${editingEvent ? 'bg-cyan-100 text-cyan-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                    {editingEvent ? <Edit size={20} /> : <Plus size={20} />}
+                  </div>
+                  <h2 className="font-black text-xl text-slate-800 tracking-tight">
+                    {editingEvent ? 'แก้ไขกิจกรรม' : 'สร้างกิจกรรมใหม่'}
+                  </h2>
+              </div>
+              <button onClick={() => setShowModal(false)} className="p-2.5 hover:bg-slate-100 rounded-2xl text-slate-400 transition-colors"><X size={24}/></button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto">
-              <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">หัวข้อกิจกรรม</label>
+            <form onSubmit={handleSubmit} className="p-8 space-y-6 overflow-y-auto">
+              <div className="space-y-2">
+                <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">หัวข้อกิจกรรม</label>
                 <input 
                   required 
                   type="text" 
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-cyan-500 transition-all font-bold text-slate-700" 
+                  placeholder="เช่น งานบวชหมู่, วันมาฆบูชา..."
+                  className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none focus:bg-white focus:border-cyan-200 transition-all font-bold text-slate-700 shadow-inner" 
                   value={formData.title} 
                   onChange={e => setFormData({...formData, title: e.target.value})} 
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">วันที่เริ่ม</label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div className="space-y-2">
+                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">วันที่เริ่ม</label>
                   <input 
                     required 
                     type="date" 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-cyan-500 font-bold text-slate-700" 
+                    className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none focus:bg-white focus:border-cyan-200 font-bold text-slate-700 shadow-inner" 
                     value={formData.start_date} 
                     onChange={e => setFormData({...formData, start_date: e.target.value})} 
                   />
                 </div>
-                <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">วันที่สิ้นสุด</label>
+                <div className="space-y-2">
+                  <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">วันที่สิ้นสุด</label>
                   <input 
                     type="date" 
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-cyan-500 font-bold text-slate-700" 
+                    className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none focus:bg-white focus:border-cyan-200 font-bold text-slate-700 shadow-inner" 
                     value={formData.end_date} 
                     onChange={e => setFormData({...formData, end_date: e.target.value})} 
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 block">รายละเอียด</label>
+              <div className="space-y-2">
+                <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">รายละเอียด</label>
                 <textarea 
-                   className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-cyan-500 font-medium text-slate-700 resize-none h-24" 
+                   placeholder="รายละเอียดกิจกรรมเพิ่มเติม (ถ้ามี)"
+                   className="w-full px-6 py-4 bg-slate-50 border-2 border-transparent rounded-2xl outline-none focus:bg-white focus:border-cyan-200 font-medium text-slate-700 resize-none h-32 shadow-inner transition-all" 
                    value={formData.description}
                    onChange={e => setFormData({...formData, description: e.target.value})}
                 />
               </div>
 
-              <label className="flex items-center gap-3 p-4 bg-slate-50 rounded-xl border border-slate-100 cursor-pointer group">
-                  <input 
-                    type="checkbox" 
-                    checked={formData.is_visible} 
-                    onChange={e => setFormData({...formData, is_visible: e.target.checked})} 
-                    className="w-5 h-5 accent-cyan-500 rounded" 
-                  />
-                  <span className="text-xs font-black text-slate-600">แสดงผลบนเว็บไซต์</span>
-              </label>
+              <div 
+                onClick={() => setFormData({...formData, is_visible: !formData.is_visible})}
+                className={`flex items-center justify-between p-5 rounded-4xl border-2 cursor-pointer transition-all duration-300 ${formData.is_visible ? 'bg-emerald-50/50 border-emerald-100' : 'bg-slate-50 border-slate-100'}`}
+              >
+                  <div className="flex items-center gap-4">
+                      <div className={`p-3 rounded-2xl transition-colors ${formData.is_visible ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                        {formData.is_visible ? <CheckCircle2 size={20} strokeWidth={3} /> : <EyeOff size={20} strokeWidth={3} />}
+                      </div>
+                      <div className="flex flex-col">
+                          <span className="text-sm font-black text-slate-700">การแสดงผลบนเว็บไซต์</span>
+                          <span className="text-[11px] text-slate-400 font-bold uppercase tracking-widest">{formData.is_visible ? 'ทุกคนมองเห็นได้' : 'ซ่อนจากสาธารณะ'}</span>
+                      </div>
+                  </div>
+                  <div className={`w-12 h-6 rounded-full relative transition-colors ${formData.is_visible ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                      <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 ${formData.is_visible ? 'left-7' : 'left-1'}`}></div>
+                  </div>
+              </div>
 
-              <div className="flex gap-3">
+              <div className="flex gap-4 pt-4">
                 {editingEvent && (
                   <button 
                     type="button"
                     onClick={() => handleDelete(editingEvent.id)}
-                    className="flex-1 py-4 bg-red-50 text-red-500 font-black rounded-xl hover:bg-red-100 transition-all"
+                    className="flex-1 py-5 bg-red-50 text-red-500 font-black rounded-3xl hover:bg-red-500 hover:text-white transition-all shadow-sm hover:shadow-red-200"
                   >
                     ลบกิจกรรม
                   </button>
                 )}
                 <button 
                   type="submit" 
-                  className="flex-2 py-4 bg-cyan-500 hover:bg-cyan-600 text-white font-black rounded-xl shadow-lg shadow-cyan-100 transition-all active:scale-[0.98]"
+                  className="flex-2 py-5 bg-slate-900 hover:bg-slate-800 text-white font-black rounded-3xl shadow-xl shadow-slate-200 transition-all active:scale-[0.98]"
                 >
-                  {editingEvent ? 'อัปเดตข้อมูล' : 'สร้างกิจกรรม'}
+                  {editingEvent ? 'อัปเดตข้อมูลกิจกรรม' : 'บันทึกกิจกรรมใหม่'}
                 </button>
               </div>
             </form>
@@ -363,84 +413,118 @@ const AdminEvents = () => {
         </div>
       )}
 
-      {/* --- CSS ปรับปรุงใหม่: ลบเส้นใต้ ลบวงเส้น และทำให้สวยแบบ Modern --- */}
+      {/* --- Modern Calendar CSS Customization --- */}
       <style>{`
-        /* 1. จัดการตัวเลขวันที่และหัวตาราง (ลบเส้นใต้/ลบวงเส้น) */
-        .custom-calendar .fc-daygrid-day-number, 
-        .custom-calendar .fc-col-header-cell-cushion { 
-            text-decoration: none !important; 
-            outline: none !important;
-            box-shadow: none !important;
+        .custom-calendar .fc {
+          --fc-border-color: #f1f5f9;
+          --fc-daygrid-event-dot-width: 8px;
+          font-family: inherit;
         }
 
+        .custom-calendar .fc-theme-standard {
+            border: none !important;
+        }
+
+        .custom-calendar .fc-theme-standard td, 
+        .custom-calendar .fc-theme-standard th {
+            border: 1px solid #f8fafc !important;
+        }
+
+        /* Toolbar */
+        .custom-calendar .fc .fc-toolbar {
+            margin-bottom: 2rem !important;
+            padding: 0 10px;
+        }
+
+        .custom-calendar .fc .fc-toolbar-title {
+            font-size: 1.5rem !important;
+            font-weight: 900 !important;
+            color: #0f172a !important;
+            letter-spacing: -0.025em;
+        }
+
+        .custom-calendar .fc .fc-button-primary {
+            background: white !important;
+            border: 1px solid #e2e8f0 !important;
+            color: #64748b !important;
+            font-weight: 800 !important;
+            border-radius: 14px !important;
+            padding: 10px 18px !important;
+            font-size: 0.85rem !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+            transition: all 0.2s !important;
+        }
+
+        .custom-calendar .fc .fc-button-primary:hover {
+            background: #f8fafc !important;
+            color: #0f172a !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        .custom-calendar .fc .fc-button-active {
+            background: #0f172a !important;
+            border-color: #0f172a !important;
+            color: white !important;
+        }
+
+        /* Day Grid */
         .custom-calendar .fc-daygrid-day-number {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #64748b;
-            padding: 10px !important;
-            display: block;
-            width: 100%;
-            text-align: right;
+            font-size: 0.8rem !important;
+            font-weight: 800 !important;
+            color: #94a3b8 !important;
+            padding: 12px !important;
+            text-decoration: none !important;
         }
 
-        /* 2. หัวตาราง (อา. จ. อ. ...) */
-        .fc-col-header-cell { 
-            background: #f8fafc; 
-            padding: 12px 0 !important; 
-            border-bottom: 2px solid #f1f5f9 !important;
-        }
-        
-        .fc-col-header-cell-cushion { 
-            font-size: 0.75rem; 
-            font-weight: 800; 
-            color: #94a3b8; 
-            text-transform: uppercase;
+        .custom-calendar .fc-col-header-cell {
+            background: #fcfcfd !important;
+            padding: 15px 0 !important;
         }
 
-        /* 3. ส่วน Header ปฏิทิน */
-        .custom-calendar .fc .fc-toolbar-title { 
-            font-size: 1.25rem; font-weight: 900; color: #1e293b; 
+        .custom-calendar .fc-col-header-cell-cushion {
+            font-size: 0.75rem !important;
+            font-weight: 900 !important;
+            color: #64748b !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.1em !important;
+            text-decoration: none !important;
         }
 
-        .custom-calendar .fc .fc-button-primary { 
-            background: white; border: 1px solid #e2e8f0; color: #475569; 
-            font-weight: 800; border-radius: 12px; padding: 8px 14px; font-size: 0.8rem;
-            text-transform: capitalize; transition: all 0.2s;
-        }
-        
-        .custom-calendar .fc .fc-button-primary:hover { background: #f8fafc; color: #1e293b; border-color: #cbd5e1; }
-        
-        .custom-calendar .fc .fc-button-primary:not(:disabled).fc-button-active { 
-            background: #06b6d4; border-color: #06b6d4; color: white; 
+        .custom-calendar .fc-day-today {
+            background: #f0f9ff !important;
         }
 
-        /* 4. สไตล์ Event (แถบสี) */
-        .fc-event { 
-            cursor: pointer;
-            border: none !important; 
-            padding: 4px 8px !important; 
-            border-radius: 8px !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            margin: 1px 4px !important;
-        }
-        
-        .fc-event-title { 
-            font-weight: 700 !important; 
-            font-size: 0.7rem !important;
-        }
-
-        /* 5. ตารางและวันปัจจุบัน */
-        .fc-theme-standard td, .fc-theme-standard th { border: 1px solid #f1f5f9 !important; }
-        .fc-day-today { background: rgba(6, 182, 212, 0.04) !important; }
-        
-        .fc-day-today .fc-daygrid-day-number {
+        .custom-calendar .fc-day-today .fc-daygrid-day-number {
             color: #06b6d4 !important;
-            font-weight: 900;
         }
 
-        /* ลบเส้นขอบสีฟ้าเวลาคลิกในบาง Browser */
+        /* Events */
+        .fc-event {
+            border-radius: 10px !important;
+            padding: 5px 10px !important;
+            margin: 2px 5px !important;
+            font-size: 0.75rem !important;
+            font-weight: 800 !important;
+            border: none !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1) !important;
+            cursor: pointer !important;
+            transition: transform 0.2s !important;
+        }
+
+        .fc-event:hover {
+            transform: scale(1.02) !important;
+        }
+
+        .fc-daygrid-more-link {
+            font-size: 0.7rem !important;
+            font-weight: 900 !important;
+            color: #06b6d4 !important;
+            padding-left: 10px !important;
+            text-decoration: none !important;
+        }
+
+        /* Hide focus ring */
         :focus { outline: none !important; }
-        a { text-decoration: none !important; }
       `}</style>
     </div>
   );
