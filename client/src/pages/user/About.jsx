@@ -166,17 +166,18 @@ const About = () => {
 
               {/* Map Canvas */}
               <div className="relative w-full h-[500px] rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white bg-gray-100 group">
-                <iframe 
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m13!1m3!1d3873.805822648721!2d100.50155097584594!3d13.82061299566113!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e29b7480c00fbb%3A0x4c44526388e3b7d4!2z4Lin4Lix4LiU4LiB4Liz4LmB4Lie4LiHIE5vbnRoYWJ1cmk!5e0!3m2!1sth!2sth!4v1711234567890!5m2!1sth!2sth" 
-                  width="100%" 
-                  height="100%" 
-                  style={{ border: 0 }} 
-                  allowFullScreen="" 
-                  loading="lazy" 
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title="แผนที่วัดกำแพง นนทบุรี"
-                  className="transition-opacity duration-500 group-hover:opacity-90"
-                ></iframe>
+                {/* ส่วนที่ต้องเปลี่ยนในไฟล์เดิม */}
+<iframe 
+  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3874.372566271168!2d100.49504837583688!3d13.816656895856411!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e29b7484c00fb9%3A0x4844526388e3b7d4!2z4Lin4Lix4LiU4LiB4Liz4Lie4LiB4LiH!5e0!3m2!1sth!2sth!4v1711200000000!5m2!1sth!2sth" 
+  width="100%" 
+  height="100%" 
+  style={{ border: 0 }} 
+  allowFullScreen="" 
+  loading="lazy" 
+  referrerPolicy="no-referrer-when-downgrade"
+  title="แผนที่วัดกำแพง นนทบุรี"
+  className="transition-opacity duration-500 group-hover:opacity-90"
+></iframe>
               </div>
 
               {/* Contact Information Cards */}
