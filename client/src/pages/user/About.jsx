@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import Navbar from "../../components/layout/Navbar";
 import Footer from "../../components/layout/Footer";
-import { History, Landmark, Mountain, Camera, Info, Sparkles, Footprints, CheckCircle2, MapPin } from 'lucide-react';
+import { History, Landmark, Mountain, Camera, Info, Sparkles, Footprints, CheckCircle2, MapPin, Clock, Navigation } from 'lucide-react';
 
 const About = () => {
   useEffect(() => {
@@ -147,7 +147,7 @@ const About = () => {
           </div>
         </section>
 
-        {/* Google Maps Section */}
+        {/* Google Maps Section - ปักหมุดวัดกำแพง นนทบุรี */}
         <section className="py-24 bg-white overflow-hidden">
           <div className="container mx-auto px-4">
             <div className="max-w-6xl mx-auto">
@@ -160,14 +160,14 @@ const About = () => {
                   <h2 className="text-4xl font-bold text-gray-900">แผนที่และการเดินทาง</h2>
                 </div>
                 <p className="text-gray-500 max-w-md">
-                  วัดกำแพง ตั้งอยู่บริเวณริมแม่น้ำเจ้าพระยา ตำบลสวนใหญ่ อำเภอเมืองนนทบุรี สามารถเดินทางเข้าถึงได้ง่ายจากถนนพิบูลสงคราม
+                  วัดกำแพง ตั้งอยู่ซอยพิบูลสงคราม 22 (ซอยวัดกำแพง) เดินทางสะดวกเข้าออกได้ทั้งถนนพิบูลสงครามและถนนนครอินทร์
                 </p>
               </div>
 
               {/* Map Canvas */}
               <div className="relative w-full h-[500px] rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white bg-gray-100 group">
                 <iframe 
-                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3873.6702674997095!2d100.4932370757279!3d13.82885409543163!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e29b9909282245%3A0xc3b8417c8005370a!2z4Lin4Lix4LiU4LiB4Liz4LmB4Lie4LiH!5e0!3m2!1sth!2sth!4v1710312000000!5m2!1sth!2sth" 
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m13!1m3!1d3873.805822648721!2d100.50155097584594!3d13.82061299566113!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e29b7480c00fbb%3A0x4c44526388e3b7d4!2z4Lin4Lix4LiU4LiB4Liz4LmB4Lie4LiHIE5vbnRoYWJ1cmk!5e0!3m2!1sth!2sth!4v1711234567890!5m2!1sth!2sth" 
                   width="100%" 
                   height="100%" 
                   style={{ border: 0 }} 
@@ -179,19 +179,36 @@ const About = () => {
                 ></iframe>
               </div>
 
-              {/* Contact Cards */}
+              {/* Contact Information Cards */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-12">
-                <div className="bg-gray-50 p-8 rounded-4xl border border-gray-100 hover:bg-orange-50 hover:border-orange-200 transition-colors">
+                <div className="bg-gray-50 p-8 rounded-4xl border border-gray-100 hover:bg-orange-50 hover:border-orange-200 transition-all duration-300">
+                  <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4 text-orange-500">
+                    <Navigation size={24} />
+                  </div>
                   <h4 className="text-lg font-bold text-gray-800 mb-2">ที่อยู่</h4>
-                  <p className="text-gray-600 text-sm leading-relaxed">ตำบลสวนใหญ่ อำเภอเมืองนนทบุรี จังหวัดนนทบุรี 11000</p>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    เลขที่ 19 หมู่ที่ 8 ซอยพิบูลสงคราม 22 อำเภอนนทบุรี จังหวัดนนทบุรี 11000
+                  </p>
                 </div>
-                <div className="bg-gray-50 p-8 rounded-4xl border border-gray-100 hover:bg-orange-50 hover:border-orange-200 transition-colors">
+                
+                <div className="bg-gray-50 p-8 rounded-4xl border border-gray-100 hover:bg-orange-50 hover:border-orange-200 transition-all duration-300">
+                  <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4 text-orange-500">
+                    <Clock size={24} />
+                  </div>
                   <h4 className="text-lg font-bold text-gray-800 mb-2">เวลาเปิดเข้าชม</h4>
-                  <p className="text-gray-600 text-sm leading-relaxed">ทุกวัน : 07:30 น. – 18:00 น.</p>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    เปิดทุกวัน : 08:00 น. – 18:00 น.
+                  </p>
                 </div>
-                <div className="bg-gray-50 p-8 rounded-4xl border border-gray-100 hover:bg-orange-50 hover:border-orange-200 transition-colors">
-                  <h4 className="text-lg font-bold text-gray-800 mb-2">เบอร์โทรศัพท์</h4>
-                  <p className="text-gray-600 text-sm leading-relaxed">ติดต่อสำนักงานวัด : 02-XXX-XXXX</p>
+
+                <div className="bg-gray-50 p-8 rounded-4xl border border-gray-100 hover:bg-orange-50 hover:border-orange-200 transition-all duration-300">
+                  <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4 text-orange-500">
+                    <Info size={24} />
+                  </div>
+                  <h4 className="text-lg font-bold text-gray-800 mb-2">จุดสังเกต</h4>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    ตั้งอยู่ในซอยพิบูลสงคราม 22 (ซอยวัดกำแพง) สามารถเข้าถึงได้จากถนนพิบูลสงครามและถนนนครอินทร์
+                  </p>
                 </div>
               </div>
             </div>
