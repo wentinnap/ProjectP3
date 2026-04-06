@@ -168,7 +168,7 @@ const About = () => {
               <div className="relative w-full h-[500px] rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white bg-gray-100 group">
                 {/* ส่วนที่ต้องเปลี่ยนในไฟล์เดิม */}
 <iframe 
-  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m2!1d3873.9189873995834!2d100.50503027588661!3d13.843890895123964!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e29b7480c00fbb%3A0x4844526388e3b7d4!2z4Lin4Lix4LiU4LiB4Liz4Lie4LiB4LiH!5e0!3m2!1sth!2sth!4v1712415842000!5m2!1sth!2sth" 
+  src="https://www.google.com/maps?q=วัดกำแพง+นนทบุรี&output=embed" 
   width="100%" 
   height="100%" 
   style={{ border: 0 }} 
