@@ -242,7 +242,7 @@ const QnA = () => {
                             ว
                           </div>
                           <div>
-                            <p className="font-bold text-orange-800 text-sm mb-1">วัดพระธาตุ</p>
+                            <p className="font-bold text-orange-800 text-sm mb-1">วัดกำแพง(นนทบุรี)</p>
                             <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{q.answer}</p>
                           </div>
                         </div>

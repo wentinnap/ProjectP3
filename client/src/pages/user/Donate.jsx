@@ -79,7 +79,7 @@ const Donate = () => {
                         <div className="mt-8 pt-8 border-t border-gray-100 max-w-sm mx-auto">
                             <div className="flex items-start gap-3 justify-center text-xs text-gray-500 leading-relaxed text-center">
                                 <Info size={16} className="shrink-0 text-orange-400" />
-                                <p>ท่านสามารถแจ้งความประสงค์รับใบอนุโมทนาบัตรได้ที่สำนักงานวัด หรือติดต่อผ่านช่องทางแชทของทางเว็บไซต์</p>
+                                <p>ท่านสามารถแจ้งความประสงค์รับใบอนุโมทนาบัตรได้ที่สำนักงานวัดกำแพง(นนทบุรี)</p>
                             </div>
                         </div>
 
