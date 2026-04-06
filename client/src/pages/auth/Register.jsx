@@ -9,8 +9,11 @@ import {
   Sparkles, Loader2
 } from 'lucide-react';
 
-// --- InputField Component (ปรับปรุงให้รองรับ Custom Validity) ---
-const InputField = ({ label, name, type = "text", icon: Icon, placeholder, value, onChange, error, required, requiredMsg }) => (
+// --- InputField Component (เพิ่ม support inputMode และ maxLength) ---
+const InputField = ({ 
+  label, name, type = "text", icon: Icon, placeholder, value, 
+  onChange, error, required, requiredMsg, inputMode, maxLength 
+}) => (
   <div className="space-y-1.5 w-full">
     <label className="text-xs md:text-sm font-bold text-gray-700 ml-1">{label}</label>
     <div className="relative group">
@@ -22,10 +25,11 @@ const InputField = ({ label, name, type = "text", icon: Icon, placeholder, value
         name={name}
         value={value}
         required={required}
+        inputMode={inputMode}
+        maxLength={maxLength}
         autoComplete="off"
-        // ส่วนสำคัญ: จัดการข้อความแจ้งเตือน
         onChange={(e) => {
-          e.target.setCustomValidity(""); // ล้างค่า Error เมื่อเริ่มพิมพ์
+          e.target.setCustomValidity("");
           onChange(e);
         }}
         onInvalid={(e) => {
@@ -69,9 +73,18 @@ const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  // --- แก้ไข Logic การพิมพ์ให้กรองเฉพาะตัวเลขสำหรับช่อง phone ---
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    if (name === 'phone') {
+      // กรองเอาเฉพาะตัวเลข 0-9 เท่านั้น
+      const onlyNums = value.replace(/[^0-9]/g, '');
+      setFormData(prev => ({ ...prev, [name]: onlyNums }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
+
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
@@ -117,7 +130,7 @@ const Register = () => {
       {/* Back to Home Button */}
       <Link 
         to="/" 
-        className="fixed top-4 left-4 md:top-6 md:left-6 z-60 group flex items-center gap-2 px-4 py-2 md:px-5 md:py-2.5 bg-white shadow-md border border-orange-50 text-gray-600 rounded-xl md:rounded-2xl hover:border-orange-200 transition-all active:scale-95 text-xs md:text-sm"
+        className="fixed top-4 left-4 md:top-6 md:left-6 z-50 group flex items-center gap-2 px-4 py-2 md:px-5 md:py-2.5 bg-white shadow-md border border-orange-50 text-gray-600 rounded-xl md:rounded-2xl hover:border-orange-200 transition-all active:scale-95 text-xs md:text-sm"
       >
         <ArrowLeft className="w-4 h-4 text-orange-500" />
         <span className="font-bold">กลับ</span>
@@ -132,7 +145,7 @@ const Register = () => {
         
         {/* Left Panel */}
         <div className="w-full md:w-5/12 bg-linear-to-br from-orange-600 via-orange-500 to-amber-500 relative p-8 md:p-12 flex flex-col justify-center text-white overflow-hidden">
-          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at:1px_1px,#fff_1px,transparent_0)] bg-size-[24px_24px] md:bg-size-[32px_32px]"></div>
+          <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_1px_1px,#fff_1px,transparent_0)] bg-size-[24px_24px] md:bg-size-[32px_32px]"></div>
           
           <div className="relative z-10">
             <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-lg px-3 py-1.5 rounded-lg mb-6 md:mb-12 border border-white/20">
@@ -182,6 +195,8 @@ const Register = () => {
                   label="เบอร์โทรศัพท์" name="phone" icon={Smartphone} placeholder="08XXXXXXXX" 
                   value={formData.phone} onChange={handleChange} error={errors.phone}
                   required requiredMsg="ขอเบอร์โทรศัพท์สำหรับติดต่อด้วยครับ"
+                  inputMode="numeric"
+                  maxLength={10}
                 />
               </div>
 

@@ -183,7 +183,7 @@ const Footer = () => {
                 </a>
             </div>
             <p className="flex items-center gap-1.5 text-[12px] bg-white/5 px-4 py-1.5 rounded-full border border-white/10">
-                Made with <Heart size={13} className="text-red-500 fill-red-500 animate-pulse" /> by <span className="text-gray-400 font-medium">ทีมพัฒนาวัดกำแพง</span>
+                Made with <Heart size={13} className="text-red-500 fill-red-500 animate-pulse" /> by <span className="text-gray-400 font-medium">ทีมพัฒนาวัดกำแพง(นนทบุรี)</span>
             </p>
         </div>
       </div>
