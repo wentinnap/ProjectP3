@@ -101,7 +101,7 @@ const Home = () => {
           <div className="container mx-auto px-4">
             <div className="text-center mb-20">
               <span className="text-orange-600 font-bold tracking-widest uppercase text-sm mb-2 block font-sans">
-                Our Services
+                
               </span>
               <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 font-serif">
                 บริการที่เป็นเลิศ
