@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import Navbar from "../../components/layout/Navbar";
 import Footer from "../../components/layout/Footer";
-import { History, Landmark, Mountain, Camera, Info, Sparkles, Footprints, CheckCircle2 } from 'lucide-react';
+import { History, Landmark, Mountain, Camera, Info, Sparkles, Footprints, CheckCircle2, MapPin } from 'lucide-react';
 
 const About = () => {
   useEffect(() => {
@@ -24,7 +24,7 @@ const About = () => {
             </div>
             <h1 className="text-4xl md:text-6xl font-bold mb-6 tracking-tight">เกี่ยวกับวัดกำแพง</h1>
             <p className="text-lg md:text-xl text-orange-50 max-w-3xl mx-auto font-light">
-              ศูนย์รวมจิตใจของพุทธศาสนิกชนที่สืบทอดมายาวนาน
+              ศูนย์รวมจิตใจของพุทธศาสนิกชนที่สืบทอดมายาวนาน ณ จังหวัดนนทบุรี
             </p>
           </div>
           <div className="absolute bottom-0 left-0 right-0 z-10 translate-y-1">
@@ -34,22 +34,19 @@ const About = () => {
           </div>
         </section>
 
-        {/* History Section - ใส่รูปภาพจริงตรงนี้ */}
+        {/* History Section */}
         <section className="py-20 bg-gray-50">
           <div className="container mx-auto px-4">
             <div className="flex flex-col lg:flex-row items-center gap-12 max-w-6xl mx-auto">
               <div className="w-full lg:w-1/2 relative">
-                {/* ตกแต่งกรอบรูปให้พรีเมียม */}
                 <div className="relative rounded-[2.5rem] overflow-hidden shadow-2xl h-[450px] border-8 border-white group">
                   <img 
-                    src="/about.jpg"  // ดึงจาก public/about.jpg โดยตรง
+                    src="/about.jpg" 
                     alt="บรรยากาศวัดกำแพง" 
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
-                  {/* Overlay บางๆ เพื่อความสวยงาม */}
                   <div className="absolute inset-0 bg-linear-to-t from-black/20 to-transparent"></div>
                 </div>
-                {/* ของตกแต่งด้านหลังรูป */}
                 <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-orange-100 rounded-full -z-10 blur-2xl opacity-60"></div>
                 <div className="absolute -top-6 -left-6 w-24 h-24 bg-amber-100 rounded-full -z-10 blur-xl opacity-60"></div>
               </div>
@@ -62,7 +59,7 @@ const About = () => {
                 
                 <div className="prose prose-lg text-gray-600 leading-relaxed">
                   <p className="indent-8">
-                    ประวัติการก่อสร้างวัดเริ่มขึ้นในสมัยของ <strong className="text-orange-600">กรุงศรีอยุธยา</strong> ได้รับพระราชทานวิสุงคามสีมาเมื่อ พ.ศ. 2226 นับเป็นหนึ่งในวัดที่มีประวัติศาสตร์อันยาวนานเคียงคู่ชุมชน
+                    ประวัติการก่อสร้างวัดเริ่มขึ้นในสมัยของ <strong className="text-orange-600">กรุงศรีอยุธยา</strong> ได้รับพระราชทานวิสุงคามสีมาเมื่อ พ.ศ. 2226 นับเป็นหนึ่งในวัดที่มีประวัติศาสตร์อันยาวนานเคียงคู่ชุมชนจังหวัดนนทบุรี
                   </p>
                   <p>
                     <strong className="text-gray-800">อาคารเสนาสนะ:</strong> โดดเด่นด้วยอุโบสถที่สร้างขึ้นตั้งแต่สมัยอยุธยา เป็นอาคารคอนกรีตเสริมเหล็กที่มีการบูรณะรักษาความงดงามไว้อย่างดี พร้อมด้วยศาลาการเปรียญทรงไทยอันวิจิตรที่สร้างขึ้นในปี พ.ศ. 2514
@@ -84,7 +81,7 @@ const About = () => {
           </div>
         </section>
 
-        {/* Architecture Section - ปรับสีให้เข้ากับธีม */}
+        {/* Architecture Section */}
         <section className="py-24 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center mb-16">
@@ -114,7 +111,6 @@ const About = () => {
         <section className="py-24 bg-gray-50/50">
           <div className="container mx-auto px-4">
             <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-stretch rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.06)] border border-white bg-white">
-              
               <div className="w-full md:w-5/12 bg-linear-to-br from-orange-600 to-orange-500 p-12 text-white flex flex-col items-center justify-center relative overflow-hidden group">
                 <div className="absolute -top-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
                 <div className="relative z-10 flex flex-col items-center text-center">
@@ -125,7 +121,6 @@ const About = () => {
                   <div className="w-12 h-1 bg-white/40 mt-4 rounded-full"></div>
                 </div>
               </div>
-
               <div className="w-full md:w-7/12 p-10 md:p-14 flex flex-col justify-center">
                 <ul className="space-y-8">
                   <li className="flex items-start gap-5 group">
@@ -137,7 +132,6 @@ const About = () => {
                       <p className="text-gray-500 text-sm md:text-base">แต่งกายมิดชิดเพื่อรักษาบรรยากาศอันสงบของวัด</p>
                     </div>
                   </li>
-
                   <li className="flex items-start gap-5 group">
                     <div className="p-3.5 bg-blue-50 rounded-2xl text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300 border border-blue-100 shadow-sm">
                       <Camera size={24} strokeWidth={2.5} />
@@ -148,6 +142,57 @@ const About = () => {
                     </div>
                   </li>
                 </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Google Maps Section */}
+        <section className="py-24 bg-white overflow-hidden">
+          <div className="container mx-auto px-4">
+            <div className="max-w-6xl mx-auto">
+              <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-6">
+                <div>
+                  <div className="inline-flex items-center gap-2 text-orange-600 font-semibold mb-3">
+                    <MapPin size={20} />
+                    <span>Location</span>
+                  </div>
+                  <h2 className="text-4xl font-bold text-gray-900">แผนที่และการเดินทาง</h2>
+                </div>
+                <p className="text-gray-500 max-w-md">
+                  วัดกำแพง ตั้งอยู่บริเวณริมแม่น้ำเจ้าพระยา ตำบลสวนใหญ่ อำเภอเมืองนนทบุรี สามารถเดินทางเข้าถึงได้ง่ายจากถนนพิบูลสงคราม
+                </p>
+              </div>
+
+              {/* Map Canvas */}
+              <div className="relative w-full h-[500px] rounded-[3rem] overflow-hidden shadow-2xl border-8 border-white bg-gray-100 group">
+                <iframe 
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3873.6702674997095!2d100.4932370757279!3d13.82885409543163!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e29b9909282245%3A0xc3b8417c8005370a!2z4Lin4Lix4LiU4LiB4Liz4LmB4Lie4LiH!5e0!3m2!1sth!2sth!4v1710312000000!5m2!1sth!2sth" 
+                  width="100%" 
+                  height="100%" 
+                  style={{ border: 0 }} 
+                  allowFullScreen="" 
+                  loading="lazy" 
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="แผนที่วัดกำแพง นนทบุรี"
+                  className="transition-opacity duration-500 group-hover:opacity-90"
+                ></iframe>
+              </div>
+
+              {/* Contact Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-12">
+                <div className="bg-gray-50 p-8 rounded-4xl border border-gray-100 hover:bg-orange-50 hover:border-orange-200 transition-colors">
+                  <h4 className="text-lg font-bold text-gray-800 mb-2">ที่อยู่</h4>
+                  <p className="text-gray-600 text-sm leading-relaxed">ตำบลสวนใหญ่ อำเภอเมืองนนทบุรี จังหวัดนนทบุรี 11000</p>
+                </div>
+                <div className="bg-gray-50 p-8 rounded-4xl border border-gray-100 hover:bg-orange-50 hover:border-orange-200 transition-colors">
+                  <h4 className="text-lg font-bold text-gray-800 mb-2">เวลาเปิดเข้าชม</h4>
+                  <p className="text-gray-600 text-sm leading-relaxed">ทุกวัน : 07:30 น. – 18:00 น.</p>
+                </div>
+                <div className="bg-gray-50 p-8 rounded-4xl border border-gray-100 hover:bg-orange-50 hover:border-orange-200 transition-colors">
+                  <h4 className="text-lg font-bold text-gray-800 mb-2">เบอร์โทรศัพท์</h4>
+                  <p className="text-gray-600 text-sm leading-relaxed">ติดต่อสำนักงานวัด : 02-XXX-XXXX</p>
+                </div>
               </div>
             </div>
           </div>
