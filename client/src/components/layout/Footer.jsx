@@ -149,13 +149,6 @@ const Footer = () => {
                     <span className="text-gray-300 font-medium">ทุกวัน</span>
                     <span className="text-orange-400 font-bold text-lg tracking-tight">06:00 - 18:00</span>
                 </div>
-                <div className="flex justify-between items-center relative z-10">
-                    <span className="text-gray-300 font-medium">วันพระ</span>
-                    <span className="text-amber-300 font-bold flex items-center gap-2">
-                        <Sparkles size={16} className="animate-pulse text-amber-400" />
-                        เปิดตลอด 24 ชม.
-                    </span>
-                </div>
 
                 <div className="absolute top-4 right-4 flex items-center gap-1.5 rounded-full px-3 py-1 bg-black/30 border border-white/5 text-[11px] font-medium relative z-10">
                     <span className={`w-2 h-2 rounded-full ${isOpen ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`}></span>

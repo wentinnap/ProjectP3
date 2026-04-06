@@ -126,8 +126,8 @@ const Login = () => {
             </motion.div>
 
             <h1 className="text-3xl md:text-5xl lg:text-6xl font-black leading-tight mb-4 md:mb-8 tracking-tight">
-              ศรัทธา<br className="hidden md:block"/>นำทาง<br className="hidden md:block"/>
-              <span className="text-yellow-200 drop-shadow-sm ml-2 md:ml-0">ปัญญา</span>
+              วัด<br className="hidden md:block"/>กำแพง<br className="hidden md:block"/>
+              <span className="text-yellow-200 drop-shadow-sm ml-2 md:ml-0">นนทบุรี</span>
             </h1>
 
             <p className="text-orange-50/90 text-sm md:text-lg font-light leading-relaxed max-w-xs hidden sm:block">
