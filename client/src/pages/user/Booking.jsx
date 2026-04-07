@@ -6,7 +6,6 @@ import { toast } from 'react-toastify';
 import { motion } from 'framer-motion';
 import Calendar from 'react-calendar';
 import "../../CalendarCustom.css";
-import './CalendarCustom.css'; 
 import { 
   Send, Calendar as CalendarIcon 
 } from 'lucide-react';
