@@ -107,45 +107,6 @@ const About = () => {
           </div>
         </section>
 
-        {/* Etiquette Section */}
-        <section className="py-24 bg-gray-50/50">
-          <div className="container mx-auto px-4">
-            <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-stretch rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.06)] border border-white bg-white">
-              <div className="w-full md:w-5/12 bg-linear-to-br from-orange-600 to-orange-500 p-12 text-white flex flex-col items-center justify-center relative overflow-hidden group">
-                <div className="absolute -top-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
-                <div className="relative z-10 flex flex-col items-center text-center">
-                  <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mb-6 border border-white/30 shadow-inner">
-                    <Info size={40} strokeWidth={2.5} />
-                  </div>
-                  <h3 className="text-3xl font-bold tracking-tight">ข้อปฏิบัติ</h3>
-                  <div className="w-12 h-1 bg-white/40 mt-4 rounded-full"></div>
-                </div>
-              </div>
-              <div className="w-full md:w-7/12 p-10 md:p-14 flex flex-col justify-center">
-                <ul className="space-y-8">
-                  <li className="flex items-start gap-5 group">
-                    <div className="p-3.5 bg-green-50 rounded-2xl text-green-500 group-hover:bg-green-500 group-hover:text-white transition-all duration-300 border border-green-100 shadow-sm">
-                      <CheckCircle2 size={24} strokeWidth={2.5} />
-                    </div>
-                    <div className="pt-1">
-                      <p className="text-xl font-semibold text-gray-800 mb-1">โปรดแต่งกายสุภาพ</p>
-                      <p className="text-gray-500 text-sm md:text-base">แต่งกายมิดชิดเพื่อรักษาบรรยากาศอันสงบของวัด</p>
-                    </div>
-                  </li>
-                  <li className="flex items-start gap-5 group">
-                    <div className="p-3.5 bg-blue-50 rounded-2xl text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300 border border-blue-100 shadow-sm">
-                      <Camera size={24} strokeWidth={2.5} />
-                    </div>
-                    <div className="pt-1">
-                      <p className="text-xl font-semibold text-gray-800 mb-1">ถ่ายภาพด้วยความเคารพ</p>
-                      <p className="text-gray-500 text-sm md:text-base">ถ่ายภาพได้โดยไม่รบกวนสมาธิและผู้อื่น</p>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* Google Maps Section - ปักหมุดวัดกำแพง นนทบุรี */}
         <section className="py-24 bg-white overflow-hidden">
@@ -211,6 +172,45 @@ const About = () => {
                     ตั้งอยู่ในซอยพิบูลสงคราม 22 (ซอยวัดกำแพง) สามารถเข้าถึงได้จากถนนพิบูลสงครามและถนนนครอินทร์
                   </p>
                 </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-24 bg-gray-50/50">
+          <div className="container mx-auto px-4">
+            <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-stretch rounded-[2.5rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.06)] border border-white bg-white">
+              <div className="w-full md:w-5/12 bg-linear-to-br from-orange-600 to-orange-500 p-12 text-white flex flex-col items-center justify-center relative overflow-hidden group">
+                <div className="absolute -top-10 -left-10 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700"></div>
+                <div className="relative z-10 flex flex-col items-center text-center">
+                  <div className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center mb-6 border border-white/30 shadow-inner">
+                    <Info size={40} strokeWidth={2.5} />
+                  </div>
+                  <h3 className="text-3xl font-bold tracking-tight">ข้อปฏิบัติ</h3>
+                  <div className="w-12 h-1 bg-white/40 mt-4 rounded-full"></div>
+                </div>
+              </div>
+              <div className="w-full md:w-7/12 p-10 md:p-14 flex flex-col justify-center">
+                <ul className="space-y-8">
+                  <li className="flex items-start gap-5 group">
+                    <div className="p-3.5 bg-green-50 rounded-2xl text-green-500 group-hover:bg-green-500 group-hover:text-white transition-all duration-300 border border-green-100 shadow-sm">
+                      <CheckCircle2 size={24} strokeWidth={2.5} />
+                    </div>
+                    <div className="pt-1">
+                      <p className="text-xl font-semibold text-gray-800 mb-1">โปรดแต่งกายสุภาพ</p>
+                      <p className="text-gray-500 text-sm md:text-base">แต่งกายมิดชิดเพื่อรักษาบรรยากาศอันสงบของวัด</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-5 group">
+                    <div className="p-3.5 bg-blue-50 rounded-2xl text-blue-500 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300 border border-blue-100 shadow-sm">
+                      <Camera size={24} strokeWidth={2.5} />
+                    </div>
+                    <div className="pt-1">
+                      <p className="text-xl font-semibold text-gray-800 mb-1">ถ่ายภาพด้วยความเคารพ</p>
+                      <p className="text-gray-500 text-sm md:text-base">ถ่ายภาพได้โดยไม่รบกวนสมาธิและผู้อื่น</p>
+                    </div>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
