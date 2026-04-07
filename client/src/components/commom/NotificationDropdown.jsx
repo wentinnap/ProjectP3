@@ -11,23 +11,45 @@ const NotificationDropdown = () => {
   const [loading, setLoading] = useState(false);
   const dropdownRef = useRef(null);
 
-  // ✅ แก้ไข: ดึงข้อมูลสรุปจาก Backend เพียงจุดเดียว
+  // ดึงข้อมูลแจ้งเตือน
   const fetchNoti = useCallback(async () => {
     if (!user) return;
     try {
       setLoading(true);
       const res = await notificationAPI.getSummary();
       setData({
-        unreadCount: res.unreadCount,
-        items: res.items,
+        unreadCount: res.unreadCount || 0,
+        items: res.items || [],
       });
     } catch (err) {
       console.error("Dropdown Fetch Error:", err);
-      setData({ unreadCount: 0, items: [] });
     } finally {
       setLoading(false);
     }
   }, [user]);
+
+  // ✅ ฟังก์ชันจัดการการคลิก: อัปเดต UI ทันที และยิง API ไปข้างหลัง
+  const handleItemClick = async (itemId) => {
+    // 1. ปิด Dropdown
+    setIsOpen(false);
+
+    // 2. อัปเดต UI ทันที (Optimistic Update) 
+    // กรองเอาตัวที่ถูกคลิกออก และลดจำนวน unreadCount
+    setData((prev) => ({
+      ...prev,
+      unreadCount: Math.max(0, prev.unreadCount - 1),
+      items: prev.items.filter((item) => item.id !== itemId),
+    }));
+
+    // 3. ส่งข้อมูลไปที่ Backend
+    try {
+      await notificationAPI.markAsRead(itemId);
+    } catch (err) {
+      console.error("Failed to mark as read:", err);
+      // ถ้า API พัง อาจจะเรียก fetchNoti() อีกรอบเพื่อคืนค่าข้อมูลที่ถูกต้อง
+      fetchNoti();
+    }
+  };
 
   // ปิดเมื่อคลิกที่อื่น
   useEffect(() => {
@@ -40,7 +62,7 @@ const NotificationDropdown = () => {
 
   useEffect(() => {
     fetchNoti();
-    const interval = setInterval(fetchNoti, 60000); 
+    const interval = setInterval(fetchNoti, 60000); // Refresh ทุก 1 นาที
     return () => clearInterval(interval);
   }, [fetchNoti]);
 
@@ -56,6 +78,7 @@ const NotificationDropdown = () => {
 
   return (
     <div className="relative" ref={dropdownRef}>
+      {/* ปุ่มกระดิ่ง */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2.5 bg-white border border-gray-100 rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-95"
@@ -69,6 +92,7 @@ const NotificationDropdown = () => {
         )}
       </button>
 
+      {/* Dropdown Menu */}
       {isOpen && (
         <div className="absolute right-0 mt-4 w-80 md:w-96 bg-white rounded-3xl shadow-2xl border border-gray-50 z-50 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
           <div className="p-5 border-b flex justify-between items-center bg-gray-50/50">
@@ -90,7 +114,10 @@ const NotificationDropdown = () => {
             {data.items && data.items.length > 0 ? (
               data.items.map((item) => (
                 <Link 
-                  key={item.id} to={item.link} onClick={() => setIsOpen(false)}
+                  key={item.id} 
+                  to={item.link} 
+                  // ✅ เปลี่ยนจาก setIsOpen(false) เป็น handleItemClick
+                  onClick={() => handleItemClick(item.id)}
                   className="flex gap-4 p-4 hover:bg-orange-50/40 transition-all border-b border-gray-50 last:border-0 group"
                 >
                   <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-sm ${getStyle(item.type).color}`}>
@@ -108,7 +135,7 @@ const NotificationDropdown = () => {
                       {item.time_ago ? new Date(item.time_ago).toLocaleString("th-TH", {
                         dateStyle: 'medium',
                         timeStyle: 'short'
-                      }) : "เพิ่งเมื่อครู่"}
+                      }) : "เมื่อครู่นี้"}
                     </p>
                   </div>
                 </Link>
@@ -118,7 +145,7 @@ const NotificationDropdown = () => {
                 <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
                    <Bell size={24} className="text-gray-300" />
                 </div>
-                <p className="text-gray-400 font-bold text-sm">ยังไม่มีรายการแจ้งเตือน</p>
+                <p className="text-gray-400 font-bold text-sm">ยังไม่มีรายการแจ้งเตือนใหม่</p>
               </div>
             )}
           </div>

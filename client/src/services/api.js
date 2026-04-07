@@ -161,6 +161,17 @@ export const notificationAPI = {
       console.error("Error fetching notifications:", error);
       return { unreadCount: 0, items: [] };
     }
+  },
+
+  // ✅ เพิ่มฟังก์ชันนี้เพื่อยิงไป Update ใน Database
+  async markAsRead(notificationId) {
+    try {
+      await api.patch(`/notifications/${notificationId}/read`);
+      return true;
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      return false;
+    }
   }
 };
 
