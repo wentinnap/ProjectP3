@@ -101,6 +101,7 @@ export const newsAPI = {
 
 // ---------------- BOOKING ----------------
 // ---------------- BOOKING ----------------
+// ---------------- BOOKING ----------------
 export const bookingAPI = {
   getTypes: () => api.get("/bookings/types"),
   create: (data) => api.post("/bookings", data),
@@ -114,9 +115,9 @@ export const bookingAPI = {
   deleteType: (id) => api.delete(`/bookings/types/${id}`),
   getStats: () => api.get("/bookings/admin/stats"),
 
-  // ✅ เพิ่มใหม่: สำหรับเช็คจำนวนพระว่างตาม วันที่ และ เวลา
-  checkAvailableMonks: (date, time) => 
-    api.get("/bookings/check-monks", { params: { date, time } }),
+  // ✅ แก้ไขใหม่: ส่งเฉพาะ date เพื่อเช็คยอดรวมทั้งวัน (ตัด time ออก)
+  checkAvailableMonks: (date) => 
+    api.get("/bookings/check-monks", { params: { date } }),
 };
 
 // ---------------- EVENT ----------------

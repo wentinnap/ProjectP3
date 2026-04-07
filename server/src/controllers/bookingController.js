@@ -350,27 +350,27 @@ exports.createBooking = async (req, res) => {
     }
 
     // 2. ดึงจำนวนพระว่างในเวลานั้น (จำนวนรวม - จำนวนที่ถูกจองแล้ว)
-    const [monkStats] = await db.query(
-      `SELECT 
-        (SELECT total_monks FROM settings LIMIT 1) as max_monks,
-        IFNULL(SUM(monks_count), 0) as used_monks
-      FROM bookings 
-      WHERE booking_date = ? 
-      AND booking_time = ? 
-      AND status = 'approved'`, 
-      [booking_date, booking_time]
-    );
+   // ... ส่วนดึงข้อมูลจาก req.body ...
+const [monkStats] = await db.query(
+  `SELECT 
+    (SELECT total_monks FROM settings LIMIT 1) as max_monks,
+    IFNULL(SUM(monks_count), 0) as used_monks
+  FROM bookings 
+  WHERE booking_date = ? 
+  AND status = 'approved'`, // เช็คยอดรวมทั้งวัน
+  [booking_date]
+);
 
-    const maxMonks = monkStats[0].max_monks || 20; // Default 20 ถ้าหาไม่เจอ
-    const availableMonks = maxMonks - monkStats[0].used_monks;
+const maxMonks = monkStats[0].max_monks || 20;
+const availableMonks = maxMonks - monkStats[0].used_monks;
 
-    // 3. ตรวจสอบว่าพอไหม
-    if (parseInt(monks_count) > availableMonks) {
-      return res.status(400).json({
-        success: false,
-        message: `ไม่สามารถจองได้: ในเวลานี้มีพระว่างเพียง ${availableMonks} รูป`
-      });
-    }
+if (parseInt(monks_count) > availableMonks) {
+  return res.status(400).json({
+    success: false,
+    message: `ไม่สามารถจองได้: วันนี้มีพระว่างเหลือเพียง ${availableMonks} รูป`
+  });
+}
+// ... ส่วน INSERT ข้อมูลต่อไป ...
 
     // 4. บันทึกการจอง (เพิ่ม monks_count ลงใน INSERT)
     const [result] = await db.query(
@@ -456,28 +456,28 @@ exports.updateBookingType = async (req, res) => {
 };
 
 // เช็คจำนวนพระว่าง (สำหรับหน้าบ้านเรียกดู)
+// เช็คจำนวนพระว่างรายวัน
 exports.checkAvailableMonks = async (req, res) => {
   try {
-    const { date, time } = req.query;
-    if (!date || !time) {
-      return res.status(400).json({ success: false, message: 'ระบุวันที่และเวลา' });
-    }
+    const { date } = req.query;
+    if (!date) return res.status(400).json({ success: false, message: 'ระบุวันที่' });
 
     const [stats] = await db.query(
       `SELECT 
         (SELECT total_monks FROM settings LIMIT 1) as max_monks,
         IFNULL(SUM(monks_count), 0) as used_monks
       FROM bookings 
-      WHERE booking_date = ? AND booking_time = ? AND status = 'approved'`,
-      [date, time]
+      WHERE booking_date = ? AND status IN ('approved', 'pending')`, // นับรวม pending เพื่อป้องกันการจองซ้อน
+      [date]
     );
 
     const max = stats[0].max_monks || 20;
-    const available = max - stats[0].used_monks;
+    const used = parseInt(stats[0].used_monks);
+    const available = max - used;
 
     res.json({
       success: true,
-      available_monks: available,
+      available_monks: available < 0 ? 0 : available,
       total_monks: max
     });
   } catch (error) {

@@ -11,6 +11,7 @@ const { authenticate, isAdmin } = require('../middleware/auth');
 router.get('/types', bookingController.getBookingTypes);
 
 // ✅ [เพิ่มใหม่] เช็คจำนวนพระว่าง (Public หรือ Authenticate ก็ได้เพื่อให้ User เห็นก่อนจอง)
+// เปลี่ยนจากเดิมที่มีการรับ time
 router.get('/check-monks', bookingController.checkAvailableMonks);
 
 
