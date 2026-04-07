@@ -102,6 +102,7 @@ export const newsAPI = {
 // ---------------- BOOKING ----------------
 // ---------------- BOOKING ----------------
 // ---------------- BOOKING ----------------
+// ---------------- BOOKING ----------------
 export const bookingAPI = {
   getTypes: () => api.get("/bookings/types"),
   create: (data) => api.post("/bookings", data),
@@ -115,9 +116,13 @@ export const bookingAPI = {
   deleteType: (id) => api.delete(`/bookings/types/${id}`),
   getStats: () => api.get("/bookings/admin/stats"),
 
-  // ✅ แก้ไขใหม่: ส่งเฉพาะ date เพื่อเช็คยอดรวมทั้งวัน (ตัด time ออก)
+  // ✅ เช็คเฉพาะวัน (ใช้ตอนคลิกเลือกวันที่)
   checkAvailableMonks: (date) => 
     api.get("/bookings/check-monks", { params: { date } }),
+
+  // ✅ เพิ่มใหม่: เช็คทั้งเดือน (ใช้สำหรับระบายสีปฏิทิน แดง/เขียว)
+  getMonthlyStatus: (year, month) => 
+    api.get("/bookings/monthly-status", { params: { year, month } }),
 };
 
 // ---------------- EVENT ----------------

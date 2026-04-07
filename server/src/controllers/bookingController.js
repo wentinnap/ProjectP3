@@ -484,3 +484,36 @@ exports.checkAvailableMonks = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+// ✅ เพิ่มใหม่: ดึงสถานะรายเดือน (สำหรับระบายสีปฏิทิน แดง/ส้ม/เขียว)
+exports.getMonthlyStatus = async (req, res) => {
+  try {
+    const { year, month } = req.query;
+    if (!year || !month) return res.status(400).json({ success: false, message: 'ระบุปีและเดือน' });
+
+    const [rows] = await db.query(
+      `SELECT 
+         DATE_FORMAT(booking_date, '%Y-%m-%d') as date, 
+         SUM(monks_count) as total_used,
+         (SELECT total_monks FROM settings LIMIT 1) as max_monks
+       FROM bookings 
+       WHERE MONTH(booking_date) = ? AND YEAR(booking_date) = ? AND status IN ('approved', 'pending')
+       GROUP BY booking_date`, 
+      [month, year]
+    );
+
+    // แปลงข้อมูลให้อยู่ในรูปแบบ Object เพื่อให้ Frontend ใช้ง่าย { "2026-04-10": 15 }
+    const busyDates = {};
+    rows.forEach(row => {
+      busyDates[row.date] = parseInt(row.total_used);
+    });
+
+    res.json({
+      success: true,
+      busyDates,
+      max_monks: rows.length > 0 ? rows[0].max_monks : 20
+    });
+  } catch (error) {
+    console.error('Get monthly status error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
