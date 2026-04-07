@@ -21,72 +21,28 @@ exports.getBookingTypes = async (req, res) => {
 };
 
 // Create booking (user)
-exports.createBooking = async (req, res) => {
+// ✅ เพิ่มฟังก์ชันที่หายไป
+exports.createBookingType = async (req, res) => {
   try {
-    const { booking_type_id, booking_date, booking_time, full_name, phone, details } = req.body;
-    const user_id = req.user.id;
-
-    // Validation
-    if (!booking_type_id || !booking_date || !booking_time || !full_name || !phone) {
-      return res.status(400).json({
-        success: false,
-        message: 'กรุณากรอกข้อมูลให้ครบถ้วน'
-      });
+    const { name, description, duration_minutes } = req.body;
+    
+    if (!name) {
+      return res.status(400).json({ success: false, message: 'กรุณาระบุชื่อประเภทพิธี' });
     }
 
-    // Check if booking type exists
-    const [types] = await db.query(
-      'SELECT id FROM booking_types WHERE id = ? AND is_active = TRUE',
-      [booking_type_id]
-    );
-
-    if (types.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'ไม่พบประเภทพิธีที่เลือก'
-      });
-    }
-
-    // Check if slot is already booked
-    const [existingBookings] = await db.query(
-      `SELECT id FROM bookings 
-       WHERE booking_date = ? 
-       AND booking_time = ? 
-       AND status IN ('pending', 'approved')`,
-      [booking_date, booking_time]
-    );
-
-    if (existingBookings.length > 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'วันและเวลาที่เลือกมีผู้จองแล้ว กรุณาเลือกเวลาอื่น'
-      });
-    }
-
-    // Create booking
     const [result] = await db.query(
-      `INSERT INTO bookings 
-       (user_id, booking_type_id, booking_date, booking_time, full_name, phone, details) 
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [user_id, booking_type_id, booking_date, booking_time, full_name, phone, details || null]
-    );
-
-    const [booking] = await db.query(
-      'SELECT * FROM booking_details WHERE id = ?',
-      [result.insertId]
+      'INSERT INTO booking_types (name, description, duration_minutes) VALUES (?, ?, ?)',
+      [name, description || null, duration_minutes || 60]
     );
 
     res.status(201).json({
       success: true,
-      message: 'จองพิธีสำเร็จ รอการตอบรับจากเจ้าหน้าที่',
-      data: booking[0]
+      message: 'สร้างประเภทพิธีสำเร็จ',
+      data: { id: result.insertId, name, description, duration_minutes }
     });
   } catch (error) {
-    console.error('Create booking error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'เกิดข้อผิดพลาดในการจองพิธี'
-    });
+    console.error('Create booking type error:', error);
+    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการสร้างประเภทพิธี' });
   }
 };
 
