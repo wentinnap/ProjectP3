@@ -216,6 +216,7 @@ exports.getAllBookings = async (req, res) => {
 };
 
 // Update booking status (admin)
+// Update booking status (admin)
 exports.updateBookingStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -223,30 +224,40 @@ exports.updateBookingStatus = async (req, res) => {
     const admin_id = req.user.id;
 
     if (!['approved', 'rejected'].includes(status)) {
-      return res.status(400).json({
-        success: false,
-        message: 'สถานะไม่ถูกต้อง'
-      });
+      return res.status(400).json({ success: false, message: 'สถานะไม่ถูกต้อง' });
     }
 
-    // Check if booking exists
-    const [bookings] = await db.query('SELECT id, status FROM bookings WHERE id = ?', [id]);
+    // ดึงข้อมูลการจองที่จะอนุมัติ
+    const [bookingData] = await db.query(
+      'SELECT booking_date, booking_time, monks_count, status FROM bookings WHERE id = ?', 
+      [id]
+    );
 
-    if (bookings.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: 'ไม่พบการจองที่ต้องการ'
-      });
+    if (bookingData.length === 0) {
+      return res.status(404).json({ success: false, message: 'ไม่พบการจอง' });
     }
 
-    if (bookings[0].status !== 'pending') {
-      return res.status(400).json({
-        success: false,
-        message: 'ไม่สามารถเปลี่ยนสถานะการจองนี้ได้'
-      });
+    // ถ้าแอดมินจะอนุมัติ (approved) ให้เช็คพระว่างอีกครั้ง
+    if (status === 'approved') {
+      const [stats] = await db.query(
+        `SELECT 
+          (SELECT total_monks FROM settings LIMIT 1) as max_monks,
+          IFNULL(SUM(monks_count), 0) as used_monks
+        FROM bookings 
+        WHERE booking_date = ? AND booking_time = ? AND status = 'approved' AND id != ?`,
+        [bookingData[0].booking_date, bookingData[0].booking_time, id]
+      );
+
+      const available = (stats[0].max_monks || 20) - stats[0].used_monks;
+      if (bookingData[0].monks_count > available) {
+        return res.status(400).json({
+          success: false,
+          message: `ไม่สามารถอนุมัติได้ เนื่องจากพระในเวลานี้เหลือไม่เพียงพอ (ว่าง ${available} รูป)`
+        });
+      }
     }
 
-    // Update booking
+    // อัปเดตสถานะ
     await db.query(
       `UPDATE bookings 
        SET status = ?, admin_response = ?, admin_id = ?, responded_at = NOW() 
@@ -254,22 +265,9 @@ exports.updateBookingStatus = async (req, res) => {
       [status, admin_response || null, admin_id, id]
     );
 
-    const [updatedBooking] = await db.query(
-      'SELECT * FROM booking_details WHERE id = ?',
-      [id]
-    );
-
-    res.json({
-      success: true,
-      message: status === 'approved' ? 'อนุมัติการจองสำเร็จ' : 'ปฏิเสธการจองสำเร็จ',
-      data: updatedBooking[0]
-    });
+    res.json({ success: true, message: 'อัปเดตสถานะเรียบร้อย' });
   } catch (error) {
-    console.error('Update booking status error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'เกิดข้อผิดพลาดในการอัปเดตสถานะการจอง'
-    });
+    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการอัปเดต' });
   }
 };
 
@@ -380,22 +378,69 @@ exports.deleteBooking = async (req, res) => {
 
 // ✅ เพิ่มใหม่: สร้างประเภทพิธี (Admin)
 // ✅ ปรับปรุง: สร้างประเภทพิธี (Admin) ให้รับข้อมูลครบถ้วน
-exports.createBookingType = async (req, res) => {
+// Create booking (user)
+exports.createBooking = async (req, res) => {
   try {
-    const { name, description, duration_minutes } = req.body;
-    if (!name) {
-      return res.status(400).json({ success: false, message: 'กรุณาระบุชื่อประเภทพิธี' });
+    // เพิ่ม monks_count เข้ามาจาก req.body
+    const { booking_type_id, booking_date, booking_time, full_name, phone, details, monks_count } = req.body;
+    const user_id = req.user.id;
+
+    // 1. Validation (เพิ่มตรวจสอบ monks_count)
+    if (!booking_type_id || !booking_date || !booking_time || !full_name || !phone || !monks_count) {
+      return res.status(400).json({
+        success: false,
+        message: 'กรุณากรอกข้อมูลให้ครบถ้วนและระบุจำนวนพระ'
+      });
     }
 
-    await db.query(
-      'INSERT INTO booking_types (name, description, duration_minutes, is_active) VALUES (?, ?, ?, TRUE)', 
-      [name, description || null, duration_minutes || 60]
+    // 2. ดึงจำนวนพระว่างในเวลานั้น (จำนวนรวม - จำนวนที่ถูกจองแล้ว)
+    const [monkStats] = await db.query(
+      `SELECT 
+        (SELECT total_monks FROM settings LIMIT 1) as max_monks,
+        IFNULL(SUM(monks_count), 0) as used_monks
+      FROM bookings 
+      WHERE booking_date = ? 
+      AND booking_time = ? 
+      AND status = 'approved'`, 
+      [booking_date, booking_time]
     );
 
-    res.status(201).json({ success: true, message: 'เพิ่มประเภทพิธีเรียบร้อยแล้ว' });
+    const maxMonks = monkStats[0].max_monks || 20; // Default 20 ถ้าหาไม่เจอ
+    const availableMonks = maxMonks - monkStats[0].used_monks;
+
+    // 3. ตรวจสอบว่าพอไหม
+    if (parseInt(monks_count) > availableMonks) {
+      return res.status(400).json({
+        success: false,
+        message: `ไม่สามารถจองได้: ในเวลานี้มีพระว่างเพียง ${availableMonks} รูป`
+      });
+    }
+
+    // 4. บันทึกการจอง (เพิ่ม monks_count ลงใน INSERT)
+    const [result] = await db.query(
+      `INSERT INTO bookings 
+       (user_id, booking_type_id, booking_date, booking_time, full_name, phone, details, monks_count) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [user_id, booking_type_id, booking_date, booking_time, full_name, phone, details || null, monks_count]
+    );
+
+    // ดึงข้อมูลที่เพิ่งบันทึกไปโชว์
+    const [booking] = await db.query(
+      'SELECT * FROM booking_details WHERE id = ?',
+      [result.insertId]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'จองพิธีสำเร็จ รอการตอบรับจากเจ้าหน้าที่',
+      data: booking[0]
+    });
   } catch (error) {
-    console.error('Create booking type error:', error);
-    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการสร้างประเภทพิธี' });
+    console.error('Create booking error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการจองพิธี'
+    });
   }
 };
 
@@ -451,5 +496,35 @@ exports.updateBookingType = async (req, res) => {
       success: false, 
       message: 'เกิดข้อผิดพลาดในการอัปเดตข้อมูลพิธี' 
     });
+  }
+};
+
+// เช็คจำนวนพระว่าง (สำหรับหน้าบ้านเรียกดู)
+exports.checkAvailableMonks = async (req, res) => {
+  try {
+    const { date, time } = req.query;
+    if (!date || !time) {
+      return res.status(400).json({ success: false, message: 'ระบุวันที่และเวลา' });
+    }
+
+    const [stats] = await db.query(
+      `SELECT 
+        (SELECT total_monks FROM settings LIMIT 1) as max_monks,
+        IFNULL(SUM(monks_count), 0) as used_monks
+      FROM bookings 
+      WHERE booking_date = ? AND booking_time = ? AND status = 'approved'`,
+      [date, time]
+    );
+
+    const max = stats[0].max_monks || 20;
+    const available = max - stats[0].used_monks;
+
+    res.json({
+      success: true,
+      available_monks: available,
+      total_monks: max
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 };

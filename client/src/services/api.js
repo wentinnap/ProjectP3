@@ -100,6 +100,7 @@ export const newsAPI = {
 };
 
 // ---------------- BOOKING ----------------
+// ---------------- BOOKING ----------------
 export const bookingAPI = {
   getTypes: () => api.get("/bookings/types"),
   create: (data) => api.post("/bookings", data),
@@ -111,9 +112,11 @@ export const bookingAPI = {
   createType: (data) => api.post("/bookings/types", data),
   updateType: (id, data) => api.put(`/bookings/types/${id}`, data),
   deleteType: (id) => api.delete(`/bookings/types/${id}`),
-  
-  // 🔥 ดึงสถิติรวม (ข่าว, กิจกรรม, Q&A, การจอง) สำหรับ Dashboard
   getStats: () => api.get("/bookings/admin/stats"),
+
+  // ✅ เพิ่มใหม่: สำหรับเช็คจำนวนพระว่างตาม วันที่ และ เวลา
+  checkAvailableMonks: (date, time) => 
+    api.get("/bookings/check-monks", { params: { date, time } }),
 };
 
 // ---------------- EVENT ----------------
