@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { bookingAPI } from '../../services/api';
 import { toast } from 'react-toastify';
-import { motion, AnimatePresence } from 'framer-motion';
-import Calendar from 'react-calendar'; // ✅ เพิ่มใหม่
-import 'react-calendar/dist/Calendar.css'; // ✅ CSS พื้นฐาน
-import './CalendarCustom.css'; // ✅ ไฟล์แต่งสีที่เราจะสร้าง
+import { motion } from 'framer-motion';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
+import './CalendarCustom.css'; 
 import { 
-  User, Phone, Send, Info, Calendar as CalendarIcon, CheckCircle2 
+  Send, Calendar as CalendarIcon 
 } from 'lucide-react';
 import Navbar from "../../components/layout/Navbar";
 
@@ -24,7 +24,7 @@ const Booking = () => {
   const [checkingMonks, setCheckingMonks] = useState(false);
 
   // ข้อมูลวันที่เต็ม (ดึงมาจาก Backend)
-  const [busyDates, setBusyDates] = useState({}); // { "2026-04-10": 20 }
+  const [busyDates, setBusyDates] = useState({}); 
 
   const [formData, setFormData] = useState({
     booking_type_id: '',
@@ -42,19 +42,21 @@ const Booking = () => {
       return;
     }
     fetchBookingTypes();
-    fetchMonthlyStatus(new Date()); // โหลดสถานะเดือนปัจจุบัน
+    fetchMonthlyStatus(new Date()); 
   }, [isAuthenticated, navigate]);
 
-  // ✅ ดึงสถานะรายเดือนเพื่อมาแสดงในปฏิทิน
+  // ✅ ปรับปรุง: ดึงสถานะรายเดือนเพื่อระบายสีปฏิทิน
   const fetchMonthlyStatus = async (date) => {
     try {
       const year = date.getFullYear();
       const month = date.getMonth() + 1;
-      // หมายเหตุ: ต้องมี API นี้ที่ Backend เพื่อคืนค่า { "YYYY-MM-DD": count }
-      // const res = await bookingAPI.getMonthlyStatus(year, month);
-      // setBusyDates(res.data.busyDates);
+      const res = await bookingAPI.getMonthlyStatus(year, month);
+      if (res.data.success) {
+        setBusyDates(res.data.busyDates);
+        if (res.data.max_monks) setTotalMonks(res.data.max_monks);
+      }
     } catch (error) {
-      console.error("Failed to fetch monthly status");
+      console.error("Failed to fetch monthly status:", error);
     }
   };
 
@@ -63,15 +65,14 @@ const Booking = () => {
       const response = await bookingAPI.getTypes();
       setBookingTypes(response.data.data);
     } catch (error) {
-      toast.error('เกิดข้อผิดพลาดในการโหลดข้อมูล');
+      toast.error('เกิดข้อผิดพลาดในการโหลดข้อมูลประเภทพิธี');
     }
   };
 
   // ✅ เมื่อคลิกเลือกวันที่ในปฏิทิน
   const handleDateSelect = (date) => {
-    // ปรับ Format เป็น YYYY-MM-DD
     const dateString = date.toLocaleDateString('sv-SE'); 
-    setFormData({ ...formData, booking_date: dateString });
+    setFormData((prev) => ({ ...prev, booking_date: dateString }));
     handleCheckAvailable(dateString);
   };
 
@@ -95,9 +96,9 @@ const Booking = () => {
       const usedCount = busyDates[dateString] || 0;
       
       if (date < new Date().setHours(0,0,0,0)) return 'past-date';
-      if (usedCount >= totalMonks) return 'date-full'; // สีแดง
-      if (usedCount > 0) return 'date-partial'; // สีส้ม
-      return 'date-available'; // สีเขียว
+      if (usedCount >= totalMonks) return 'date-full'; 
+      if (usedCount > 0) return 'date-partial'; 
+      return 'date-available'; 
     }
   };
 
@@ -115,7 +116,7 @@ const Booking = () => {
       toast.success('จองพิธีสำเร็จ');
       navigate('/profile');
     } catch (error) {
-      toast.error(error.response?.data?.message || 'เกิดข้อผิดพลาด');
+      toast.error(error.response?.data?.message || 'เกิดข้อผิดพลาดในการจอง');
     } finally {
       setLoading(false);
     }
@@ -135,10 +136,10 @@ const Booking = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               
-              {/* ฝั่งซ้าย: ปฏิทิน (7 ส่วน) */}
+              {/* ฝั่งซ้าย: ปฏิทิน */}
               <div className="lg:col-span-7 bg-white rounded-[40px] shadow-2xl p-6 border border-orange-50">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-2xl bg-orange-500 flex items-center justify-center text-white">
+                  <div className="w-10 h-10 rounded-2xl bg-orange-500 flex items-center justify-center text-white shadow-lg shadow-orange-200">
                     <CalendarIcon size={20} />
                   </div>
                   <h3 className="text-xl font-black text-gray-800">ตารางวันว่าง</h3>
@@ -152,37 +153,41 @@ const Booking = () => {
                   className="w-full border-none font-sans"
                 />
 
-                <div className="mt-8 flex flex-wrap gap-4 justify-center text-xs font-bold text-gray-500">
+                <div className="mt-8 flex flex-wrap gap-4 justify-center text-xs font-bold text-gray-500 bg-gray-50 p-4 rounded-2xl">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-green-500"></div> วันว่าง
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-orange-400"></div> มีการจองบ้างแล้ว
+                    <div className="w-3 h-3 rounded-full bg-orange-400"></div> มีการจองบางส่วน
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500"></div> เต็ม
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div> เต็ม (นิมนต์พระครบแล้ว)
                   </div>
                 </div>
               </div>
 
-              {/* ฝั่งขวา: ฟอร์ม (5 ส่วน) */}
+              {/* ฝั่งขวา: ฟอร์ม */}
               <div className="lg:col-span-5 bg-white rounded-[40px] shadow-2xl p-8 border border-orange-50 overflow-hidden relative">
                 <div className="h-2 absolute top-0 left-0 w-full bg-linear-to-r from-orange-500 to-amber-500"></div>
                 
                 <form onSubmit={handleSubmit} className="space-y-6">
-                  <div className="bg-orange-50 p-4 rounded-3xl border border-orange-100 mb-4">
-                    <p className="text-sm font-bold text-orange-800">วันที่เลือก:</p>
+                  <div className="bg-orange-50 p-5 rounded-3xl border border-orange-100 mb-4">
+                    <p className="text-xs font-bold text-orange-800 uppercase tracking-wider mb-1">วันที่เลือกจอง:</p>
                     <p className="text-2xl font-black text-orange-600">
-                      {formData.booking_date || "กรุณาเลือกวันที่บนปฏิทิน"}
+                      {formData.booking_date || "กรุณาเลือกบนปฏิทิน"}
                     </p>
                   </div>
 
                   {availableMonks !== null && (
-                    <div className="flex justify-between items-center px-2">
-                       <span className="text-sm font-bold text-gray-600">พระว่างคงเหลือ:</span>
-                       <span className={`text-lg font-black ${availableMonks > 0 ? 'text-green-600' : 'text-red-600'}`}>
-                         {availableMonks} รูป
+                    <div className="flex justify-between items-center px-2 py-1 bg-gray-50 rounded-xl">
+                       <span className="text-sm font-bold text-gray-600">
+                         {checkingMonks ? "กำลังตรวจสอบ..." : "พระว่างคงเหลือในระบบ:"}
                        </span>
+                       {!checkingMonks && (
+                         <span className={`text-lg font-black ${availableMonks > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                           {availableMonks} รูป
+                         </span>
+                       )}
                     </div>
                   )}
 
@@ -191,49 +196,52 @@ const Booking = () => {
                       name="booking_type_id"
                       value={formData.booking_type_id}
                       onChange={(e) => setFormData({...formData, booking_type_id: e.target.value})}
-                      className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-orange-500 font-bold outline-none"
+                      className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-orange-500 font-bold outline-none transition-all"
                       required
                     >
-                      <option value="">ประเภทพิธี...</option>
+                      <option value="">เลือกประเภทพิธี...</option>
                       {bookingTypes.map((type) => (
                         <option key={type.id} value={type.id}>{type.name}</option>
                       ))}
                     </select>
 
-                    <input
-                      type="number"
-                      placeholder="จำนวนพระ (รูป)"
-                      value={formData.monks_count}
-                      onChange={(e) => setFormData({...formData, monks_count: e.target.value})}
-                      className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-orange-500 font-bold outline-none"
-                      required
-                      min="1"
-                    />
+                    <div className="relative">
+                      <input
+                        type="number"
+                        placeholder="ต้องการนิมนต์พระกี่รูป?"
+                        value={formData.monks_count}
+                        onChange={(e) => setFormData({...formData, monks_count: e.target.value})}
+                        className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-orange-500 font-bold outline-none transition-all"
+                        required
+                        min="1"
+                        max={availableMonks || 20}
+                      />
+                    </div>
 
                     <input
                       type="tel"
-                      placeholder="เบอร์โทรศัพท์"
+                      placeholder="เบอร์โทรศัพท์ติดต่อ"
                       value={formData.phone}
                       onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                      className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-orange-500 font-bold outline-none"
+                      className="w-full px-5 py-4 bg-gray-50 border-2 border-transparent rounded-2xl focus:border-orange-500 font-bold outline-none transition-all"
                       required
                     />
 
                     <textarea
-                      placeholder="สถานที่และรายละเอียดเพิ่มเติม..."
+                      placeholder="สถานที่นิมนต์ และรายละเอียดเพิ่มเติม..."
                       value={formData.details}
                       onChange={(e) => setFormData({...formData, details: e.target.value})}
                       rows="3"
-                      className="w-full p-5 bg-gray-50 border-2 border-transparent rounded-3xl focus:border-orange-500 font-medium resize-none outline-none"
+                      className="w-full p-5 bg-gray-50 border-2 border-transparent rounded-3xl focus:border-orange-500 font-medium resize-none outline-none transition-all"
                     ></textarea>
                   </div>
 
                   <button
                     type="submit"
                     disabled={loading || !formData.booking_date || (availableMonks !== null && availableMonks <= 0)}
-                    className="w-full py-5 bg-linear-to-r from-orange-500 to-amber-600 text-white rounded-2xl font-black shadow-lg hover:-translate-y-1 transition-all disabled:opacity-50 flex items-center justify-center gap-3"
+                    className="w-full py-5 bg-linear-to-r from-orange-500 to-amber-600 text-white rounded-2xl font-black shadow-lg shadow-orange-200 hover:-translate-y-1 active:scale-95 transition-all disabled:opacity-50 disabled:translate-y-0 flex items-center justify-center gap-3"
                   >
-                    {loading ? "กำลังดำเนินการ..." : "ยืนยันการจอง"}
+                    {loading ? "กำลังบันทึกข้อมูล..." : "ยืนยันการจองพิธี"}
                     <Send size={18} />
                   </button>
                 </form>

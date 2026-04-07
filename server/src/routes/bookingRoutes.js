@@ -15,7 +15,8 @@ router.get('/types', bookingController.getBookingTypes);
 router.get('/check-monks', bookingController.checkAvailableMonks);
 
 // เพิ่มบรรทัดนี้ลงไป
-router.get('/monthly-status', auth, bookingController.getMonthlyStatus);
+// ✅ ใช้ authenticate แทน auth
+router.get('/monthly-status', authenticate, bookingController.getMonthlyStatus);
 // ==========================================
 // 2. User Routes (เส้นทางสำหรับผู้ใช้งานทั่วไป)
 // ==========================================
