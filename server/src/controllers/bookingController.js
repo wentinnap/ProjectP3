@@ -488,32 +488,37 @@ exports.checkAvailableMonks = async (req, res) => {
 exports.getMonthlyStatus = async (req, res) => {
   try {
     const { year, month } = req.query;
-    if (!year || !month) return res.status(400).json({ success: false, message: 'ระบุปีและเดือน' });
+    
+    // ดึงค่าจำนวนพระสูงสุดต่อวัน (ถ้าไม่มี Table settings ให้ Default ที่ 20)
+    const [settings] = await db.query('SELECT total_monks FROM settings LIMIT 1');
+    const maxMonks = settings[0]?.total_monks || 20;
 
+    // ดึงยอดรวมการใช้พระในแต่ละวันของเดือนนั้นๆ
     const [rows] = await db.query(
       `SELECT 
-         DATE_FORMAT(booking_date, '%Y-%m-%d') as date, 
-         SUM(monks_count) as total_used,
-         (SELECT total_monks FROM settings LIMIT 1) as max_monks
+          DATE_FORMAT(booking_date, '%Y-%m-%d') as date, 
+          SUM(monks_count) as total_used
        FROM bookings 
-       WHERE MONTH(booking_date) = ? AND YEAR(booking_date) = ? AND status IN ('approved', 'pending')
+       WHERE MONTH(booking_date) = ? AND YEAR(booking_date) = ? 
+       AND status IN ('approved', 'pending')
        GROUP BY booking_date`, 
       [month, year]
     );
 
-    // แปลงข้อมูลให้อยู่ในรูปแบบ Object เพื่อให้ Frontend ใช้ง่าย { "2026-04-10": 15 }
+    // ปั้นข้อมูลให้ Frontend ใช้ง่าย
     const busyDates = {};
     rows.forEach(row => {
-      busyDates[row.date] = parseInt(row.total_used);
+      busyDates[row.date] = {
+        used: parseInt(row.total_used)
+      };
     });
 
     res.json({
       success: true,
       busyDates,
-      max_monks: rows.length > 0 ? rows[0].max_monks : 20
+      max_monks: maxMonks
     });
   } catch (error) {
-    console.error('Get monthly status error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
