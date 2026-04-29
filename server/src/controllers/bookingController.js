@@ -438,26 +438,28 @@ exports.updateBookingType = async (req, res) => {
 // เช็คจำนวนพระว่างรายวัน
 exports.checkAvailableMonks = async (req, res) => {
   try {
-    const { date, time } = req.query; // รับทั้งวันที่และเวลา
-    if (!date || !time) return res.status(400).json({ success: false, message: 'ระบุวันที่และเวลา' });
+    const { date, time } = req.query; // ตรวจสอบว่าได้รับ time มาด้วย
+    
+    // 1. ดึงยอดพระสูงสุด
+    const [settings] = await db.query('SELECT total_monks FROM settings LIMIT 1');
+    const maxMonks = settings[0]?.total_monks || 20;
 
-    const [stats] = await db.query(
-      `SELECT 
-        (SELECT total_monks FROM settings LIMIT 1) as max_monks,
-        IFNULL(SUM(monks_count), 0) as used_monks
-      FROM bookings 
-      WHERE booking_date = ? AND booking_time = ? AND status IN ('approved', 'pending')`, 
-      [date, time] // เพิ่ม time ตรงนี้
+    // 2. ต้องเช็คยอดการใช้ "เฉพาะวันที่และเวลา" ที่เลือกเท่านั้น
+    const [booked] = await db.query(
+      `SELECT SUM(monks_count) as used 
+       FROM bookings 
+       WHERE booking_date = ? 
+       AND booking_time = ? 
+       AND status IN ('approved', 'pending')`, 
+      [date, time] // ใส่ Parameter ให้ครบ 2 ตัว
     );
 
-    const max = stats[0].max_monks || 20;
-    const used = parseInt(stats[0].used_monks);
-    const available = max - used;
+    const usedCount = parseInt(booked[0].used || 0);
+    const available = maxMonks - usedCount;
 
     res.json({
       success: true,
-      available_monks: available < 0 ? 0 : available,
-      total_monks: max
+      available_monks: available < 0 ? 0 : available
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
