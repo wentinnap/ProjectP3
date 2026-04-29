@@ -337,42 +337,34 @@ exports.deleteBooking = async (req, res) => {
 // Create booking (user)
 exports.createBooking = async (req, res) => {
   try {
-    // เพิ่ม monks_count เข้ามาจาก req.body
     const { booking_type_id, booking_date, booking_time, full_name, phone, details, monks_count } = req.body;
     const user_id = req.user.id;
 
-    // 1. Validation (เพิ่มตรวจสอบ monks_count)
     if (!booking_type_id || !booking_date || !booking_time || !full_name || !phone || !monks_count) {
+      return res.status(400).json({ success: false, message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
+    }
+
+    // แก้ไขจุดนี้: เช็คพระว่างรายเวลา (Slot)
+    const [monkStats] = await db.query(
+      `SELECT 
+        (SELECT total_monks FROM settings LIMIT 1) as max_monks,
+        IFNULL(SUM(monks_count), 0) as used_monks
+      FROM bookings 
+      WHERE booking_date = ? AND booking_time = ? AND status IN ('approved', 'pending')`,
+      [booking_date, booking_time] // ใส่ booking_time ด้วย
+    );
+
+    const maxMonks = monkStats[0].max_monks || 20;
+    const availableMonks = maxMonks - monkStats[0].used_monks;
+
+    if (parseInt(monks_count) > availableMonks) {
       return res.status(400).json({
         success: false,
-        message: 'กรุณากรอกข้อมูลให้ครบถ้วนและระบุจำนวนพระ'
+        message: `ขออภัย เวลานี้พระว่างเหลือเพียง ${availableMonks} รูป`
       });
     }
 
-    // 2. ดึงจำนวนพระว่างในเวลานั้น (จำนวนรวม - จำนวนที่ถูกจองแล้ว)
-   // ... ส่วนดึงข้อมูลจาก req.body ...
-const [monkStats] = await db.query(
-  `SELECT 
-    (SELECT total_monks FROM settings LIMIT 1) as max_monks,
-    IFNULL(SUM(monks_count), 0) as used_monks
-  FROM bookings 
-  WHERE booking_date = ? 
-  AND status = 'approved'`, // เช็คยอดรวมทั้งวัน
-  [booking_date]
-);
-
-const maxMonks = monkStats[0].max_monks || 20;
-const availableMonks = maxMonks - monkStats[0].used_monks;
-
-if (parseInt(monks_count) > availableMonks) {
-  return res.status(400).json({
-    success: false,
-    message: `ไม่สามารถจองได้: วันนี้มีพระว่างเหลือเพียง ${availableMonks} รูป`
-  });
-}
-// ... ส่วน INSERT ข้อมูลต่อไป ...
-
-    // 4. บันทึกการจอง (เพิ่ม monks_count ลงใน INSERT)
+    // บันทึกข้อมูล
     const [result] = await db.query(
       `INSERT INTO bookings 
        (user_id, booking_type_id, booking_date, booking_time, full_name, phone, details, monks_count) 
@@ -380,23 +372,10 @@ if (parseInt(monks_count) > availableMonks) {
       [user_id, booking_type_id, booking_date, booking_time, full_name, phone, details || null, monks_count]
     );
 
-    // ดึงข้อมูลที่เพิ่งบันทึกไปโชว์
-    const [booking] = await db.query(
-      'SELECT * FROM booking_details WHERE id = ?',
-      [result.insertId]
-    );
-
-    res.status(201).json({
-      success: true,
-      message: 'จองพิธีสำเร็จ รอการตอบรับจากเจ้าหน้าที่',
-      data: booking[0]
-    });
+    res.status(201).json({ success: true, message: 'จองพิธีสำเร็จ' });
   } catch (error) {
-    console.error('Create booking error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'เกิดข้อผิดพลาดในการจองพิธี'
-    });
+    console.error(error);
+    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการจอง' });
   }
 };
 
@@ -459,16 +438,16 @@ exports.updateBookingType = async (req, res) => {
 // เช็คจำนวนพระว่างรายวัน
 exports.checkAvailableMonks = async (req, res) => {
   try {
-    const { date } = req.query;
-    if (!date) return res.status(400).json({ success: false, message: 'ระบุวันที่' });
+    const { date, time } = req.query; // รับทั้งวันที่และเวลา
+    if (!date || !time) return res.status(400).json({ success: false, message: 'ระบุวันที่และเวลา' });
 
     const [stats] = await db.query(
       `SELECT 
         (SELECT total_monks FROM settings LIMIT 1) as max_monks,
         IFNULL(SUM(monks_count), 0) as used_monks
       FROM bookings 
-      WHERE booking_date = ? AND status IN ('approved', 'pending')`, // นับรวม pending เพื่อป้องกันการจองซ้อน
-      [date]
+      WHERE booking_date = ? AND booking_time = ? AND status IN ('approved', 'pending')`, 
+      [date, time] // เพิ่ม time ตรงนี้
     );
 
     const max = stats[0].max_monks || 20;

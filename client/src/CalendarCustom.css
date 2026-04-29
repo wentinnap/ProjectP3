@@ -1,42 +1,5 @@
-/* สีปฏิทินพื้นฐาน */
-.react-calendar {
-    width: 100% !important;
-    border: none !important;
-    font-family: 'Noto Sans Thai', sans-serif;
-}
-
-/* วันที่ว่าง (เขียว) */
-.date-available {
-    background-color: #f0fdf4 !important;
-    color: #15803d !important;
-    border-radius: 12px;
-}
-
-/* วันที่มีการจองแล้วบางส่วน (ส้ม) */
-.date-partial {
-    background-color: #fff7ed !important;
-    color: #c2410c !important;
-    border-radius: 12px;
-}
-
-/* วันที่เต็ม (แดง) */
-.date-full {
-    background-color: #fef2f2 !important;
-    color: #b91c1c !important;
-    border-radius: 12px;
-    cursor: not-allowed !important;
-}
-
-/* วันที่เลือกปัจจุบัน */
-.react-calendar__tile--active {
-    background: #f97316 !important;
-    color: white !important;
-    border-radius: 12px !important;
-}
-
-/* วันที่ผ่านมาแล้ว */
-.past-date {
-    color: #d1d5db !important;
-    pointer-events: none !important;
-    background: #f9fafb !important;
-}
+.date-available { background-color: #f0fdf4 !important; color: #16a34a !important; border-radius: 12px; }
+.date-partial { background-color: #fffbeb !important; color: #d97706 !important; border-radius: 12px; }
+.date-full { background-color: #fef2f2 !important; color: #dc2626 !important; cursor: not-allowed !important; border-radius: 12px; }
+.past-date { color: #d1d5db !important; pointer-events: none !important; background: #f9fafb !important; }
+.react-calendar__tile--active { background: #f97316 !important; color: white !important; border-radius: 12px !important; }

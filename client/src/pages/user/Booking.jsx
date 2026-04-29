@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { bookingAPI } from '../../services/api';
@@ -6,95 +6,73 @@ import { toast } from 'react-toastify';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import "../../CalendarCustom.css";
-import { Calendar as CalendarIcon, Clock, Users, Phone, Info } from 'lucide-react';
+import { Clock, Users, Phone, Info, CheckCircle } from 'lucide-react';
 import Navbar from "../../components/layout/Navbar";
 
 const Booking = () => {
-  const { isAuthenticated, user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
-  
   const [bookingTypes, setBookingTypes] = useState([]);
+  const [busyDates, setBusyDates] = useState({});
+  const [availableCount, setAvailableCount] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [busyDates, setBusyDates] = useState({}); // เก็บสถานะความว่างรายวัน
-  const [totalMonks, setTotalMonks] = useState(20);
-  
-  const timeSlots = ["07:00", "08:00", "09:00", "10:00", "11:00"];
+  const [maxMonks, setMaxMonks] = useState(20);
 
+  const timeSlots = ["07:00", "08:00", "09:00", "10:00", "11:00"];
   const [formData, setFormData] = useState({
-    booking_type_id: '',
-    booking_date: '',
-    booking_time: '',
-    monks_count: '',
-    full_name: user?.full_name || '',
-    phone: user?.phone || '',
-    details: '',
+    booking_type_id: '', booking_date: '', booking_time: '',
+    monks_count: '', full_name: user?.full_name || '', phone: user?.phone || '', details: ''
   });
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      toast.info('กรุณาเข้าสู่ระบบก่อนจองพิธี');
-      navigate('/login');
-    }
-    fetchBookingTypes();
-    fetchMonthlyStatus(new Date());
-  }, [isAuthenticated, authLoading]);
+  // เช็คจำนวนพระว่างเมื่อเลือก วัน หรือ เวลา
+  const fetchAvailability = useCallback(async (date, time) => {
+    if (!date || !time) return;
+    try {
+      const res = await bookingAPI.checkAvailableMonks(date, `${time}:00`);
+      setAvailableCount(res.data.available_monks);
+    } catch (err) { setAvailableCount(0); }
+  }, []);
 
-  // ดึงข้อมูลความว่างรายเดือนมาโชว์บนปฏิทิน
   const fetchMonthlyStatus = async (date) => {
     try {
       const res = await bookingAPI.getMonthlyStatus(date.getFullYear(), date.getMonth() + 1);
-      if (res.data.success) {
-        setBusyDates(res.data.busyDates || {});
-        setTotalMonks(res.data.max_monks || 20);
-      }
-    } catch (error) { console.error(error); }
+      setBusyDates(res.data.busyDates || {});
+      setMaxMonks(res.data.max_monks || 20);
+    } catch (err) { console.error(err); }
   };
 
-  const fetchBookingTypes = async () => {
-    try {
-      const response = await bookingAPI.getTypes();
-      setBookingTypes(response.data.data);
-    } catch (error) { toast.error('โหลดข้อมูลล้มเหลว'); }
+  useEffect(() => {
+    bookingAPI.getTypes().then(res => setBookingTypes(res.data.data));
+    fetchMonthlyStatus(new Date());
+  }, []);
+
+  const handleDateChange = (date) => {
+    const dateStr = date.toLocaleDateString('sv-SE');
+    setFormData(prev => ({ ...prev, booking_date: dateStr, booking_time: '', monks_count: '' }));
+    setAvailableCount(null);
   };
 
-  const handleDateSelect = (date) => {
-    const dateString = date.toLocaleDateString('sv-SE'); 
-    setFormData((prev) => ({ ...prev, booking_date: dateString }));
-  };
-
-  // Logic การใส่ Class สีให้ปฏิทิน
   const getTileClassName = ({ date, view }) => {
     if (view === 'month') {
-      const dateString = date.toLocaleDateString('sv-SE');
-      const dayData = busyDates[dateString];
+      const dateStr = date.toLocaleDateString('sv-SE');
       const today = new Date().setHours(0,0,0,0);
-
       if (date < today) return 'past-date';
-      if (!dayData) return 'date-available'; // ไม่มีข้อมูล = ว่าง (เขียว)
-      
-      const used = dayData.used || 0;
-      if (used >= totalMonks) return 'date-full'; // เต็ม (แดง)
-      if (used > 0) return 'date-partial'; // มีจองบ้าง (ส้ม)
+      const used = busyDates[dateStr]?.used || 0;
+      if (used >= maxMonks) return 'date-full';
+      if (used > 0) return 'date-partial';
       return 'date-available';
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.booking_date || !formData.booking_time) return toast.error('กรุณาเลือกวันและเวลา');
-    
+    if (parseInt(formData.monks_count) > availableCount) return toast.error('จำนวนพระไม่พอ');
     setLoading(true);
     try {
-      await bookingAPI.create({
-        ...formData,
-        booking_time: `${formData.booking_time}:00`, // Format ให้ตรงกับ DB time
-        booking_type_id: parseInt(formData.booking_type_id),
-        monks_count: parseInt(formData.monks_count)
-      });
+      await bookingAPI.create({ ...formData, booking_time: `${formData.booking_time}:00` });
       toast.success('ส่งคำขอจองสำเร็จ');
       navigate('/profile');
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'การจองล้มเหลว');
+    } catch (err) { toast.error(err.response?.data?.message || 'จองไม่สำเร็จ');
     } finally { setLoading(false); }
   };
 
@@ -102,110 +80,52 @@ const Booking = () => {
     <>
       <Navbar />
       <div className="min-h-screen bg-[#FDFBF7] pt-28 pb-10">
-        <div className="container mx-auto px-4 max-w-6xl">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            
-            {/* ฝั่งซ้าย: ปฏิทินแสดงความว่าง */}
-            <div className="lg:col-span-7 bg-white rounded-[30px] shadow-sm p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <CalendarIcon className="text-orange-500" />
-                <h2 className="text-xl font-bold">ตรวจสอบวันว่าง</h2>
+        <div className="container mx-auto px-4 max-w-6xl grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* ปฏิทิน */}
+          <div className="lg:col-span-7 bg-white rounded-[30px] shadow-sm p-6">
+             <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-orange-600"><CheckCircle /> 1. เลือกวัน</h2>
+             <Calendar onChange={handleDateChange} tileClassName={getTileClassName} onActiveStartDateChange={({ activeStartDate }) => fetchMonthlyStatus(activeStartDate)} minDate={new Date()} />
+          </div>
+
+          {/* ฟอร์ม */}
+          <div className="lg:col-span-5 bg-white rounded-[30px] shadow-xl p-8 border-t-8 border-orange-500">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100">
+                <p className="text-sm font-bold text-orange-800">วันที่: {formData.booking_date || 'โปรดเลือกบนปฏิทิน'}</p>
+                {availableCount !== null && <p className="text-lg font-black text-green-600">ว่างสำหรับเวลานี้: {availableCount} รูป</p>}
               </div>
-              <Calendar 
-                onChange={handleDateSelect} 
-                tileClassName={getTileClassName}
-                onActiveStartDateChange={({ activeStartDate }) => fetchMonthlyStatus(activeStartDate)}
-                minDate={new Date()}
-              />
-              <div className="mt-6 flex flex-wrap gap-4 text-sm font-medium border-t pt-4">
-                <div className="flex items-center gap-2"><span className="w-4 h-4 bg-green-100 border border-green-200 rounded"></span> ว่างมาก</div>
-                <div className="flex items-center gap-2"><span className="w-4 h-4 bg-orange-100 border border-orange-200 rounded"></span> มีจองแล้ว</div>
-                <div className="flex items-center gap-2"><span className="w-4 h-4 bg-red-100 border border-red-200 rounded"></span> เต็ม/งดรับ</div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-bold flex items-center gap-2"><Clock size={16}/> 2. เลือกเวลา</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {timeSlots.map(t => (
+                    <button key={t} type="button" onClick={() => { setFormData({...formData, booking_time: t}); fetchAvailability(formData.booking_date, t); }} 
+                      className={`p-2 rounded-xl border-2 font-bold ${formData.booking_time === t ? 'border-orange-500 bg-orange-500 text-white' : 'border-gray-100 bg-gray-50 text-gray-400'}`}>{t} น.</button>
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* ฝั่งขวา: ฟอร์มกรอกข้อมูล */}
-            <div className="lg:col-span-5 bg-white rounded-[30px] shadow-xl p-8 relative overflow-hidden">
-              <div className="h-2 absolute top-0 left-0 w-full bg-orange-500"></div>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                
-                {/* แสดงวันที่เลือก */}
-                <div className="bg-orange-50 p-4 rounded-2xl border border-orange-100">
-                  <p className="text-sm text-orange-800">วันที่จอง:</p>
-                  <p className="text-2xl font-black text-orange-600">
-                    {formData.booking_date ? new Date(formData.booking_date).toLocaleDateString('th-TH', { dateStyle: 'long' }) : "โปรดเลือกวันที่"}
-                  </p>
-                </div>
+              <select className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none" onChange={e => setFormData({...formData, booking_type_id: e.target.value})} required>
+                <option value="">3. เลือกประเภทพิธี...</option>
+                {bookingTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+              </select>
 
-                {/* เลือกช่วงเวลา */}
-                <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-sm font-bold text-gray-700">
-                    <Clock size={16} /> เลือกเวลา
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {timeSlots.map(time => (
-                      <button
-                        key={time}
-                        type="button"
-                        onClick={() => setFormData({...formData, booking_time: time})}
-                        className={`p-2 rounded-xl border-2 transition-all text-sm font-bold ${
-                          formData.booking_time === time 
-                          ? 'border-orange-500 bg-orange-500 text-white shadow-md' 
-                          : 'border-gray-100 bg-gray-50 text-gray-500'
-                        }`}
-                      >
-                        {time} น.
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              <div className="space-y-1">
+                <label className="text-sm font-bold ml-1">4. จำนวนพระ (รูป)</label>
+                <input type="number" placeholder="ระบุจำนวนพระ" className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none"
+                  value={formData.monks_count} max={availableCount} onChange={e => setFormData({...formData, monks_count: e.target.value})} required disabled={!formData.booking_time} />
+              </div>
 
-                {/* ประเภทพิธี */}
-                <select 
-                  className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none focus:border-orange-500"
-                  onChange={(e) => setFormData({...formData, booking_type_id: e.target.value})}
-                  required
-                >
-                  <option value="">เลือกประเภทพิธี...</option>
-                  {bookingTypes.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                </select>
+              <input type="tel" placeholder="เบอร์โทรติดต่อ" className="w-full p-4 bg-gray-50 border border-gray-200 rounded-2xl outline-none" onChange={e => setFormData({...formData, phone: e.target.value})} required />
 
-                {/* จำนวนพระ */}
-                <div className="relative">
-                  <Users className="absolute left-4 top-4 text-gray-400" size={20} />
-                  <input 
-                    type="number" placeholder="จำนวนพระ (รูป)" 
-                    className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-2xl outline-none"
-                    onChange={(e) => setFormData({...formData, monks_count: e.target.value})}
-                    required
-                  />
-                </div>
-
-                {/* เบอร์โทร */}
-                <div className="relative">
-                  <Phone className="absolute left-4 top-4 text-gray-400" size={20} />
-                  <input 
-                    type="tel" placeholder="เบอร์โทรศัพท์ติดต่อ" 
-                    className="w-full p-4 pl-12 bg-gray-50 border border-gray-200 rounded-2xl outline-none"
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    required
-                  />
-                </div>
-
-                <button 
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-bold shadow-lg transition-all"
-                >
-                  {loading ? "กำลังบันทึก..." : "ยืนยันการจองพิธี"}
-                </button>
-              </form>
-            </div>
+              <button type="submit" disabled={loading || !availableCount} className="w-full py-4 bg-orange-500 text-white rounded-2xl font-bold shadow-lg hover:bg-orange-600 disabled:bg-gray-300">
+                {loading ? "กำลังตรวจสอบ..." : "ยืนยันการจอง"}
+              </button>
+            </form>
           </div>
         </div>
       </div>
     </>
   );
 };
-
 export default Booking;
