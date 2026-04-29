@@ -2,16 +2,17 @@ import { useEffect, useState, useCallback } from 'react';
 import { bookingAPI } from '../../services/api';
 import { toast } from 'react-toastify';
 import { 
-  Calendar, Clock, Search, Check, X, MoreHorizontal, Filter, 
-  Trash2, Settings, Plus, User, Phone, Info, Edit3, Save, RotateCcw,
-  ChevronRight, MapPin, MessageSquare, Loader2
+  Calendar, Clock, Search, Check, X, Filter, Trash2, Settings, 
+  Plus, User, Phone, Info, Edit3, Save, RotateCcw, ChevronRight, 
+  MapPin, Loader2, CalendarRange, Users, Hash, FileText
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const AdminBookings = () => {
   // --- States ---
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('pending'); // 'pending', 'approved', 'rejected', 'all'
+  const [filter, setFilter] = useState('pending');
   const [searchTerm, setSearchTerm] = useState('');
   
   // Modals Control
@@ -66,7 +67,7 @@ const AdminBookings = () => {
   const handleUpdateStatus = async (id, status) => {
     try {
       await bookingAPI.updateStatus(id, { status, admin_response: adminResponse });
-      toast.success(`เปลี่ยนสถานะเป็น ${status === 'approved' ? 'อนุมัติ' : 'ปฏิเสธ'} เรียบร้อย`);
+      toast.success(`อัปเดตสถานะเรียบร้อย`);
       setShowModal(false); 
       fetchBookings();
     } catch (error) { 
@@ -75,7 +76,7 @@ const AdminBookings = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("⚠️ ยืนยันการลบรายการจองถาวร? การกระทำนี้ไม่สามารถย้อนกลับได้")) return;
+    if (!window.confirm("⚠️ ยืนยันการลบรายการจองถาวร?")) return;
     try { 
       await bookingAPI.deleteBooking(id); 
       toast.success('ลบรายการจองเรียบร้อย'); 
@@ -102,15 +103,6 @@ const AdminBookings = () => {
     }
   };
 
-  const startEditType = (t) => {
-    setEditingId(t.id);
-    setEditForm({ 
-      name: t.name, 
-      description: t.description || '', 
-      duration: t.duration_minutes || 60 
-    });
-  };
-
   const handleUpdateType = async (id) => {
     if (!editForm.name.trim()) return toast.warning('กรุณาระบุชื่อพิธี');
     try {
@@ -128,432 +120,315 @@ const AdminBookings = () => {
   };
 
   const handleDeleteType = async (id) => {
-    if (!window.confirm("ต้องการลบประเภทพิธีนี้ใช่หรือไม่?")) return;
+    if (!window.confirm("ต้องการลบประเภทพิธีนี้?")) return;
     try { 
       await bookingAPI.deleteType(id); 
       toast.success('ลบประเภทพิธีสำเร็จ'); 
       fetchTypes(); 
     } catch (error) { 
-      toast.error('ไม่สามารถลบได้ เนื่องจากมีการใช้งานอยู่'); 
+      toast.error('ไม่สามารถลบได้เนื่องจากมีการใช้งานอยู่'); 
     }
   };
 
-  // --- Filter Logic ---
   const filteredBookings = bookings.filter(b => 
     b.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     b.booking_type_name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="min-h-screen bg-[#FDFCFB] pb-20 p-4 lg:p-8">
-      {/* --- HEADER SECTION --- */}
-      <div className="max-w-7xl mx-auto mb-8">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+    <div className="min-h-screen bg-[#FDFCFB] pb-24">
+      {/* --- HEADER --- */}
+      <div className="bg-slate-900 pt-16 pb-24 px-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
+        <div className="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
           <div>
-            <h2 className="text-2xl lg:text-3xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
-              <div className="p-2.5 bg-orange-100 rounded-2xl text-orange-600 shadow-sm">
-                <Calendar size={28} />
+            <h1 className="text-3xl md:text-4xl font-black text-white flex items-center gap-4">
+              <div className="p-3 bg-orange-500 rounded-2xl shadow-lg shadow-orange-500/20">
+                <CalendarRange size={32} />
               </div>
-              ระบบจัดการการจอง
-            </h2>
-            <p className="text-slate-500 mt-1.5 text-sm lg:text-base">ตรวจสอบคำขอ ตรวจสอบคิว และตั้งค่าพิธีการ</p>
+              จัดการคิวการจอง
+            </h1>
+            <p className="text-slate-400 mt-2 font-medium">ระบบบริหารจัดการสำหรับแอดมิน</p>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-            <button 
-              onClick={() => setShowTypeModal(true)} 
-              className="flex items-center justify-center gap-2 px-6 py-3.5 bg-white border border-slate-200 text-slate-700 rounded-2xl font-bold text-sm shadow-sm hover:border-orange-200 hover:bg-orange-50/30 transition-all"
-            >
-              <Settings size={18} className="text-slate-400" /> 
-              ตั้งค่าประเภทพิธี
-            </button>
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input 
-                type="text" 
-                placeholder="ค้นหาชื่อผู้จอง หรือชื่อพิธี..." 
-                className="w-full pl-11 pr-4 py-3.5 bg-white border border-slate-200 rounded-2xl text-sm outline-none focus:ring-4 focus:ring-orange-500/10 focus:border-orange-500/50 shadow-sm transition-all"
-                onChange={(e) => setSearchTerm(e.target.value)} 
-              />
-            </div>
-          </div>
+          <button 
+            onClick={() => setShowTypeModal(true)}
+            className="flex items-center gap-2 px-8 py-4 bg-white/10 hover:bg-white text-white hover:text-slate-900 rounded-2xl font-bold transition-all border border-white/20 active:scale-95"
+          >
+            <Settings size={20} />
+            ตั้งค่าประเภทพิธี
+          </button>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto">
-        {/* --- STATUS TABS --- */}
-        <div className="flex gap-2 mb-8 overflow-x-auto pb-2 no-scrollbar">
-          {[
-            { id: 'pending', label: 'รอดำเนินการ', color: 'bg-amber-500' },
-            { id: 'approved', label: 'อนุมัติแล้ว', color: 'bg-emerald-500' },
-            { id: 'rejected', label: 'ปฏิเสธแล้ว', color: 'bg-red-500' },
-            { id: 'all', label: 'ทั้งหมด', color: 'bg-slate-600' }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setFilter(tab.id)}
-              className={`px-6 py-2.5 rounded-2xl text-sm font-bold transition-all whitespace-nowrap border ${
-                filter === tab.id 
-                ? `${tab.color} text-white border-transparent shadow-lg shadow-black/5` 
-                : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
-              }`}
-            >
-              {tab.label}
-              {filter === tab.id && <span className="ml-2 px-2 py-0.5 bg-white/20 rounded-md text-xs">{filteredBookings.length}</span>}
-            </button>
-          ))}
+      <div className="max-w-7xl mx-auto px-6 -mt-12 relative z-20">
+        {/* --- FILTERS --- */}
+        <div className="bg-white rounded-4xl shadow-xl shadow-slate-200/50 p-4 mb-10 flex flex-col lg:flex-row gap-4 items-center border border-slate-100">
+          <div className="relative w-full lg:flex-1">
+            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
+            <input 
+              type="text" 
+              placeholder="ค้นหาชื่อผู้จอง หรือพิธี..." 
+              className="w-full pl-14 pr-6 py-4 bg-slate-50 border-none rounded-2xl outline-none focus:ring-2 focus:ring-orange-500/20 transition-all font-medium"
+              onChange={(e) => setSearchTerm(e.target.value)} 
+            />
+          </div>
+          
+          <div className="flex bg-slate-100 p-1.5 rounded-2xl w-full lg:w-auto overflow-x-auto">
+            {[
+              { id: 'pending', label: 'รอดำเนินการ', color: 'text-amber-600 bg-white shadow-sm' },
+              { id: 'approved', label: 'อนุมัติแล้ว', color: 'text-emerald-600 bg-white shadow-sm' },
+              { id: 'rejected', label: 'ปฏิเสธ', color: 'text-red-600 bg-white shadow-sm' },
+              { id: 'all', label: 'ทั้งหมด', color: 'text-slate-600 bg-white shadow-sm' }
+            ].map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setFilter(t.id)}
+                className={`px-6 py-3 rounded-xl text-sm font-black transition-all whitespace-nowrap ${
+                  filter === t.id ? t.color : 'text-slate-400 hover:text-slate-600'
+                }`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* --- MAIN CONTENT --- */}
+        {/* --- BOOKING CARDS --- */}
         {loading ? (
-          <div className="bg-white rounded-[2.5rem] p-20 flex flex-col items-center justify-center text-slate-400 border border-slate-100 shadow-sm">
-            <Loader2 size={40} className="animate-spin text-orange-400 mb-4" />
-            <p className="font-medium animate-pulse">กำลังดึงข้อมูลล่าสุด...</p>
+          <div className="bg-white rounded-[40px] p-32 flex flex-col items-center justify-center border border-slate-100 shadow-sm">
+            <Loader2 size={48} className="animate-spin text-orange-500 mb-4" />
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">Loading Data...</p>
           </div>
         ) : filteredBookings.length === 0 ? (
-          <div className="bg-white rounded-[2.5rem] p-20 text-center border border-slate-100 shadow-sm">
-            <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-               <Search size={32} className="text-slate-200" />
-            </div>
-            <p className="text-slate-400 font-medium italic">ไม่พบรายการจองในหมวดหมู่นี้</p>
+          <div className="bg-white rounded-[40px] p-24 text-center border border-slate-100">
+             <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-200">
+                <Search size={40} />
+             </div>
+             <p className="text-slate-400 font-bold italic">ไม่พบข้อมูลในหมวดหมู่นี้</p>
           </div>
         ) : (
-          <>
-            {/* Desktop Table View */}
-            <div className="hidden lg:block bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-slate-50/50 border-b border-slate-100">
-                    <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">ข้อมูลผู้จอง</th>
-                    <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">ประเภทพิธี</th>
-                    <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest">กำหนดการ</th>
-                    <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest text-center">สถานะ</th>
-                    <th className="px-8 py-5 text-[11px] font-black text-slate-400 uppercase tracking-widest text-right">จัดการ</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {filteredBookings.map((booking) => (
-                    <tr key={booking.id} className="hover:bg-orange-50/20 transition-colors group">
-                      <td className="px-8 py-5">
-                        <div className="font-bold text-slate-700">{booking.full_name}</div>
-                        <div className="text-xs text-slate-400 flex items-center gap-1 mt-0.5">
-                          <Phone size={12} /> {booking.phone_number}
-                        </div>
-                      </td>
-                      <td className="px-8 py-5">
-                        <span className="px-3 py-1 bg-orange-50 text-orange-600 rounded-lg text-xs font-bold border border-orange-100">
-                          {booking.booking_type_name}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5">
-                        <div className="text-sm text-slate-600 font-bold">
-                          {new Date(booking.booking_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })}
-                        </div>
-                        <div className="text-xs text-slate-400 font-medium flex items-center gap-1">
-                          <Clock size={12} /> {booking.booking_time} น.
-                        </div>
-                      </td>
-                      <td className="px-8 py-5 text-center">
-                        <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-tight ${
-                          booking.status === 'approved' ? 'bg-emerald-100 text-emerald-600' :
-                          booking.status === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'
-                        }`}>
-                          {booking.status === 'pending' ? 'รอดำเนินการ' : booking.status === 'approved' ? 'อนุมัติแล้ว' : 'ปฏิเสธ'}
-                        </span>
-                      </td>
-                      <td className="px-8 py-5 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button onClick={() => openBookingDetail(booking)} className="p-2.5 text-slate-400 hover:text-orange-500 hover:bg-orange-50 rounded-xl transition-all">
-                            <Info size={20} />
-                          </button>
-                          <button onClick={() => handleDelete(booking.id)} className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
-                            <Trash2 size={20} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredBookings.map((booking) => (
+              <motion.div
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                key={booking.id}
+                className="group bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-orange-900/5 transition-all relative overflow-hidden"
+              >
+                <div className={`absolute top-0 left-0 w-full h-2 ${
+                  booking.status === 'approved' ? 'bg-emerald-500' : 
+                  booking.status === 'rejected' ? 'bg-red-500' : 'bg-amber-500'
+                }`} />
 
-            {/* Mobile Card View */}
-            <div className="lg:hidden space-y-4">
-              {filteredBookings.map((booking) => (
-                <div key={booking.id} className="bg-white p-6 rounded-4xl border border-slate-100 shadow-sm active:scale-[0.99] transition-transform">
-                  <div className="flex justify-between items-start mb-4">
-                    <div>
-                      <div className="font-extrabold text-slate-800 text-lg">{booking.full_name}</div>
-                      <div className="text-sm text-slate-500 flex items-center gap-1.5 mt-1">
-                        <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-slate-400">
-                          <Phone size={12} />
-                        </div>
-                        {booking.phone_number}
-                      </div>
-                    </div>
-                    <div className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${
-                          booking.status === 'approved' ? 'bg-emerald-100 text-emerald-600' :
-                          booking.status === 'rejected' ? 'bg-red-100 text-red-600' : 'bg-amber-100 text-amber-600'
-                    }`}>
-                      {booking.status}
-                    </div>
+                <div className="flex justify-between items-start mb-6">
+                  <div className="w-14 h-14 bg-slate-50 group-hover:bg-orange-50 transition-colors rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-orange-500">
+                    <User size={28} />
                   </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 py-4 border-y border-slate-50 mb-4">
-                    <div>
-                      <p className="text-[10px] text-slate-400 uppercase font-black tracking-wider mb-1">ประเภทพิธี</p>
-                      <p className="text-sm font-bold text-orange-600">{booking.booking_type_name}</p>
+                  <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                     booking.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 
+                     booking.status === 'rejected' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'
+                  }`}>
+                    {booking.status === 'pending' ? 'รอดำเนินการ' : booking.status}
+                  </span>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-xl font-black text-slate-800 line-clamp-1">{booking.full_name}</h4>
+                    <p className="text-slate-400 text-sm font-medium flex items-center gap-1.5 mt-1">
+                      <Phone size={14} /> {booking.phone_number}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2">
+                    <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-2xl text-sm font-bold text-slate-600">
+                      <Calendar size={16} className="text-orange-500" />
+                      {new Date(booking.booking_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })}
                     </div>
-                    <div>
-                      <p className="text-[10px] text-slate-400 uppercase font-black tracking-wider mb-1">วันและเวลา</p>
-                      <p className="text-sm font-bold text-slate-700">
-                        {new Date(booking.booking_date).toLocaleDateString('th-TH', {dateStyle: 'short'})}
-                        <span className="ml-1.5 text-slate-400 font-normal">{booking.booking_time} น.</span>
-                      </p>
+                    <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-2xl text-sm font-bold text-slate-600">
+                      <Clock size={16} className="text-orange-500" />
+                      {booking.booking_time} น.
+                    </div>
+                    <div className="flex items-center gap-3 px-4 py-3 bg-orange-50/50 border border-orange-100 rounded-2xl text-sm font-bold text-orange-600">
+                      <Info size={16} />
+                      {booking.booking_type_name}
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex gap-2 pt-2">
                     <button 
                       onClick={() => openBookingDetail(booking)}
-                      className="flex-1 py-3.5 bg-slate-50 text-slate-600 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-100 transition-colors"
+                      className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
                     >
-                      <Info size={18} /> จัดการคำขอ
+                      จัดการคำขอ <ChevronRight size={16} />
                     </button>
                     <button 
                       onClick={() => handleDelete(booking.id)}
-                      className="px-5 py-3.5 text-red-400 bg-red-50 rounded-2xl hover:bg-red-100 transition-colors"
+                      className="p-4 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"
                     >
-                      <Trash2 size={18} />
+                      <Trash2 size={20} />
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </>
+              </motion.div>
+            ))}
+          </div>
         )}
       </div>
 
-      {/* --- MODAL: BOOKING DETAILS --- */}
-      {showModal && selectedBooking && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-end sm:items-center justify-center z-100 p-0 sm:p-4">
-          <div className="bg-white rounded-t-[3rem] sm:rounded-[3rem] w-full max-w-2xl shadow-2xl flex flex-col max-h-[95vh] overflow-hidden animate-in slide-in-from-bottom sm:zoom-in duration-300">
-            <div className="p-8 pb-4 flex justify-between items-center border-b border-slate-50">
-              <div className="flex items-center gap-4">
-                <div className={`p-3 rounded-2xl ${
-                  selectedBooking.status === 'pending' ? 'bg-amber-100 text-amber-600' : 
-                  selectedBooking.status === 'approved' ? 'bg-emerald-100 text-emerald-600' : 'bg-red-100 text-red-600'
-                }`}>
-                  <Info size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-extrabold text-slate-800 leading-tight">รายละเอียดการจอง</h3>
-                  <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-0.5">Booking ID: #{selectedBooking.id.toString().slice(-6)}</p>
-                </div>
-              </div>
-              <button onClick={() => setShowModal(false)} className="p-2.5 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
-                <X size={24} />
-              </button>
-            </div>
-
-            <div className="p-8 overflow-y-auto space-y-8">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-6 rounded-4xl">
+      {/* --- MODAL: BOOKING DETAIL --- */}
+      <AnimatePresence>
+        {showModal && selectedBooking && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowModal(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" />
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-[48px] w-full max-w-2xl shadow-2xl relative z-10 overflow-hidden max-h-[90vh] flex flex-col">
+              <div className="p-8 border-b border-slate-50 flex justify-between items-center">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center text-slate-400"><User size={20} /></div>
+                  <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-500"><FileText size={28} /></div>
                   <div>
-                    <p className="text-[10px] text-slate-400 uppercase font-black">ผู้จอง</p>
-                    <p className="font-bold text-slate-700">{selectedBooking.full_name}</p>
+                    <h3 className="text-2xl font-black text-slate-800">รายละเอียด</h3>
+                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">ID: #{selectedBooking.id.toString().slice(-6)}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white rounded-2xl shadow-sm flex items-center justify-center text-slate-400"><Phone size={20} /></div>
-                  <div>
-                    <p className="text-[10px] text-slate-400 uppercase font-black">เบอร์ติดต่อ</p>
-                    <p className="font-bold text-slate-700">{selectedBooking.phone_number}</p>
+                <button onClick={() => setShowModal(false)} className="p-3 hover:bg-slate-50 rounded-full transition-colors"><X size={28} /></button>
+              </div>
+
+              <div className="p-8 overflow-y-auto space-y-6">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-6 bg-slate-50 rounded-4xl">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">ผู้จอง</p>
+                    <p className="text-lg font-bold text-slate-800">{selectedBooking.full_name}</p>
+                  </div>
+                  <div className="p-6 bg-slate-50 rounded-4xl">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">เบอร์ติดต่อ</p>
+                    <p className="text-lg font-bold text-slate-800">{selectedBooking.phone_number}</p>
                   </div>
                 </div>
+
+                <div className="p-8 border border-slate-100 rounded-4xl space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-400 font-bold text-xs uppercase">พิธีการ</span>
+                    <span className="font-black text-orange-600 text-lg">{selectedBooking.booking_type_name}</span>
+                  </div>
+                  <div className="flex justify-between items-center border-t border-slate-50 pt-4">
+                    <span className="text-slate-400 font-bold text-xs uppercase">จำนวนพระ</span>
+                    <span className="font-black text-slate-800 text-lg">{selectedBooking.monks_count} รูป</span>
+                  </div>
+                  <div className="flex justify-between items-center border-t border-slate-50 pt-4">
+                    <span className="text-slate-400 font-bold text-xs uppercase">วัน-เวลา</span>
+                    <span className="font-black text-slate-800">
+                      {new Date(selectedBooking.booking_date).toLocaleDateString('th-TH', {dateStyle: 'long'})} | {selectedBooking.booking_time} น.
+                    </span>
+                  </div>
+                </div>
+
+                {selectedBooking.note && (
+                  <div className="p-6 bg-orange-50/50 rounded-3xl border border-orange-100/50 italic text-slate-600 text-sm">
+                    "{selectedBooking.note}"
+                  </div>
+                )}
+
+                <div className="space-y-3 pt-4">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">ข้อความตอบกลับแอดมิน</label>
+                  <textarea 
+                    className="w-full p-6 bg-slate-50 rounded-4xl border-none outline-none focus:ring-2 focus:ring-orange-500/20 h-32 resize-none transition-all font-medium"
+                    placeholder="พิมพ์ข้อความที่นี่..."
+                    value={adminResponse}
+                    onChange={(e) => setAdminResponse(e.target.value)}
+                  />
+                </div>
               </div>
 
-              <div className="space-y-4">
-                <div className="flex justify-between items-center p-5 border border-slate-100 rounded-2xl">
-                   <div className="flex items-center gap-3">
-                     <Calendar className="text-orange-500" size={18} />
-                     <span className="text-xs font-black text-slate-400 uppercase tracking-widest">ประเภทพิธี</span>
-                   </div>
-                   <span className="font-extrabold text-slate-800">{selectedBooking.booking_type_name}</span>
-                </div>
-                <div className="flex justify-between items-center p-5 border border-slate-100 rounded-2xl">
-                   <div className="flex items-center gap-3">
-                     <Clock className="text-orange-500" size={18} />
-                     <span className="text-xs font-black text-slate-400 uppercase tracking-widest">วันและเวลา</span>
-                   </div>
-                   <span className="font-extrabold text-slate-800">
-                     {new Date(selectedBooking.booking_date).toLocaleDateString('th-TH', { dateStyle: 'long' })} | {selectedBooking.booking_time} น.
-                   </span>
-                </div>
-                <div className="p-6 bg-orange-50/50 border border-orange-100 rounded-3xl">
-                  <p className="text-[10px] text-orange-600 font-black uppercase mb-2 tracking-widest">บันทึกเพิ่มเติมจากผู้ใช้</p>
-                  <p className="text-sm text-slate-600 italic leading-relaxed">
-                    {selectedBooking.note ? `"${selectedBooking.note}"` : '--- ไม่มีข้อมูลระบุเพิ่มเติม ---'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <label className="text-[10px] text-slate-400 font-black uppercase tracking-widest ml-1">ข้อความตอบกลับจากแอดมิน (จะถูกส่งไปยังผู้จอง)</label>
-                <textarea 
-                  className="w-full p-5 bg-slate-50 rounded-3xl border-2 border-transparent outline-none focus:border-orange-500/20 focus:bg-white text-sm h-32 resize-none transition-all"
-                  placeholder="เช่น: ยืนยันการจองครับ, หรือระบุเหตุผลหากปฏิเสธ..."
-                  value={adminResponse}
-                  onChange={(e) => setAdminResponse(e.target.value)}
-                />
-                
-                <div className="flex flex-col sm:flex-row gap-3">
-                  {selectedBooking.status === 'pending' ? (
-                    <>
-                      <button onClick={() => handleUpdateStatus(selectedBooking.id, 'approved')} className="flex-1 py-4.5 bg-emerald-500 text-white rounded-2xl font-bold shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 order-2 sm:order-1 hover:bg-emerald-600 transition-colors">
-                        <Check size={20} /> อนุมัติการจอง
-                      </button>
-                      <button onClick={() => handleUpdateStatus(selectedBooking.id, 'rejected')} className="flex-1 py-4.5 bg-red-50 text-red-500 rounded-2xl font-bold order-1 sm:order-2 hover:bg-red-100 transition-colors">
-                        <X size={20} /> ปฏิเสธคำขอ
-                      </button>
-                    </>
-                  ) : (
-                    <button onClick={() => handleUpdateStatus(selectedBooking.id, 'pending')} className="w-full py-4.5 bg-slate-100 text-slate-600 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-slate-200 transition-colors">
-                      <RotateCcw size={20} /> ย้ายกลับไปที่รอดำเนินการ
+              <div className="p-8 bg-slate-50 flex flex-col sm:flex-row gap-3">
+                {selectedBooking.status === 'pending' ? (
+                  <>
+                    <button onClick={() => handleUpdateStatus(selectedBooking.id, 'approved')} className="flex-1 py-5 bg-emerald-500 text-white rounded-2xl font-black text-lg shadow-xl shadow-emerald-500/20 hover:bg-emerald-600 transition-all active:scale-95 flex items-center justify-center gap-2">
+                      <Check size={24} /> อนุมัติการจอง
                     </button>
-                  )}
-                </div>
+                    <button onClick={() => handleUpdateStatus(selectedBooking.id, 'rejected')} className="flex-1 py-5 bg-red-50 text-red-500 rounded-2xl font-black text-lg hover:bg-red-100 transition-all">
+                      <X size={24} className="inline mr-2" /> ปฏิเสธ
+                    </button>
+                  </>
+                ) : (
+                  <button onClick={() => handleUpdateStatus(selectedBooking.id, 'pending')} className="w-full py-5 bg-white border border-slate-200 text-slate-600 rounded-2xl font-black text-lg flex items-center justify-center gap-2 hover:bg-slate-100 transition-all">
+                    <RotateCcw size={24} /> ย้ายกลับไปรอดำเนินการ
+                  </button>
+                )}
               </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
-      {/* --- MODAL: TYPE MANAGEMENT --- */}
-      {showTypeModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-end sm:items-center justify-center z-100 p-0 sm:p-4">
-          <div className="bg-white rounded-t-[3rem] sm:rounded-[3rem] w-full max-w-2xl shadow-2xl flex flex-col max-h-[90vh] animate-in slide-in-from-bottom sm:zoom-in duration-300 overflow-hidden">
-            <div className="p-8 pb-4 flex justify-between items-center border-b border-slate-50">
-              <div>
-                <h3 className="text-xl font-extrabold text-slate-800">ตั้งค่าประเภทพิธี</h3>
-                <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-0.5">Manage Ceremony Types</p>
+      {/* --- MODAL: TYPE SETTINGS --- */}
+      <AnimatePresence>
+        {showTypeModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowTypeModal(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" />
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} className="bg-white rounded-[48px] w-full max-w-2xl shadow-2xl relative z-10 overflow-hidden max-h-[90vh] flex flex-col">
+              <div className="p-8 border-b border-slate-50 flex justify-between items-center">
+                <h3 className="text-2xl font-black text-slate-800">ตั้งค่าประเภทพิธี</h3>
+                <button onClick={() => setShowTypeModal(false)} className="p-3 hover:bg-slate-50 rounded-full transition-colors"><X size={28} /></button>
               </div>
-              <button onClick={() => { setShowTypeModal(false); setEditingId(null); }} className="p-2.5 hover:bg-slate-100 rounded-full transition-colors text-slate-400">
-                <X size={24} />
-              </button>
-            </div>
-            
-            <div className="p-8 overflow-y-auto custom-scrollbar">
-              {!editingId && (
-                <div className="bg-orange-50/50 p-6 rounded-4xl border border-orange-100 mb-8">
-                  <p className="text-[10px] font-black text-orange-600 uppercase mb-4 tracking-widest">เพิ่มประเภทพิธีใหม่</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+              <div className="p-8 overflow-y-auto space-y-8 no-scrollbar">
+                {/* เพิ่มใหม่ */}
+                <div className="bg-orange-50 p-8 rounded-[40px] border border-orange-100">
+                  <h4 className="text-orange-600 font-black text-xs uppercase tracking-widest mb-6">เพิ่มประเภทพิธี</h4>
+                  <div className="space-y-4">
                     <input 
-                      placeholder="ชื่อพิธี (เช่น ขึ้นบ้านใหม่, บวช)" 
-                      className="px-5 py-3.5 rounded-2xl border border-orange-200 bg-white text-sm outline-none w-full focus:ring-4 focus:ring-orange-500/10 transition-all"
+                      placeholder="ชื่อพิธี (เช่น ขึ้นบ้านใหม่)" 
+                      className="w-full px-6 py-4 rounded-2xl bg-white border-none outline-none focus:ring-2 focus:ring-orange-500/20 font-bold shadow-sm"
                       value={newType.name}
                       onChange={(e) => setNewType({...newType, name: e.target.value})}
                     />
                     <div className="relative">
                       <input 
-                        type="number" 
-                        placeholder="ระยะเวลา" 
-                        className="px-5 py-3.5 rounded-2xl border border-orange-200 bg-white text-sm outline-none w-full focus:ring-4 focus:ring-orange-500/10 transition-all"
+                        type="number" placeholder="ระยะเวลา" 
+                        className="w-full px-6 py-4 rounded-2xl bg-white border-none outline-none focus:ring-2 focus:ring-orange-500/20 font-bold shadow-sm"
                         value={newType.duration}
                         onChange={(e) => setNewType({...newType, duration: e.target.value})}
                       />
-                      <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[10px] text-orange-400 font-black uppercase">นาที</span>
+                      <span className="absolute right-6 top-1/2 -translate-y-1/2 text-[10px] font-black text-orange-300 uppercase tracking-tighter">นาที</span>
                     </div>
                     <textarea 
-                      placeholder="คำอธิบายสั้นๆ เกี่ยวกับพิธี..."
-                      className="sm:col-span-2 px-5 py-3.5 rounded-2xl border border-orange-200 bg-white text-sm outline-none h-24 resize-none focus:ring-4 focus:ring-orange-500/10 transition-all"
+                      placeholder="คำอธิบาย..." 
+                      className="w-full px-6 py-4 rounded-2xl bg-white border-none outline-none focus:ring-2 focus:ring-orange-500/20 font-medium shadow-sm h-24 resize-none"
                       value={newType.description}
                       onChange={(e) => setNewType({...newType, description: e.target.value})}
                     />
+                    <button onClick={handleAddType} className="w-full py-4 bg-orange-500 text-white rounded-2xl font-black shadow-lg shadow-orange-500/30 hover:bg-orange-600 transition-all">
+                      เพิ่มประเภทพิธี
+                    </button>
                   </div>
-                  <button onClick={handleAddType} className="w-full mt-4 py-4 bg-orange-500 text-white rounded-2xl font-extrabold shadow-lg shadow-orange-500/30 hover:bg-orange-600 active:scale-[0.98] transition-all flex items-center justify-center gap-2">
-                    <Plus size={20} /> ยืนยันเพิ่มประเภทพิธี
-                  </button>
                 </div>
-              )}
 
-              <div className="space-y-4">
-                <p className="text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest ml-1">รายการพิธีปัจจุบัน ({bookingTypes.length})</p>
-                {bookingTypes.map(t => (
-                  <div key={t.id} className={`p-5 rounded-3xl border transition-all ${editingId === t.id ? 'bg-white border-blue-500 ring-4 ring-blue-500/5 shadow-xl' : 'bg-slate-50 border-slate-100 hover:bg-slate-100/50'}`}>
-                    {editingId === t.id ? (
-                      <div className="space-y-4">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <input 
-                            className="px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-4 focus:ring-blue-500/10 outline-none transition-all"
-                            value={editForm.name}
-                            onChange={(e) => setEditForm({...editForm, name: e.target.value})}
-                          />
-                          <div className="relative">
-                            <input 
-                              type="number"
-                              className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm focus:ring-4 focus:ring-blue-500/10 outline-none transition-all"
-                              value={editForm.duration}
-                              onChange={(e) => setEditForm({...editForm, duration: e.target.value})}
-                            />
-                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 font-black">นาที</span>
-                          </div>
-                        </div>
-                        <textarea 
-                          className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm h-20 focus:ring-4 focus:ring-blue-500/10 outline-none resize-none transition-all"
-                          value={editForm.description}
-                          onChange={(e) => setEditForm({...editForm, description: e.target.value})}
-                        />
-                        <div className="flex gap-2">
-                          <button 
-                            onClick={() => handleUpdateType(t.id)}
-                            className="flex-1 bg-blue-600 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 hover:bg-blue-700 transition-all"
-                          >
-                            <Save size={18} /> บันทึกการแก้ไข
-                          </button>
-                          <button 
-                            onClick={() => setEditingId(null)}
-                            className="px-6 py-3 bg-slate-100 text-slate-500 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all"
-                          >
-                            ยกเลิก
-                          </button>
-                        </div>
+                {/* รายการที่มีอยู่ */}
+                <div className="space-y-4">
+                  <h4 className="text-slate-400 font-black text-xs uppercase tracking-widest ml-2">รายการปัจจุบัน</h4>
+                  {bookingTypes.map(t => (
+                    <div key={t.id} className="p-6 rounded-4xl bg-slate-50 border border-slate-100 flex justify-between items-center group">
+                      <div>
+                        <p className="font-black text-slate-800 text-lg">{t.name}</p>
+                        <p className="text-orange-500 font-bold text-xs flex items-center gap-1 mt-1">
+                          <Clock size={14} /> {t.duration_minutes} นาที
+                        </p>
                       </div>
-                    ) : (
-                      <div className="flex justify-between items-center">
-                        <div className="flex-1 pr-4">
-                          <h4 className="font-extrabold text-slate-700">{t.name}</h4>
-                          <div className="flex items-center gap-3 mt-1.5">
-                            <span className="text-[10px] font-black text-orange-500 bg-orange-50 px-2.5 py-1 rounded-lg flex items-center gap-1.5 border border-orange-100">
-                              <Clock size={12} /> {t.duration_minutes} นาที
-                            </span>
-                            {t.description && <span className="text-xs text-slate-400 truncate max-w-[200px] font-medium">{t.description}</span>}
-                          </div>
-                        </div>
-                        <div className="flex gap-1">
-                          <button 
-                            onClick={() => startEditType(t)} 
-                            className="p-2.5 text-blue-500 hover:bg-blue-50 rounded-xl transition-all"
-                          >
-                            <Edit3 size={20}/>
-                          </button>
-                          <button 
-                            onClick={() => handleDeleteType(t.id)} 
-                            className="p-2.5 text-red-400 hover:bg-red-50 rounded-xl transition-all"
-                          >
-                            <Trash2 size={20}/>
-                          </button>
-                        </div>
+                      <div className="flex gap-2">
+                        <button onClick={() => handleDeleteType(t.id)} className="w-12 h-12 flex items-center justify-center bg-white text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                          <Trash2 size={20} />
+                        </button>
                       </div>
-                    )}
-                  </div>
-                ))}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 };

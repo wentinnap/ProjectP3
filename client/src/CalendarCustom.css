@@ -1,5 +1,64 @@
-.date-available { background-color: #f0fdf4 !important; color: #16a34a !important; border-radius: 12px; }
-.date-partial { background-color: #fffbeb !important; color: #d97706 !important; border-radius: 12px; }
-.date-full { background-color: #fef2f2 !important; color: #dc2626 !important; cursor: not-allowed !important; border-radius: 12px; }
-.past-date { color: #d1d5db !important; pointer-events: none !important; background: #f9fafb !important; }
-.react-calendar__tile--active { background: #f97316 !important; color: white !important; border-radius: 12px !important; }
+/* ปรับแต่งปฏิทินหลัก */
+.react-calendar {
+  border: none !important;
+  font-family: 'Prompt', sans-serif !important;
+}
+
+.react-calendar__navigation button {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.react-calendar__month-view__weekdays__weekday {
+  text-decoration: none !important;
+  font-weight: 800;
+  color: #fb923c;
+  padding-bottom: 10px;
+}
+
+.react-calendar__tile {
+  padding: 1.5em 0.5em !important;
+  font-weight: 600;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.react-calendar__tile:hover {
+  background-color: #fff7ed !important;
+  transform: scale(1.05);
+}
+
+/* สีสถานะ */
+.date-available {
+  background-color: #f0fdf4 !important;
+  color: #16a34a !important;
+}
+
+.date-partial {
+  background-color: #fff7ed !important;
+  color: #ea580c !important;
+}
+
+.date-full {
+  background-color: #fef2f2 !important;
+  color: #dc2626 !important;
+  cursor: not-allowed !important;
+}
+
+.past-date {
+  color: #e5e7eb !important;
+  pointer-events: none !important;
+}
+
+/* วันที่เลือก */
+.react-calendar__tile--active {
+  background: #f97316 !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+.react-calendar__tile--now {
+  background: #fef3c7 !important;
+  border: 2px solid #f59e0b !important;
+}
