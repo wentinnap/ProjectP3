@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import { 
   Calendar, Clock, Search, Check, X, Filter, Trash2, Settings, 
   Plus, User, Phone, Info, Edit3, Save, RotateCcw, ChevronRight, 
-  MapPin, Loader2, CalendarRange, Users, Hash, FileText
+  MapPin, Loader2, CalendarRange, Users, Hash, FileText, Sun, Sunrise 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -15,19 +15,21 @@ const AdminBookings = () => {
   const [filter, setFilter] = useState('pending');
   const [searchTerm, setSearchTerm] = useState('');
   
-  // Modals Control
   const [showModal, setShowModal] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
   
-  // Data States
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [bookingTypes, setBookingTypes] = useState([]);
   const [adminResponse, setAdminResponse] = useState('');
   
-  // Form States (Create/Edit Types)
   const [newType, setNewType] = useState({ name: '', description: '', duration: 60 });
-  const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({ name: '', description: '', duration: 60 });
+
+  // ฟังก์ชันช่วยแปลงเวลาเป็นชื่อรอบ (เพื่อให้ตรงกับหน้าจอง)
+  const getTimeLabel = (time) => {
+    if (time.startsWith("07")) return { label: "รอบเช้า", icon: <Sunrise size={14} className="text-orange-500" /> };
+    if (time.startsWith("11")) return { label: "รอบเพล/บ่าย", icon: <Sun size={14} className="text-amber-500" /> };
+    return { label: time + " น.", icon: <Clock size={14} className="text-slate-400" /> };
+  };
 
   // --- Data Fetching ---
   const fetchBookings = useCallback(async () => {
@@ -57,7 +59,7 @@ const AdminBookings = () => {
     fetchTypes();
   }, [fetchBookings]);
 
-  // --- Handlers: Bookings ---
+  // --- Handlers ---
   const openBookingDetail = (booking) => {
     setSelectedBooking(booking);
     setAdminResponse(booking.admin_response || '');
@@ -86,7 +88,6 @@ const AdminBookings = () => {
     }
   };
 
-  // --- Handlers: Booking Types ---
   const handleAddType = async () => {
     if (!newType.name.trim()) return toast.warning('กรุณาระบุชื่อพิธี');
     try {
@@ -103,30 +104,14 @@ const AdminBookings = () => {
     }
   };
 
-  const handleUpdateType = async (id) => {
-    if (!editForm.name.trim()) return toast.warning('กรุณาระบุชื่อพิธี');
-    try {
-      await bookingAPI.updateType(id, {
-        name: editForm.name,
-        description: editForm.description,
-        duration_minutes: parseInt(editForm.duration)
-      });
-      toast.success('อัปเดตข้อมูลสำเร็จ');
-      setEditingId(null);
-      fetchTypes();
-    } catch (error) { 
-      toast.error('แก้ไขไม่สำเร็จ'); 
-    }
-  };
-
   const handleDeleteType = async (id) => {
-    if (!window.confirm("ต้องการลบประเภทพิธีนี้?")) return;
+    if (!window.confirm("ต้องการลบประเภทพิธีนี้? หากมีคิวจองที่ใช้ประเภทนี้อยู่อาจลบไม่ได้")) return;
     try { 
       await bookingAPI.deleteType(id); 
       toast.success('ลบประเภทพิธีสำเร็จ'); 
       fetchTypes(); 
     } catch (error) { 
-      toast.error('ไม่สามารถลบได้เนื่องจากมีการใช้งานอยู่'); 
+      toast.error('ไม่สามารถลบได้เนื่องจากมีการใช้งานอยู่ในระบบ'); 
     }
   };
 
@@ -209,71 +194,74 @@ const AdminBookings = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredBookings.map((booking) => (
-              <motion.div
-                layout
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                key={booking.id}
-                className="group bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-orange-900/5 transition-all relative overflow-hidden"
-              >
-                <div className={`absolute top-0 left-0 w-full h-2 ${
-                  booking.status === 'approved' ? 'bg-emerald-500' : 
-                  booking.status === 'rejected' ? 'bg-red-500' : 'bg-amber-500'
-                }`} />
+            {filteredBookings.map((booking) => {
+              const timeInfo = getTimeLabel(booking.booking_time);
+              return (
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  key={booking.id}
+                  className="group bg-white rounded-[40px] p-8 border border-slate-100 shadow-sm hover:shadow-2xl hover:shadow-orange-900/5 transition-all relative overflow-hidden"
+                >
+                  <div className={`absolute top-0 left-0 w-full h-2 ${
+                    booking.status === 'approved' ? 'bg-emerald-500' : 
+                    booking.status === 'rejected' ? 'bg-red-500' : 'bg-amber-500'
+                  }`} />
 
-                <div className="flex justify-between items-start mb-6">
-                  <div className="w-14 h-14 bg-slate-50 group-hover:bg-orange-50 transition-colors rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-orange-500">
-                    <User size={28} />
-                  </div>
-                  <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
-                     booking.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 
-                     booking.status === 'rejected' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'
-                  }`}>
-                    {booking.status === 'pending' ? 'รอดำเนินการ' : booking.status}
-                  </span>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <h4 className="text-xl font-black text-slate-800 line-clamp-1">{booking.full_name}</h4>
-                    <p className="text-slate-400 text-sm font-medium flex items-center gap-1.5 mt-1">
-                      <Phone size={14} /> {booking.phone_number}
-                    </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 gap-2">
-                    <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-2xl text-sm font-bold text-slate-600">
-                      <Calendar size={16} className="text-orange-500" />
-                      {new Date(booking.booking_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })}
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="w-14 h-14 bg-slate-50 group-hover:bg-orange-50 transition-colors rounded-2xl flex items-center justify-center text-slate-400 group-hover:text-orange-500">
+                      <User size={28} />
                     </div>
-                    <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-2xl text-sm font-bold text-slate-600">
-                      <Clock size={16} className="text-orange-500" />
-                      {booking.booking_time} น.
-                    </div>
-                    <div className="flex items-center gap-3 px-4 py-3 bg-orange-50/50 border border-orange-100 rounded-2xl text-sm font-bold text-orange-600">
-                      <Info size={16} />
-                      {booking.booking_type_name}
-                    </div>
+                    <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest ${
+                       booking.status === 'approved' ? 'bg-emerald-50 text-emerald-600' : 
+                       booking.status === 'rejected' ? 'bg-red-50 text-red-600' : 'bg-amber-50 text-amber-600'
+                    }`}>
+                      {booking.status === 'pending' ? 'รอดำเนินการ' : booking.status}
+                    </span>
                   </div>
 
-                  <div className="flex gap-2 pt-2">
-                    <button 
-                      onClick={() => openBookingDetail(booking)}
-                      className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
-                    >
-                      จัดการคำขอ <ChevronRight size={16} />
-                    </button>
-                    <button 
-                      onClick={() => handleDelete(booking.id)}
-                      className="p-4 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"
-                    >
-                      <Trash2 size={20} />
-                    </button>
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-xl font-black text-slate-800 line-clamp-1">{booking.full_name}</h4>
+                      <p className="text-slate-400 text-sm font-medium flex items-center gap-1.5 mt-1">
+                        <Phone size={14} /> {booking.phone_number}
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2">
+                      <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-2xl text-sm font-bold text-slate-600">
+                        <Calendar size={16} className="text-orange-500" />
+                        {new Date(booking.booking_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })}
+                      </div>
+                      <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-2xl text-sm font-bold text-slate-600">
+                        {timeInfo.icon}
+                        {timeInfo.label} ({booking.booking_time} น.)
+                      </div>
+                      <div className="flex items-center gap-3 px-4 py-3 bg-orange-50/50 border border-orange-100 rounded-2xl text-sm font-bold text-orange-600">
+                        <Info size={16} />
+                        {booking.booking_type_name}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 pt-2">
+                      <button 
+                        onClick={() => openBookingDetail(booking)}
+                        className="flex-1 py-4 bg-slate-900 text-white rounded-2xl font-bold text-sm hover:bg-slate-800 transition-all flex items-center justify-center gap-2"
+                      >
+                        จัดการคำขอ <ChevronRight size={16} />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(booking.id)}
+                        className="p-4 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>
@@ -318,8 +306,9 @@ const AdminBookings = () => {
                   </div>
                   <div className="flex justify-between items-center border-t border-slate-50 pt-4">
                     <span className="text-slate-400 font-bold text-xs uppercase">วัน-เวลา</span>
-                    <span className="font-black text-slate-800">
-                      {new Date(selectedBooking.booking_date).toLocaleDateString('th-TH', {dateStyle: 'long'})} | {selectedBooking.booking_time} น.
+                    <span className="font-black text-slate-800 text-right">
+                      {new Date(selectedBooking.booking_date).toLocaleDateString('th-TH', {dateStyle: 'long'})} <br/> 
+                      <span className="text-orange-500">{getTimeLabel(selectedBooking.booking_time).label} ({selectedBooking.booking_time} น.)</span>
                     </span>
                   </div>
                 </div>
@@ -374,7 +363,6 @@ const AdminBookings = () => {
               </div>
 
               <div className="p-8 overflow-y-auto space-y-8 no-scrollbar">
-                {/* เพิ่มใหม่ */}
                 <div className="bg-orange-50 p-8 rounded-[40px] border border-orange-100">
                   <h4 className="text-orange-600 font-black text-xs uppercase tracking-widest mb-6">เพิ่มประเภทพิธี</h4>
                   <div className="space-y-4">
@@ -405,24 +393,27 @@ const AdminBookings = () => {
                   </div>
                 </div>
 
-                {/* รายการที่มีอยู่ */}
                 <div className="space-y-4">
                   <h4 className="text-slate-400 font-black text-xs uppercase tracking-widest ml-2">รายการปัจจุบัน</h4>
-                  {bookingTypes.map(t => (
-                    <div key={t.id} className="p-6 rounded-4xl bg-slate-50 border border-slate-100 flex justify-between items-center group">
-                      <div>
-                        <p className="font-black text-slate-800 text-lg">{t.name}</p>
-                        <p className="text-orange-500 font-bold text-xs flex items-center gap-1 mt-1">
-                          <Clock size={14} /> {t.duration_minutes} นาที
-                        </p>
+                  {bookingTypes.length === 0 ? (
+                    <p className="text-center py-4 text-slate-300 italic">ไม่มีข้อมูลประเภทพิธี</p>
+                  ) : (
+                    bookingTypes.map(t => (
+                      <div key={t.id} className="p-6 rounded-4xl bg-slate-50 border border-slate-100 flex justify-between items-center group">
+                        <div>
+                          <p className="font-black text-slate-800 text-lg">{t.name}</p>
+                          <p className="text-orange-500 font-bold text-xs flex items-center gap-1 mt-1">
+                            <Clock size={14} /> {t.duration_minutes} นาที
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={() => handleDeleteType(t.id)} className="w-12 h-12 flex items-center justify-center bg-white text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm">
+                            <Trash2 size={20} />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <button onClick={() => handleDeleteType(t.id)} className="w-12 h-12 flex items-center justify-center bg-white text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm">
-                          <Trash2 size={20} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
               </div>
             </motion.div>

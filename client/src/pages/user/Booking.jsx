@@ -6,9 +6,9 @@ import { toast } from 'react-toastify';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import "../../CalendarCustom.css";
-import { Clock, Users, Phone, Info, CheckCircle, MapPin, Notebook, Pen } from 'lucide-react';
+import { Clock, Users, Phone, Info, CheckCircle, MapPin, Sun, Sunrise } from 'lucide-react';
 import Navbar from "../../components/layout/Navbar";
-import { motion } from 'framer-motion'; // แนะนำให้ลงเพิ่ม: npm install framer-motion
+import { motion } from 'framer-motion';
 
 const Booking = () => {
   const { user } = useAuth();
@@ -19,10 +19,20 @@ const Booking = () => {
   const [loading, setLoading] = useState(false);
   const [maxMonks, setMaxMonks] = useState(20);
 
-  const timeSlots = ["07:00", "08:00", "09:00", "10:00", "11:00"];
+  // ปรับ Time Slots เป็นแบบช่วงเวลา เช้า/เพล
+  const timeSlots = [
+    { label: "รอบเช้า", value: "07:00", icon: <Sunrise size={20} /> },
+    { label: "รอบเพล/บ่าย", value: "11:00", icon: <Sun size={20} /> }
+  ];
+
   const [formData, setFormData] = useState({
-    booking_type_id: '', booking_date: '', booking_time: '',
-    monks_count: '', full_name: user?.full_name || '', phone: user?.phone || '', details: ''
+    booking_type_id: '', 
+    booking_date: '', 
+    booking_time: '',
+    monks_count: '', 
+    full_name: user?.full_name || '', 
+    phone: user?.phone || '', 
+    details: ''
   });
 
   const fetchAvailability = useCallback(async (date, time) => {
@@ -30,7 +40,9 @@ const Booking = () => {
     try {
       const res = await bookingAPI.checkAvailableMonks(date, `${time}:00`);
       setAvailableCount(res.data.available_monks);
-    } catch (err) { setAvailableCount(0); }
+    } catch (err) { 
+      setAvailableCount(0); 
+    }
   }, []);
 
   const fetchMonthlyStatus = async (date) => {
@@ -38,7 +50,9 @@ const Booking = () => {
       const res = await bookingAPI.getMonthlyStatus(date.getFullYear(), date.getMonth() + 1);
       setBusyDates(res.data.busyDates || {});
       setMaxMonks(res.data.max_monks || 20);
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      console.error(err); 
+    }
   };
 
   useEffect(() => {
@@ -74,14 +88,15 @@ const Booking = () => {
       navigate('/profile');
     } catch (err) { 
       toast.error(err.response?.data?.message || 'จองไม่สำเร็จ');
-    } finally { setLoading(false); }
+    } finally { 
+      setLoading(false); 
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#FDFBF7]">
       <Navbar />
       
-      {/* Hero Section Header */}
       <div className="bg-linear-to-b from-orange-500 to-orange-600 pt-32 pb-20 px-4">
         <div className="container mx-auto text-center">
           <motion.h1 
@@ -92,7 +107,7 @@ const Booking = () => {
             จองคิวพิธีสงฆ์
           </motion.h1>
           <p className="text-orange-100 text-lg max-w-2xl mx-auto">
-            เลือกวันที่และเวลาที่คุณต้องการ เพื่อความสะดวกในการเตรียมการและอำนวยความสะดวกจากทางวัด
+            เลือกวันที่และช่วงเวลาที่คุณต้องการ เพื่อความสะดวกในการเตรียมนิมนต์พระคุณเจ้า
           </p>
         </div>
       </div>
@@ -100,7 +115,7 @@ const Booking = () => {
       <div className="container mx-auto px-4 max-w-6xl -mt-10 pb-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
-          {/* ฝั่งซ้าย: ปฏิทินและการแสดงสถานะ */}
+          {/* ฝั่งซ้าย: ปฏิทิน */}
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -126,7 +141,6 @@ const Booking = () => {
                 />
               </div>
 
-              {/* Legend สถานะ */}
               <div className="mt-8 grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                 <div className="flex flex-col items-center gap-1">
                   <span className="w-8 h-2 bg-green-400 rounded-full"></span>
@@ -153,10 +167,10 @@ const Booking = () => {
             <div className="bg-white rounded-4xl shadow-2xl shadow-orange-900/10 p-8 sticky top-28 border border-orange-100">
               <form onSubmit={handleSubmit} className="space-y-6">
                 
-                {/* วันที่และเวลาที่เลือกปัจจุบัน */}
+                {/* สถานะการเลือกปัจจุบัน */}
                 <div className="bg-linear-to-r from-orange-50 to-orange-100 p-5 rounded-3xl border border-orange-200">
                   <div className="flex justify-between items-start mb-2">
-                    <p className="text-xs font-bold text-orange-600 uppercase tracking-wider">ข้อมูลการจองปัจจุบัน</p>
+                    <p className="text-xs font-bold text-orange-600 uppercase tracking-wider">ข้อมูลที่เลือก</p>
                     <Info size={16} className="text-orange-400" />
                   </div>
                   <h3 className="text-xl font-black text-gray-800">
@@ -165,31 +179,43 @@ const Booking = () => {
                   {availableCount !== null && (
                     <div className="mt-3 flex items-center gap-2">
                       <div className={`px-3 py-1 rounded-full text-xs font-bold ${availableCount > 0 ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
-                        {availableCount > 0 ? `พระว่าง ${availableCount} รูป` : 'คิวเต็มแล้ว'}
+                        {availableCount > 0 ? `พระว่าง ${availableCount} รูป` : 'รอบนี้เต็มแล้ว'}
                       </div>
-                      <span className="text-xs text-gray-500">ณ เวลา {formData.booking_time} น.</span>
+                      <span className="text-xs text-gray-500">
+                        {timeSlots.find(s => s.value === formData.booking_time)?.label || ''}
+                      </span>
                     </div>
                   )}
                 </div>
 
-                {/* เลือกเวลา */}
+                {/* เลือกเวลา (เช้า/เพล) */}
                 <div className="space-y-3">
                   <label className="text-sm font-bold text-gray-700 flex items-center gap-2 ml-1">
-                    <Clock size={16} className="text-orange-500"/> 2. เลือกเวลา (สามารถจองซ้ำช่วงเวลาเดียวกันได้)
+                    <Clock size={16} className="text-orange-500"/> 2. เลือกช่วงเวลา
                   </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {timeSlots.map(t => (
+                  <div className="grid grid-cols-2 gap-3">
+                    {timeSlots.map(slot => (
                       <button 
-                        key={t} 
+                        key={slot.value} 
                         type="button" 
-                        onClick={() => { setFormData({...formData, booking_time: t}); fetchAvailability(formData.booking_date, t); }} 
-                        className={`py-3 rounded-2xl border-2 font-bold transition-all duration-200 ${
-                          formData.booking_time === t 
+                        disabled={!formData.booking_date}
+                        onClick={() => { 
+                          setFormData({...formData, booking_time: slot.value}); 
+                          fetchAvailability(formData.booking_date, slot.value); 
+                        }} 
+                        className={`py-4 rounded-2xl border-2 font-bold transition-all duration-200 flex flex-col items-center gap-2 ${
+                          !formData.booking_date ? 'opacity-50 cursor-not-allowed' : ''
+                        } ${
+                          formData.booking_time === slot.value 
                           ? 'border-orange-500 bg-orange-500 text-white shadow-lg shadow-orange-200 scale-105' 
                           : 'border-gray-100 bg-gray-50 text-gray-400 hover:border-orange-200 hover:text-orange-400'
                         }`}
                       >
-                        {t} น.
+                        {slot.icon}
+                        <div className="text-center">
+                          <div className="text-sm">{slot.label}</div>
+                          <div className="text-xs font-normal opacity-80">{slot.value} น.</div>
+                        </div>
                       </button>
                     ))}
                   </div>
@@ -214,11 +240,11 @@ const Booking = () => {
                 {/* จำนวนพระ */}
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-gray-700 ml-1 flex items-center gap-2">
-                    <Users size={16} className="text-orange-500"/> 4. จำนวนพระที่ต้องการ (รูป)
+                    <Users size={16} className="text-orange-500"/> 4. จำนวนพระ (รูป)
                   </label>
                   <input 
                     type="number" 
-                    placeholder="เช่น 9" 
+                    placeholder={availableCount ? `ระบุจำนวน (ไม่เกิน ${availableCount})` : "เช่น 9"}
                     className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all"
                     value={formData.monks_count} 
                     max={availableCount} 
@@ -231,7 +257,7 @@ const Booking = () => {
                 {/* เบอร์โทร */}
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-gray-700 ml-1 flex items-center gap-2">
-                    <Phone size={16} className="text-orange-500"/> 5. เบอร์โทรศัพท์ติดต่อ
+                    <Phone size={16} className="text-orange-500"/> 5. เบอร์โทรศัพท์
                   </label>
                   <input 
                     type="tel" 
@@ -245,9 +271,9 @@ const Booking = () => {
 
                 <button 
                   type="submit" 
-                  disabled={loading || !availableCount || availableCount <= 0} 
+                  disabled={loading || !availableCount || availableCount <= 0 || !formData.booking_time} 
                   className={`w-full py-5 rounded-2xl font-black text-lg shadow-xl transition-all duration-300 transform active:scale-95 ${
-                    loading || !availableCount || availableCount <= 0
+                    loading || !availableCount || availableCount <= 0 || !formData.booking_time
                     ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
                     : "bg-linear-to-r from-orange-500 to-orange-600 text-white hover:shadow-orange-200 hover:-translate-y-1"
                   }`}
@@ -269,4 +295,5 @@ const Booking = () => {
     </div>
   );
 };
+
 export default Booking;
