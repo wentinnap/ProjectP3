@@ -59,9 +59,12 @@ router.delete('/types/:id', authenticate, isAdmin, bookingController.deleteBooki
 
 
 // เส้นทาง API สำหรับจัดการพระสงฆ์
+// เส้นทาง API สำหรับจัดการพระสงฆ์
 router.get('/admin/monks', authenticate, isAdmin, bookingController.getAllMonks);
+// 🔥 [เพิ่มใหม่] เส้นทางสำหรับเช็คสถานะพระรายรูปในวันที่เลือก (ใช้ใน Modal จัดการพระของแอดมิน)
+router.get('/admin/monks/availability', authenticate, isAdmin, bookingController.getAvailableMonks);
+
 router.post('/admin/monks', authenticate, isAdmin, bookingController.createMonk);
 router.delete('/admin/monks/:id', authenticate, isAdmin, bookingController.deleteMonk);
-
 
 module.exports = router;

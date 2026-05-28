@@ -106,16 +106,19 @@ exports.getUserBookings = async (req, res) => {
 };
 
 // 🛠️ แก้ไข: เปลี่ยนจากดึง VIEW (booking_details) มาดึงตารางจริงสำหรับหน้า Admin ด้วยเช่นกัน
+// 🛠️ แก้ไข: ดึงตารางหลัก + JOIN ตารางเชื่อมพระสงฆ์ เพื่อให้หน้าบ้านได้ค่า monk_ids ไปเช็คปุ่มจม
 exports.getAllBookings = async (req, res) => {
   try {
     const { status, page = 1, limit = 10, date_from, date_to } = req.query;
     const offset = (page - 1) * limit;
 
-    // ✨ ปรับ Query ดึงตรงจากตารางหลัก มั่นใจได้ว่ามี monks_count ครบถ้วน
+    // ✨ เพิ่ม GROUP_CONCAT(bm.monk_id) เพื่อดึง ID พระที่ถูกเลือกในใบจองนั้นๆ ออกมาด้วย
     let query = `
-      SELECT b.*, bt.name as booking_type_name 
+      SELECT b.*, bt.name as booking_type_name,
+             GROUP_CONCAT(bm.monk_id) as assigned_monk_ids
       FROM bookings b
       LEFT JOIN booking_types bt ON b.booking_type_id = bt.id
+      LEFT JOIN booking_monks bm ON b.id = bm.booking_id
       WHERE 1=1
     `;
     const queryParams = [];
@@ -135,10 +138,17 @@ exports.getAllBookings = async (req, res) => {
       queryParams.push(date_to);
     }
 
-    query += ' ORDER BY b.booking_date DESC, b.booking_time DESC LIMIT ? OFFSET ?';
+    // ⚠️ ต้องเติม GROUP BY b.id เพราะมีการใช้ Aggregate Function (GROUP_CONCAT)
+    query += ' GROUP BY b.id ORDER BY b.booking_date DESC, b.booking_time DESC LIMIT ? OFFSET ?';
     queryParams.push(parseInt(limit), parseInt(offset));
 
     const [bookings] = await db.query(query, queryParams);
+
+    // 🔄 แปลงสตริงตระกูล "1,2,3" ให้กลับไปเป็น Array ของตัวเลข [1, 2, 3] เพื่อให้หน้าบ้าน map ได้ทันที
+    const formattedBookings = bookings.map(b => ({
+      ...b,
+      monk_ids: b.assigned_monk_ids ? b.assigned_monk_ids.split(',').map(Number) : []
+    }));
 
     // Get total count
     let countQuery = 'SELECT COUNT(*) as total FROM bookings WHERE 1=1';
@@ -165,7 +175,7 @@ exports.getAllBookings = async (req, res) => {
     res.json({
       success: true,
       data: {
-        bookings,
+        bookings: formattedBookings, // ส่งข้อมูลที่แปลงฟอร์แมตแล้วกลับไป
         pagination: {
           page: parseInt(page),
           limit: parseInt(limit),
@@ -184,6 +194,7 @@ exports.getAllBookings = async (req, res) => {
 };
 
 // ✅ Update booking status (admin) พร้อมบันทึกรายชื่อพระและส่ง LINE Messaging API
+// ✅ แก้ไขฟังก์ชันอัปเดตสถานะให้ดักจับ "พระรูปหลักติดงานซ้อน" ป้องกัน Human Error
 exports.updateBookingStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -211,8 +222,8 @@ exports.updateBookingStatus = async (req, res) => {
 
     const booking = bookingData[0];
 
-    // 2. เช็คจำนวนพระว่าง
     if (status === 'approved') {
+      // 2. เช็คโควตาจำนวนพระว่างภาพรวม (โค้ดเดิมของคุณ)
       const [stats] = await db.query(
         `SELECT 
           (SELECT total_monks FROM settings LIMIT 1) as max_monks,
@@ -228,6 +239,26 @@ exports.updateBookingStatus = async (req, res) => {
           success: false,
           message: `ไม่สามารถอนุมัติได้ เนื่องจากพระในเวลานี้เหลือไม่เพียงพอ (ว่าง ${available} รูป)`
         });
+      }
+
+      // 🔥 [เพิ่มใหม่] เช็คเชิงลึก: รายชื่อพระที่เลือก ไปชนกับใบจองอื่นที่ "อนุมัติแล้ว" ในวันเดียวกันไหม?
+      if (monk_ids && Array.isArray(monk_ids) && monk_ids.length > 0) {
+        const [conflicts] = await db.query(
+          `SELECT m.name 
+           FROM booking_monks bm
+           JOIN bookings b ON bm.booking_id = b.id
+           JOIN monks m ON bm.monk_id = m.id
+           WHERE b.booking_date = ? AND b.status = 'approved' AND b.id != ? AND bm.monk_id IN (?)`,
+          [booking.booking_date, id, monk_ids]
+        );
+
+        if (conflicts.length > 0) {
+          const conflictNames = conflicts.map(c => c.name).join(', ');
+          return res.status(400).json({
+            success: false,
+            message: `❌ ไม่สามารถบันทึกได้ เนื่องจากมีพระสงฆ์ติดคิวงานอื่นในวันนี้แล้ว: ${conflictNames}`
+          });
+        }
       }
     }
 
@@ -252,7 +283,7 @@ exports.updateBookingStatus = async (req, res) => {
       }
     }
 
-    // 4. ถ้าอนุมัติสำเร็จ ให้ส่งข้อความเข้ากลุ่มไลน์ด้วย Messaging API
+    // 4. ส่วนส่ง LINE Messaging API (โค้ดเดิมของคุณคงเดิมไว้ทั้งหมด...)
     if (status === 'approved') {
       try {
         const lineToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
@@ -261,7 +292,6 @@ exports.updateBookingStatus = async (req, res) => {
         if (!lineToken || !lineGroupId) {
           console.warn('⚠️ LINE Integration Warning: Missing Env Variables.');
         } else {
-          
           const [monksData] = await db.query(
             `SELECT m.name FROM booking_monks bm
              JOIN monks m ON bm.monk_id = m.id
@@ -310,7 +340,6 @@ exports.updateBookingStatus = async (req, res) => {
           );
           console.log('ส่งแจ้งเตือนไลน์กลุ่มสำเร็จพร้อมรายชื่อพระ');
         }
-
       } catch (lineError) {
         console.error('LINE API Error:', lineError.response ? lineError.response.data : lineError.message);
       }
@@ -682,13 +711,52 @@ exports.deleteMonk = async (req, res) => {
 };
 
 // เพิ่มฟังก์ชันนี้ใน Controller
+// ✅ แก้ไข: เช็คจำนวนพระว่างรายวัน (Public - ไม่เช็คเวลาตามคอมเมนต์ใน Router)
+exports.checkAvailableMonks = async (req, res) => {
+  try {
+    const { date } = req.query; // รับเฉพาะวันที่เข้ามา
+    
+    if (!date) {
+      return res.status(400).json({ success: false, message: 'กรุณาระบุวันที่ต้องการตรวจสอบ' });
+    }
+
+    // 1. ดึงจำนวนพระทั้งหมดจากสถานะตั้งค่า
+    const [settings] = await db.query('SELECT total_monks FROM settings LIMIT 1');
+    const maxMonks = settings[0]?.total_monks || 20;
+
+    // 2. นับจำนวนพระที่ถูกดึงตัวไปทำงานนิมนต์ที่ได้รับการอนุมัติแล้วในวันนั้นทั้งหมด (ไม่สนเวลา)
+    const [booked] = await db.query(
+      `SELECT COUNT(DISTINCT bm.monk_id) as used 
+       FROM booking_monks bm
+       JOIN bookings b ON bm.booking_id = b.id
+       WHERE b.booking_date = ? 
+       AND b.status = 'approved'`, 
+      [date]
+    );
+
+    const usedCount = parseInt(booked[0].used || 0);
+    const available = maxMonks - usedCount;
+
+    res.json({
+      success: true,
+      available_monks: available < 0 ? 0 : available
+    });
+  } catch (error) {
+    console.error('Check available monks error:', error);
+    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการตรวจสอบจำนวนพระว่าง' });
+  }
+};
+
+// ✅ ตรวจสอบความถูกต้อง: ดึงรายชื่อพระทั้งหมด + พ่วงสถานะติดงานรายรูป (สำหรับ Admin Modal)
 exports.getAvailableMonks = async (req, res) => {
   try {
-    const { date } = req.query; // รับวันที่ที่ต้องการเช็ค
+    const { date } = req.query;
 
-    if (!date) return res.status(400).json({ success: false, message: 'กรุณาระบุวันที่' });
+    if (!date) {
+      return res.status(400).json({ success: false, message: 'กรุณาระบุวันที่ต้องการตรวจสอบ' });
+    }
 
-    // Query หา ID ของพระที่ถูกจองไปแล้วในวันที่นั้น (และสถานะถูกอนุมัติ)
+    // หาสมณศักดิ์/ID พระที่ติดคิวงานนิมนต์ที่อนุมัติแล้วในวันนั้น
     const [bookedMonks] = await db.query(
       `SELECT DISTINCT bm.monk_id 
        FROM booking_monks bm
@@ -699,17 +767,18 @@ exports.getAvailableMonks = async (req, res) => {
 
     const bookedIds = bookedMonks.map(row => row.monk_id);
 
-    // ดึงพระทั้งหมด แล้วกรองตัวที่ไม่ติดจองออกไป
+    // ดึงพระทั้งหมดในวัดออกเรียงตามชื่อ
     const [allMonks] = await db.query('SELECT * FROM monks ORDER BY name ASC');
     
-    // ส่งข้อมูลกลับไปทั้งรายชื่อ และบอกว่ารูปไหนติดจองอยู่ (is_busy)
+    // map สเตตัสส่งไปให้หน้าบ้านเช็คเพื่อทำปุ่มจม (Disabled)
     const result = allMonks.map(monk => ({
       ...monk,
-      is_busy: bookedIds.includes(monk.id)
+      is_busy: bookedIds.includes(monk.id) // ถ้า ID ตรงกับที่ติดงานจะเป็น true
     }));
 
     res.json({ success: true, data: result });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error('Get available monks details error:', error);
+    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการดึงข้อมูลสถานะพระสงฆ์' });
   }
 };

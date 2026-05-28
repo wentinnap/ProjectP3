@@ -100,6 +100,7 @@ export const newsAPI = {
 };
 
 // ---------------- BOOKING ----------------
+// ---------------- BOOKING ----------------
 export const bookingAPI = {
   getTypes: () => api.get("/bookings/types"),
   create: (data) => api.post("/bookings", data),
@@ -113,9 +114,9 @@ export const bookingAPI = {
   deleteType: (id) => api.delete(`/bookings/types/${id}`),
   getStats: () => api.get("/bookings/admin/stats"),
 
-  // ✅ ปรับเปลี่ยนจุดนี้: เพิ่ม parameter 'time' เพื่อส่งไปเช็คพระว่างแยกตามช่วงเวลา
-  checkAvailableMonks: (date, time) => 
-    api.get("/bookings/check-monks", { params: { date, time } }),
+  // 🛠️ แก้ไข: ปรับตามหลังบ้านให้เช็คจำนวนพระว่างภาพรวม "รายวัน" (ไม่เช็คเวลาแล้ว)
+  checkAvailableMonks: (date) => 
+    api.get("/bookings/check-monks", { params: { date } }),
 
   // ✅ เช็คทั้งเดือน (ใช้สำหรับระบายสีปฏิทิน แดง/เขียว)
   getMonthlyStatus: (year, month) => 
@@ -126,6 +127,10 @@ export const bookingAPI = {
 export const monkAPI = {
   // ดึงรายชื่อพระทั้งหมดไปแสดงในตารางหน้า Admin หรือใช้เลือกใน Dropdown
   getAll: () => api.get("/bookings/admin/monks"),
+  
+  // 🔥 [เพิ่มใหม่] ดึงรายชื่อพระพร้อมสถานะติดงาน (is_busy) รายวัน เพื่อไปทำปุ่มเลือกใน Modal อนุมัติงาน
+  getAvailableMonks: (date) => 
+    api.get("/bookings/admin/monks/availability", { params: { date } }),
   
   // ส่งข้อมูล { name: "ชื่อพระ" } เพื่อบันทึกเพิ่มรูปใหม่
   create: (data) => api.post("/bookings/admin/monks", data),
