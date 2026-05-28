@@ -29,7 +29,7 @@ const AdminBookings = () => {
 
   const [newType, setNewType] = useState({ name: '', description: '', duration: 60 });
 
-  // 🌟 [ปรับแก้] ใช้ useState เก็บ ID พระที่ติดงาน แทนการใช้ useMemo กรองหน้าบ้าน
+  // เก็บ ID พระที่ติดงาน
   const [busyMonkIds, setBusyMonkIds] = useState([]);
 
   // ฟังก์ชันช่วยแปลงเวลาเป็นชื่อรอบ
@@ -104,7 +104,7 @@ const AdminBookings = () => {
     }
   };
 
-  // 🌟 [ปรับแก้] ดึงข้อมูลสถานะพระจาก API ทันทีที่เปิดดูรายละเอียดการจอง
+  // ดึงข้อมูลสถานะพระจาก API ทันทีที่เปิดดูรายละเอียดการจอง
   const openBookingDetail = async (booking) => {
     setSelectedBooking(booking);
     setAdminResponse(booking.admin_response || '');
@@ -133,7 +133,7 @@ const AdminBookings = () => {
   const handleToggleMonk = (monkId) => {
     const requiredMonks = selectedBooking?.monks_count ?? selectedBooking?.monksCount ?? 0;
 
-    // 🛡️ ดักจับไม่ให้เลือกพระสงฆ์ที่ติดภารกิจอื่นในวันนั้นแล้ว
+    // ดักจับไม่ให้เลือกพระสงฆ์ที่ติดภารกิจอื่นในวันนั้นแล้ว (ป้องกันการ Bypass)
     if (busyMonkIds.includes(monkId) && !selectedMonkIds.includes(monkId)) {
       toast.error('พระสงฆ์รูปนี้ติดคิวงานนิมนต์อื่นในวันดังกล่าวแล้ว');
       return;
@@ -432,7 +432,7 @@ const AdminBookings = () => {
                   </div>
                 )}
 
-                {/* 🌟 แสดงรายชื่อพระสงฆ์ */}
+                {/* 🌟 แสดงรายชื่อพระสงฆ์ (อัปเดตล็อคปุ่มแล้ว) */}
                 {selectedBooking.status === 'pending' && (
                   <div className="space-y-3 pt-2">
                     <div className="flex justify-between items-end px-2">
@@ -447,26 +447,27 @@ const AdminBookings = () => {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 bg-slate-50 rounded-4xl border border-slate-100 max-h-48 overflow-y-auto no-scrollbar">
                       {allMonks.map((monk) => {
                         const isSelected = selectedMonkIds.includes(monk.id);
-                        // เปลี่ยนมาใช้ State busyMonkIds
-                        const isBusy = busyMonkIds.includes(monk.id) && !isSelected;
+                        
+                        // 🛑 อัปเดต: ถ้าพระติดคิว ให้ประเมินเป็น true เสมอ (ป้องกันการกด)
+                        const isBusy = busyMonkIds.includes(monk.id);
                         
                         return (
                           <button
                             key={monk.id}
                             type="button"
-                            disabled={isBusy}
+                            disabled={isBusy} // 🛑 ล็อคปุ่ม
                             onClick={() => handleToggleMonk(monk.id)}
                             className={`p-3.5 rounded-2xl font-bold text-sm transition-all flex items-center justify-between border ${
-                              isSelected 
-                                ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20 active:scale-95' 
-                                : isBusy
-                                  ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                              isBusy
+                                ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60' // 🛑 สีเทา กดไม่ได้
+                                : isSelected 
+                                  ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20 active:scale-95' 
                                   : 'bg-white text-slate-700 border-slate-200/60 hover:border-orange-300'
                             }`}
                           >
                             <span className="truncate">{monk.name} {isBusy && '(ติดคิว)'}</span>
-                            {isSelected && <Check size={16} className="shrink-0 ml-1 text-white" />}
-                            {isBusy && <X size={14} className="shrink-0 ml-1 text-slate-300" />}
+                            {isSelected && !isBusy && <Check size={16} className="shrink-0 ml-1 text-white" />}
+                            {isBusy && <X size={14} className="shrink-0 ml-1 text-slate-400" />}
                           </button>
                         );
                       })}
