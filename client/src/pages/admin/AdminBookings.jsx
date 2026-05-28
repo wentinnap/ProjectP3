@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { bookingAPI, monkAPI } from '../../services/api';
 import { toast } from 'react-toastify';
 import { 
@@ -28,6 +28,15 @@ const AdminBookings = () => {
   const [selectedMonkIds, setSelectedMonkIds] = useState([]);
 
   const [newType, setNewType] = useState({ name: '', description: '', duration: 60 });
+
+  // --- 🛡️ เช็ครายชื่อพระที่ติดจองในวันเดียวกันแบบ Real-time ---
+  const busyMonkIds = useMemo(() => {
+    if (!selectedBooking) return [];
+    // กรองหาคิวงานจองอื่นที่ "อนุมัติแล้ว" และเป็น "วันเดียวกัน" กับคำขอที่กำลังพิจารณา
+    return bookings
+      .filter(b => b.status === 'approved' && b.booking_date === selectedBooking.booking_date && b.id !== selectedBooking.id)
+      .flatMap(b => b.monk_ids || []);
+  }, [bookings, selectedBooking]);
 
   // ฟังก์ชันช่วยแปลงเวลาเป็นชื่อรอบ
   const getTimeLabel = (time) => {
@@ -109,8 +118,13 @@ const AdminBookings = () => {
   };
 
   const handleToggleMonk = (monkId) => {
-    // 🛡️ รองรับทั้ง monks_count และ monksCount ป้องกันค่า undefined
     const requiredMonks = selectedBooking?.monks_count ?? selectedBooking?.monksCount ?? 0;
+
+    // 🛡️ ดักจับไม่ให้เลือกพระสงฆ์ที่ติดภารกิจอื่นในวันนั้นแล้ว (ยกเว้นกดเพื่อเอารูปเดิมออก)
+    if (busyMonkIds.includes(monkId) && !selectedMonkIds.includes(monkId)) {
+      toast.error('พระสงฆ์รูปนี้ติดคิวงานนิมนต์อื่นในวันดังกล่าวแล้ว');
+      return;
+    }
 
     setSelectedMonkIds(prev => {
       if (prev.includes(monkId)) {
@@ -126,7 +140,6 @@ const AdminBookings = () => {
   };
 
   const handleUpdateStatus = async (id, status) => {
-    // 🛡️ ดักจับจำนวนพระสงฆ์ที่ต้องนิมนต์
     const requiredMonks = selectedBooking?.monks_count ?? selectedBooking?.monksCount ?? 0;
 
     try {
@@ -279,7 +292,6 @@ const AdminBookings = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredBookings.map((booking) => {
               const timeInfo = getTimeLabel(booking.booking_time);
-              // 🛡️ ดักจับชื่อคอลัมน์โทรศัพท์ของแต่ละแถว (phone หรือ phone_number)
               const cardPhone = booking.phone || booking.phone_number || 'ไม่ระบุเบอร์โทร';
 
               return (
@@ -407,7 +419,7 @@ const AdminBookings = () => {
                   </div>
                 )}
 
-                {/* UI สำหรับการเลือกรายชื่อพระสงฆ์ */}
+                {/* 🌟 ปรับปรุง UI การจัดรายชื่อพระสงฆ์เพื่อป้องกันการเลือกซ้ำในวันเดียวกัน 🌟 */}
                 {selectedBooking.status === 'pending' && (
                   <div className="space-y-3 pt-2">
                     <div className="flex justify-between items-end px-2">
@@ -422,19 +434,26 @@ const AdminBookings = () => {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 bg-slate-50 rounded-4xl border border-slate-100 max-h-48 overflow-y-auto no-scrollbar">
                       {allMonks.map((monk) => {
                         const isSelected = selectedMonkIds.includes(monk.id);
+                        // ถ้าติดจองคิวงานอื่นในวันเดียวกัน และ ตัวมันเองไม่ได้กำลังถูกเลือกอยู่ ให้มีสถานะเป็น busy
+                        const isBusy = busyMonkIds.includes(monk.id) && !isSelected;
+                        
                         return (
                           <button
                             key={monk.id}
                             type="button"
+                            disabled={isBusy}
                             onClick={() => handleToggleMonk(monk.id)}
                             className={`p-3.5 rounded-2xl font-bold text-sm transition-all flex items-center justify-between border ${
                               isSelected 
                                 ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20 active:scale-95' 
-                                : 'bg-white text-slate-700 border-slate-200/60 hover:border-orange-300'
+                                : isBusy
+                                  ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60'
+                                  : 'bg-white text-slate-700 border-slate-200/60 hover:border-orange-300'
                             }`}
                           >
-                            <span className="truncate">{monk.name}</span>
+                            <span className="truncate">{monk.name} {isBusy && '(ติดคิว)'}</span>
                             {isSelected && <Check size={16} className="shrink-0 ml-1 text-white" />}
+                            {isBusy && <X size={14} className="shrink-0 ml-1 text-slate-300" />}
                           </button>
                         );
                       })}

@@ -680,3 +680,36 @@ exports.deleteMonk = async (req, res) => {
     });
   }
 };
+
+// เพิ่มฟังก์ชันนี้ใน Controller
+exports.getAvailableMonks = async (req, res) => {
+  try {
+    const { date } = req.query; // รับวันที่ที่ต้องการเช็ค
+
+    if (!date) return res.status(400).json({ success: false, message: 'กรุณาระบุวันที่' });
+
+    // Query หา ID ของพระที่ถูกจองไปแล้วในวันที่นั้น (และสถานะถูกอนุมัติ)
+    const [bookedMonks] = await db.query(
+      `SELECT DISTINCT bm.monk_id 
+       FROM booking_monks bm
+       JOIN bookings b ON bm.booking_id = b.id
+       WHERE b.booking_date = ? AND b.status = 'approved'`,
+      [date]
+    );
+
+    const bookedIds = bookedMonks.map(row => row.monk_id);
+
+    // ดึงพระทั้งหมด แล้วกรองตัวที่ไม่ติดจองออกไป
+    const [allMonks] = await db.query('SELECT * FROM monks ORDER BY name ASC');
+    
+    // ส่งข้อมูลกลับไปทั้งรายชื่อ และบอกว่ารูปไหนติดจองอยู่ (is_busy)
+    const result = allMonks.map(monk => ({
+      ...monk,
+      is_busy: bookedIds.includes(monk.id)
+    }));
+
+    res.json({ success: true, data: result });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
