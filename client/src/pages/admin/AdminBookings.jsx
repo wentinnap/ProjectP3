@@ -25,11 +25,11 @@ const AdminBookings = () => {
   const [adminResponse, setAdminResponse] = useState('');
   
   const [allMonks, setAllMonks] = useState([]); 
-  const [selectedMonkIds, setSelectedMonkIds] = useState([]);
+  const [selectedMonkIds, setSelectedMonkIds] = useState([]); // เก็บเป็น Array ของ String ID
 
   const [newType, setNewType] = useState({ name: '', description: '', duration: 60 });
 
-  // เก็บ ID พระที่ติดงาน
+  // เก็บ ID พระที่ติดงาน (เก็บเป็น String ID เพื่อความแม่นยำในการเปรียบเทียบ)
   const [busyMonkIds, setBusyMonkIds] = useState([]);
 
   // ฟังก์ชันช่วยแปลงเวลาเป็นชื่อรอบ
@@ -104,37 +104,58 @@ const AdminBookings = () => {
     }
   };
 
-  // 🔥 จุดแก้ไขหลัก: ปรับปรุงการตรวจสอบรายชื่อพระที่ติดคิวให้ครอบคลุมทุกโครงสร้าง API
+  // 🔥 จุดแก้ไขหลักที่ 1: ปรับปรุงการล้างฟอร์แมต Date และการเช็คค่าอย่างปลอดภัยสูงสุด
   const openBookingDetail = async (booking) => {
     setSelectedBooking(booking);
     setAdminResponse(booking.admin_response || '');
-    setSelectedMonkIds(booking.monk_ids || []); 
+    
+    // แปลงข้อมูลตั้งต้นให้เป็น String ID ทั้งหมดเพื่อป้องกัน Type Mismatch
+    const initialSelectedIds = (booking.monk_ids || []).map(id => String(id));
+    setSelectedMonkIds(initialSelectedIds); 
     setShowModal(true);
 
     if (booking.booking_date) {
       try {
-        const response = await monkAPI.getAvailableMonks(booking.booking_date);
-        const resData = response.data?.data || response.data;
+        // ป้องกันปัญหา Date ISO String: ตัดเอาเฉพาะ YYYY-MM-DD
+        const cleanDate = booking.booking_date.split('T')[0];
+        const response = await monkAPI.getAvailableMonks(cleanDate);
+        
+        let resData = response.data?.data || response.data;
+        
+        // รองรับกรณีห่อ Object ซ้อนมาอีกชั้น
+        if (resData && typeof resData === 'object' && !Array.isArray(resData)) {
+          if (Array.isArray(resData.availableMonks)) resData = resData.availableMonks;
+          else if (Array.isArray(resData.monks)) resData = resData.monks;
+        }
 
         if (Array.isArray(resData)) {
-          // ตรวจสอบว่า API ส่งมาเป็น Object ที่มีสถานะ หรือส่งมาเฉพาะคนขยัน/คนว่าง
+          // ตรวจสอบโครงสร้างว่าส่งมาพร้อม flag บอกสถานะงานตรงๆ หรือไม่
           const hasStatusFlag = resData.length > 0 && typeof resData[0] === 'object' && (
             'is_busy' in resData[0] || 'isBusy' in resData[0] || 'available' in resData[0]
           );
 
           if (hasStatusFlag) {
-            // แบบที่ 1: API ส่งมาครบทุกคน แต่มี flag บอกสถานะย่อย
+            // แบบที่ 1: ดึง ID ของคนที่ไม่ว่างออกมา (แปลงเป็น String)
             const busyIds = resData
               .filter(monk => monk.is_busy === true || monk.isBusy === true || monk.available === false)
-              .map(monk => monk.id);
+              .map(monk => String(monk.id || monk.monk_id || monk.monkId));
             setBusyMonkIds(busyIds);
           } else {
-            // แบบที่ 2: API ส่งมาเฉพาะ "รายชื่อพระที่ว่าง" (คนติดคิวจะไม่โผล่มาเลย)
-            // วิธีคิด: พระรูปไหนที่อยู่ในระบบ (allMonks) แต่ "ไม่มีชื่อ" ในลิสต์ที่ได้มา แปลว่า "ติดคิว"
-            const availableIds = resData.map(monk => typeof monk === 'object' ? monk.id : monk);
+            // แบบที่ 2: API ส่งเฉพาะ "คนว่าง" -> คนไหนไม่มีชื่อในลิสต์นี้ แปลว่า "ติดงาน"
+            const availableIds = resData.map(monk => {
+              if (typeof monk === 'object' && monk !== null) {
+                return String(monk.id ?? monk.monk_id ?? monk.monkId);
+              }
+              return String(monk);
+            });
+
             const busyIds = allMonks
-              .filter(monk => !availableIds.includes(monk.id))
-              .map(monk => monk.id);
+              .filter(monk => {
+                const currentId = String(monk.id ?? monk.monk_id ?? monk.monkId);
+                return !availableIds.includes(currentId);
+              })
+              .map(monk => String(monk.id ?? monk.monk_id ?? monk.monkId));
+            
             setBusyMonkIds(busyIds);
           }
         }
@@ -147,23 +168,25 @@ const AdminBookings = () => {
     }
   };
 
+  // 🔥 จุดแก้ไขหลักที่ 2: ปรับฟังก์ชันการเลือกให้ใช้ String เปรียบเทียบ
   const handleToggleMonk = (monkId) => {
     const requiredMonks = selectedBooking?.monks_count ?? selectedBooking?.monksCount ?? 0;
+    const monkIdStr = String(monkId);
 
-    if (busyMonkIds.includes(monkId) && !selectedMonkIds.includes(monkId)) {
+    if (busyMonkIds.includes(monkIdStr) && !selectedMonkIds.includes(monkIdStr)) {
       toast.error('พระสงฆ์รูปนี้ติดคิวงานนิมนต์อื่นในวันดังกล่าวแล้ว');
       return;
     }
 
     setSelectedMonkIds(prev => {
-      if (prev.includes(monkId)) {
-        return prev.filter(id => id !== monkId); 
+      if (prev.includes(monkIdStr)) {
+        return prev.filter(id => id !== monkIdStr); 
       } else {
         if (prev.length >= requiredMonks) {
           toast.warning(`ไม่สามารถเลือกเพิ่มได้เนื่องจากสล็อตเต็มที่ ${requiredMonks} รูปแล้ว`);
           return prev;
         }
-        return [...prev, monkId]; 
+        return [...prev, monkIdStr]; 
       }
     });
   };
@@ -176,10 +199,15 @@ const AdminBookings = () => {
         return toast.warning(`กรุณาเลือกพระสงฆ์ให้ครบตามจำนวนที่นิมนต์ไว้ (${requiredMonks} รูป / เลือกแล้ว ${selectedMonkIds.length} รูป)`);
       }
 
+      // 🔥 จุดแก้ไขหลักที่ 3: แปลงกลับเป็น Number ก่อนยิงเข้าหลังบ้าน ป้องกันหลังบ้านฟ้อง Error ชนิดข้อมูล
+      const finalMonkIds = status === 'approved' 
+        ? selectedMonkIds.map(id => isNaN(id) ? id : Number(id)) 
+        : [];
+
       await bookingAPI.updateStatus(id, { 
         status, 
         admin_response: adminResponse,
-        monk_ids: status === 'approved' ? selectedMonkIds : [] 
+        monk_ids: finalMonkIds
       });
 
       toast.success(`อัปเดตสถานะและส่งแจ้งเตือนกลุ่มเรียบร้อย`);
@@ -462,8 +490,10 @@ const AdminBookings = () => {
                     
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 bg-slate-50 rounded-4xl border border-slate-100 max-h-48 overflow-y-auto no-scrollbar">
                       {allMonks.map((monk) => {
-                        const isSelected = selectedMonkIds.includes(monk.id);
-                        const isBusy = busyMonkIds.includes(monk.id);
+                        // 🔥 จุดแก้ไขหลักที่ 4: เปลี่ยนมาเช็คด้วย String ID
+                        const monkIdStr = String(monk.id);
+                        const isSelected = selectedMonkIds.includes(monkIdStr);
+                        const isBusy = busyMonkIds.includes(monkIdStr);
                         
                         return (
                           <button
