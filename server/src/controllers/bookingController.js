@@ -1,4 +1,5 @@
 const db = require('../config/database');
+const axios = require('axios'); // ✅ เพิ่ม axios สำหรับส่ง LINE Notify
 
 // Get all booking types
 exports.getBookingTypes = async (req, res) => {
@@ -20,8 +21,7 @@ exports.getBookingTypes = async (req, res) => {
   }
 };
 
-// Create booking (user)
-// ✅ เพิ่มฟังก์ชันที่หายไป
+// Create booking type (admin)
 exports.createBookingType = async (req, res) => {
   try {
     const { name, description, duration_minutes } = req.body;
@@ -171,8 +171,8 @@ exports.getAllBookings = async (req, res) => {
   }
 };
 
-// Update booking status (admin)
-// Update booking status (admin)
+// ✅ Update booking status (admin) พร้อมส่ง LINE Notify
+
 exports.updateBookingStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -183,9 +183,14 @@ exports.updateBookingStatus = async (req, res) => {
       return res.status(400).json({ success: false, message: 'สถานะไม่ถูกต้อง' });
     }
 
-    // ดึงข้อมูลการจองที่จะอนุมัติ
+    // 1. ดึงข้อมูลการจองมาเตรียมไว้
     const [bookingData] = await db.query(
-      'SELECT booking_date, booking_time, monks_count, status FROM bookings WHERE id = ?', 
+      `SELECT b.booking_date, b.booking_time, b.monks_count, b.status, 
+              b.full_name, b.phone, b.details, 
+              bt.name as booking_type_name
+       FROM bookings b
+       LEFT JOIN booking_types bt ON b.booking_type_id = bt.id
+       WHERE b.id = ?`, 
       [id]
     );
 
@@ -193,7 +198,9 @@ exports.updateBookingStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: 'ไม่พบการจอง' });
     }
 
-    // ถ้าแอดมินจะอนุมัติ (approved) ให้เช็คพระว่างอีกครั้ง
+    const booking = bookingData[0];
+
+    // 2. เช็คจำนวนพระว่าง (โค้ดเดิมของคุณ)
     if (status === 'approved') {
       const [stats] = await db.query(
         `SELECT 
@@ -201,11 +208,11 @@ exports.updateBookingStatus = async (req, res) => {
           IFNULL(SUM(monks_count), 0) as used_monks
         FROM bookings 
         WHERE booking_date = ? AND booking_time = ? AND status = 'approved' AND id != ?`,
-        [bookingData[0].booking_date, bookingData[0].booking_time, id]
+        [booking.booking_date, booking.booking_time, id]
       );
 
       const available = (stats[0].max_monks || 20) - stats[0].used_monks;
-      if (bookingData[0].monks_count > available) {
+      if (booking.monks_count > available) {
         return res.status(400).json({
           success: false,
           message: `ไม่สามารถอนุมัติได้ เนื่องจากพระในเวลานี้เหลือไม่เพียงพอ (ว่าง ${available} รูป)`
@@ -213,7 +220,7 @@ exports.updateBookingStatus = async (req, res) => {
       }
     }
 
-    // อัปเดตสถานะ
+    // 3. อัปเดตสถานะในฐานข้อมูล MySQL
     await db.query(
       `UPDATE bookings 
        SET status = ?, admin_response = ?, admin_id = ?, responded_at = NOW() 
@@ -221,8 +228,58 @@ exports.updateBookingStatus = async (req, res) => {
       [status, admin_response || null, admin_id, id]
     );
 
-    res.json({ success: true, message: 'อัปเดตสถานะเรียบร้อย' });
+    // 4. ถ้าอนุมัติสำเร็จ ให้ส่งข้อความเข้ากลุ่มไลน์ด้วย Messaging API
+    if (status === 'approved') {
+      try {
+        // แปลงวันที่เป็นฟอร์แมตภาษาไทย
+        const dateObj = new Date(booking.booking_date);
+        const formattedDate = dateObj.toLocaleDateString('th-TH', {
+          year: 'numeric', month: 'long', day: 'numeric'
+        });
+
+        // จัดรูปแบบข้อความข้อความ
+        const messageText = `🔔 มีงานนิมนต์พระ (ได้รับการอนุมัติแล้ว)\n\n` +
+                            `📌 พิธี: ${booking.booking_type_name || 'ไม่ระบุประเภท'}\n` +
+                            `🗓 วันที่: ${formattedDate}\n` +
+                            `⏰ เวลา: ${booking.booking_time.substring(0, 5)} น.\n` +
+                            `🙏 จำนวนพระสงฆ์: ${booking.monks_count} รูป\n` +
+                            `👤 เจ้าภาพ/ผู้จอง: ${booking.full_name}\n` +
+                            `📞 เบอร์โทรติดต่อ: ${booking.phone}\n` +
+                            `📝 รายละเอียดเพิ่มเติม: ${booking.details || '-'}`;
+
+        // โครงสร้าง Payload ตามกำหนดของ LINE Messaging API
+        const payload = {
+          to: process.env.LINE_GROUP_ID, // ยิงเข้า Group ID จากไฟล์ .env
+          messages: [
+            {
+              type: 'text',
+              text: messageText
+            }
+          ]
+        };
+
+        // ยิง POST Request ไปที่ LINE Server
+        await axios.post(
+          'https://api.line.me/v2/bot/message/push',
+          payload,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${process.env.LINE_CHANNEL_ACCESS_TOKEN}`
+            }
+          }
+        );
+        console.log('ส่งแจ้งเตือนไลน์กลุ่มสำเร็จ');
+
+      } catch (lineError) {
+        // ครอบ try-catch แยกไว้เพื่อป้องกันกรณี LINE พัง แต่ระบบจองหลักยังเดินหน้าต่อได้
+        console.error('LINE API Error:', lineError.response ? lineError.response.data : lineError.message);
+      }
+    }
+
+    res.json({ success: true, message: 'อัปเดตสถานะและแจ้งเตือนเรียบร้อย' });
   } catch (error) {
+    console.error('Update booking status error:', error);
     res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการอัปเดต' });
   }
 };
@@ -303,8 +360,7 @@ exports.getBookingStats = async (req, res) => {
   }
 };
 
-
-
+// Delete booking
 exports.deleteBooking = async (req, res) => {
   try {
     const { id } = req.params;
@@ -332,8 +388,6 @@ exports.deleteBooking = async (req, res) => {
   }
 };
 
-// ✅ เพิ่มใหม่: สร้างประเภทพิธี (Admin)
-// ✅ ปรับปรุง: สร้างประเภทพิธี (Admin) ให้รับข้อมูลครบถ้วน
 // Create booking (user)
 exports.createBooking = async (req, res) => {
   try {
@@ -344,14 +398,14 @@ exports.createBooking = async (req, res) => {
       return res.status(400).json({ success: false, message: 'กรุณากรอกข้อมูลให้ครบถ้วน' });
     }
 
-    // แก้ไขจุดนี้: เช็คพระว่างรายเวลา (Slot)
+    // เช็คพระว่างรายเวลา (Slot)
     const [monkStats] = await db.query(
       `SELECT 
         (SELECT total_monks FROM settings LIMIT 1) as max_monks,
         IFNULL(SUM(monks_count), 0) as used_monks
       FROM bookings 
       WHERE booking_date = ? AND booking_time = ? AND status IN ('approved', 'pending')`,
-      [booking_date, booking_time] // ใส่ booking_time ด้วย
+      [booking_date, booking_time]
     );
 
     const maxMonks = monkStats[0].max_monks || 20;
@@ -374,12 +428,12 @@ exports.createBooking = async (req, res) => {
 
     res.status(201).json({ success: true, message: 'จองพิธีสำเร็จ' });
   } catch (error) {
-    console.error(error);
+    console.error('Create booking error:', error);
     res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการจอง' });
   }
 };
 
-// ✅ เพิ่มใหม่: ลบประเภทพิธี (Admin)
+// Delete booking type (admin)
 exports.deleteBookingType = async (req, res) => {
   try {
     const { id } = req.params;
@@ -401,7 +455,7 @@ exports.deleteBookingType = async (req, res) => {
   }
 };
 
-// ✅ แก้ไขใหม่: อัปเดตรายละเอียดและเวลาของประเภทพิธี (Admin)
+// Update booking type (admin)
 exports.updateBookingType = async (req, res) => {
   try {
     const { id } = req.params;
@@ -434,11 +488,10 @@ exports.updateBookingType = async (req, res) => {
   }
 };
 
-// เช็คจำนวนพระว่าง (สำหรับหน้าบ้านเรียกดู)
-// เช็คจำนวนพระว่างรายวัน
+// Check available monks
 exports.checkAvailableMonks = async (req, res) => {
   try {
-    const { date, time } = req.query; // ตรวจสอบว่าได้รับ time มาด้วย
+    const { date, time } = req.query;
     
     // 1. ดึงยอดพระสูงสุด
     const [settings] = await db.query('SELECT total_monks FROM settings LIMIT 1');
@@ -451,7 +504,7 @@ exports.checkAvailableMonks = async (req, res) => {
        WHERE booking_date = ? 
        AND booking_time = ? 
        AND status IN ('approved', 'pending')`, 
-      [date, time] // ใส่ Parameter ให้ครบ 2 ตัว
+      [date, time]
     );
 
     const usedCount = parseInt(booked[0].used || 0);
@@ -465,7 +518,8 @@ exports.checkAvailableMonks = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-// ✅ เพิ่มใหม่: ดึงสถานะรายเดือน (สำหรับระบายสีปฏิทิน แดง/ส้ม/เขียว)
+
+// Get monthly status
 exports.getMonthlyStatus = async (req, res) => {
   try {
     const { year, month } = req.query;

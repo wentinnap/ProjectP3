@@ -26,6 +26,7 @@ const AdminBookings = () => {
 
   // ฟังก์ชันช่วยแปลงเวลาเป็นชื่อรอบ (เพื่อให้ตรงกับหน้าจอง)
   const getTimeLabel = (time) => {
+    if (!time) return { label: "ไม่ระบุเวลา", icon: <Clock size={14} className="text-slate-400" /> };
     if (time.startsWith("07")) return { label: "รอบเช้า", icon: <Sunrise size={14} className="text-orange-500" /> };
     if (time.startsWith("11")) return { label: "รอบเพล/บ่าย", icon: <Sun size={14} className="text-amber-500" /> };
     return { label: time + " น.", icon: <Clock size={14} className="text-slate-400" /> };
@@ -39,7 +40,8 @@ const AdminBookings = () => {
       const response = await bookingAPI.getAllAdmin(params);
       setBookings(response.data.data.bookings || []);
     } catch (error) { 
-      toast.error('โหลดข้อมูลการจองล้มเหลว'); 
+      const errorMsg = error.response?.data?.message || 'โหลดข้อมูลการจองล้มเหลว';
+      toast.error(errorMsg); 
     } finally { 
       setLoading(false); 
     }
@@ -50,7 +52,7 @@ const AdminBookings = () => {
       const response = await bookingAPI.getTypes();
       setBookingTypes(response.data.data || []);
     } catch (error) { 
-      console.error('Error fetching types'); 
+      console.error('Error fetching types:', error); 
     }
   };
 
@@ -73,7 +75,9 @@ const AdminBookings = () => {
       setShowModal(false); 
       fetchBookings();
     } catch (error) { 
-      toast.error('การอัปเดตล้มเหลว'); 
+      // ✅ ดึง Error Message ตรงจาก Backend มาโชว์ (เช่น แจ้งเตือนเมื่อพระไม่พอจอง)
+      const errorMsg = error.response?.data?.message || 'การอัปเดตล้มเหลว';
+      toast.error(errorMsg); 
     }
   };
 
@@ -84,7 +88,8 @@ const AdminBookings = () => {
       toast.success('ลบรายการจองเรียบร้อย'); 
       fetchBookings(); 
     } catch (error) { 
-      toast.error('ลบไม่สำเร็จ'); 
+      const errorMsg = error.response?.data?.message || 'ลบไม่สำเร็จ';
+      toast.error(errorMsg); 
     }
   };
 
@@ -100,7 +105,8 @@ const AdminBookings = () => {
       setNewType({ name: '', description: '', duration: 60 });
       fetchTypes();
     } catch (error) { 
-      toast.error('เพิ่มไม่สำเร็จ'); 
+      const errorMsg = error.response?.data?.message || 'เพิ่มไม่สำเร็จ';
+      toast.error(errorMsg); 
     }
   };
 
@@ -225,22 +231,22 @@ const AdminBookings = () => {
                     <div>
                       <h4 className="text-xl font-black text-slate-800 line-clamp-1">{booking.full_name}</h4>
                       <p className="text-slate-400 text-sm font-medium flex items-center gap-1.5 mt-1">
-                        <Phone size={14} /> {booking.phone_number}
+                        <Phone size={14} /> {booking.phone_number || 'ไม่ระบุเบอร์โทร'}
                       </p>
                     </div>
 
                     <div className="grid grid-cols-1 gap-2">
                       <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-2xl text-sm font-bold text-slate-600">
                         <Calendar size={16} className="text-orange-500" />
-                        {new Date(booking.booking_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' })}
+                        {booking.booking_date ? new Date(booking.booking_date).toLocaleDateString('th-TH', { day: '2-digit', month: 'short', year: '2-digit' }) : '-'}
                       </div>
                       <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-2xl text-sm font-bold text-slate-600">
                         {timeInfo.icon}
-                        {timeInfo.label} ({booking.booking_time} น.)
+                        {timeInfo.label} {booking.booking_time ? `(${booking.booking_time.substring(0, 5)} น.)` : ''}
                       </div>
                       <div className="flex items-center gap-3 px-4 py-3 bg-orange-50/50 border border-orange-100 rounded-2xl text-sm font-bold text-orange-600">
                         <Info size={16} />
-                        {booking.booking_type_name}
+                        {booking.booking_type_name || 'ไม่ระบุประเภทพิธี'}
                       </div>
                     </div>
 
@@ -291,7 +297,7 @@ const AdminBookings = () => {
                   </div>
                   <div className="p-6 bg-slate-50 rounded-4xl">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">เบอร์ติดต่อ</p>
-                    <p className="text-lg font-bold text-slate-800">{selectedBooking.phone_number}</p>
+                    <p className="text-lg font-bold text-slate-800">{selectedBooking.phone_number || '-'}</p>
                   </div>
                 </div>
 
@@ -307,8 +313,8 @@ const AdminBookings = () => {
                   <div className="flex justify-between items-center border-t border-slate-50 pt-4">
                     <span className="text-slate-400 font-bold text-xs uppercase">วัน-เวลา</span>
                     <span className="font-black text-slate-800 text-right">
-                      {new Date(selectedBooking.booking_date).toLocaleDateString('th-TH', {dateStyle: 'long'})} <br/> 
-                      <span className="text-orange-500">{getTimeLabel(selectedBooking.booking_time).label} ({selectedBooking.booking_time} น.)</span>
+                      {selectedBooking.booking_date ? new Date(selectedBooking.booking_date).toLocaleDateString('th-TH', {dateStyle: 'long'}) : '-'} <br/> 
+                      <span className="text-orange-500">{getTimeLabel(selectedBooking.booking_time).label} ({selectedBooking.booking_time?.substring(0, 5)} น.)</span>
                     </span>
                   </div>
                 </div>
@@ -323,7 +329,7 @@ const AdminBookings = () => {
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">ข้อความตอบกลับแอดมิน</label>
                   <textarea 
                     className="w-full p-6 bg-slate-50 rounded-4xl border-none outline-none focus:ring-2 focus:ring-orange-500/20 h-32 resize-none transition-all font-medium"
-                    placeholder="พิมพ์ข้อความที่นี่..."
+                    placeholder="พิมพ์ข้อความตอบกลับโยมผู้จองที่นี่..."
                     value={adminResponse}
                     onChange={(e) => setAdminResponse(e.target.value)}
                   />

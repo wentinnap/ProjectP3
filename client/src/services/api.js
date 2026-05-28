@@ -100,9 +100,6 @@ export const newsAPI = {
 };
 
 // ---------------- BOOKING ----------------
-// ---------------- BOOKING ----------------
-// ---------------- BOOKING ----------------
-// ---------------- BOOKING ----------------
 export const bookingAPI = {
   getTypes: () => api.get("/bookings/types"),
   create: (data) => api.post("/bookings", data),
@@ -116,11 +113,11 @@ export const bookingAPI = {
   deleteType: (id) => api.delete(`/bookings/types/${id}`),
   getStats: () => api.get("/bookings/admin/stats"),
 
-  // ✅ เช็คเฉพาะวัน (ใช้ตอนคลิกเลือกวันที่)
-  checkAvailableMonks: (date) => 
-    api.get("/bookings/check-monks", { params: { date } }),
+  // ✅ ปรับเปลี่ยนจุดนี้: เพิ่ม parameter 'time' เพื่อส่งไปเช็คพระว่างแยกตามช่วงเวลา
+  checkAvailableMonks: (date, time) => 
+    api.get("/bookings/check-monks", { params: { date, time } }),
 
-  // ✅ เพิ่มใหม่: เช็คทั้งเดือน (ใช้สำหรับระบายสีปฏิทิน แดง/เขียว)
+  // ✅ เช็คทั้งเดือน (ใช้สำหรับระบายสีปฏิทิน แดง/เขียว)
   getMonthlyStatus: (year, month) => 
     api.get("/bookings/monthly-status", { params: { year, month } }),
 };
@@ -172,7 +169,6 @@ export const notificationAPI = {
     }
   },
 
-  // ✅ เพิ่มฟังก์ชันนี้เพื่อยิงไป Update ใน Database
   async markAsRead(notificationId) {
     try {
       await api.patch(`/notifications/${notificationId}/read`);

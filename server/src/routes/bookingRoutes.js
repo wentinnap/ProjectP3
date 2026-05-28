@@ -24,6 +24,13 @@ router.post('/', authenticate, bookingController.createBooking);
 router.get('/my-bookings', authenticate, bookingController.getUserBookings);
 router.patch('/:id/cancel', authenticate, bookingController.cancelBooking);
 
+// โค้ดดักจับ Group ID ชั่วคราว
+router.post('/api/line-webhook', (req, res) => {
+  console.log('--- LINE WEBHOOK DATA ---');
+  console.log(JSON.stringify(req.body, null, 2));
+  res.sendStatus(200);
+});
+
 
 // ==========================================
 // 3. Admin Routes (เส้นทางสำหรับผู้ดูแลระบบ)

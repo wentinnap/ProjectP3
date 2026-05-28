@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import "../../CalendarCustom.css";
-import { Clock, Users, Phone, Info, CheckCircle, MapPin, Sun, Sunrise } from 'lucide-react';
+import { Clock, Users, Phone, Info, CheckCircle, MapPin, Sun, Sunrise, User, FileText } from 'lucide-react';
 import Navbar from "../../components/layout/Navbar";
 import { motion } from 'framer-motion';
 
@@ -19,7 +19,6 @@ const Booking = () => {
   const [loading, setLoading] = useState(false);
   const [maxMonks, setMaxMonks] = useState(20);
 
-  // ปรับ Time Slots เป็นแบบช่วงเวลา เช้า/เพล
   const timeSlots = [
     { label: "รอบเช้า", value: "07:00", icon: <Sunrise size={20} /> },
     { label: "รอบเพล/บ่าย", value: "11:00", icon: <Sun size={20} /> }
@@ -30,10 +29,21 @@ const Booking = () => {
     booking_date: '', 
     booking_time: '',
     monks_count: '', 
-    full_name: user?.full_name || '', 
-    phone: user?.phone || '', 
+    full_name: '', 
+    phone: '', 
     details: ''
   });
+
+  // ✅ เฝ้าดูการโหลดของสถานะ Auth เพื่อนำมา Pre-fill ข้อมูลเมื่อพร้อม
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        full_name: prev.full_name || user.full_name || '',
+        phone: prev.phone || user.phone || ''
+      }));
+    }
+  }, [user]);
 
   const fetchAvailability = useCallback(async (date, time) => {
     if (!date || !time) return;
@@ -82,8 +92,18 @@ const Booking = () => {
     e.preventDefault();
     if (parseInt(formData.monks_count) > availableCount) return toast.error('จำนวนพระไม่พอสำหรับช่วงเวลานี้');
     setLoading(true);
+
     try {
-      await bookingAPI.create({ ...formData, booking_time: `${formData.booking_time}:00` });
+      // ✅ แก้ไขปัญหา Double Submit: สร้างตัวแปร payload แยกเพื่อไม่ให้กระทบค่าเดิมใน State
+      const formattedTime = formData.booking_time.includes(':00') 
+        ? formData.booking_time 
+        : `${formData.booking_time}:00`;
+
+      await bookingAPI.create({ 
+        ...formData, 
+        booking_time: formattedTime 
+      });
+
       toast.success('ส่งคำขอจองสำเร็จ');
       navigate('/profile');
     } catch (err) { 
@@ -119,7 +139,7 @@ const Booking = () => {
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:col-span-7 space-y-6"
+            className="lg:col-span-6 space-y-6"
           >
             <div className="bg-white rounded-4xl shadow-xl shadow-orange-900/5 p-8 border border-orange-100">
               <div className="flex items-center justify-between mb-8">
@@ -162,10 +182,10 @@ const Booking = () => {
           <motion.div 
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className="lg:col-span-5"
+            className="lg:col-span-6"
           >
             <div className="bg-white rounded-4xl shadow-2xl shadow-orange-900/10 p-8 sticky top-28 border border-orange-100">
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 
                 {/* สถานะการเลือกปัจจุบัน */}
                 <div className="bg-linear-to-r from-orange-50 to-orange-100 p-5 rounded-3xl border border-orange-200">
@@ -227,7 +247,7 @@ const Booking = () => {
                     <MapPin size={16} className="text-orange-500"/> 3. ประเภทพิธี
                   </label>
                   <select 
-                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all appearance-none" 
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all" 
                     value={formData.booking_type_id}
                     onChange={e => setFormData({...formData, booking_type_id: e.target.value})} 
                     required
@@ -247,17 +267,33 @@ const Booking = () => {
                     placeholder={availableCount ? `ระบุจำนวน (ไม่เกิน ${availableCount})` : "เช่น 9"}
                     className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all"
                     value={formData.monks_count} 
-                    max={availableCount} 
+                    max={availableCount || 20} 
+                    min="1"
                     onChange={e => setFormData({...formData, monks_count: e.target.value})} 
                     required 
                     disabled={!formData.booking_time} 
                   />
                 </div>
 
+                {/* ✅ เพิ่มฟิลด์: ชื่อ-นามสกุล ผู้แจ้งจอง */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700 ml-1 flex items-center gap-2">
+                    <User size={16} className="text-orange-500"/> 5. ชื่อ-นามสกุล ผู้จอง
+                  </label>
+                  <input 
+                    type="text" 
+                    placeholder="กรุณาระบุชื่อผู้จองพิธี" 
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all" 
+                    value={formData.full_name}
+                    onChange={e => setFormData({...formData, full_name: e.target.value})} 
+                    required 
+                  />
+                </div>
+
                 {/* เบอร์โทร */}
                 <div className="space-y-2">
                   <label className="text-sm font-bold text-gray-700 ml-1 flex items-center gap-2">
-                    <Phone size={16} className="text-orange-500"/> 5. เบอร์โทรศัพท์
+                    <Phone size={16} className="text-orange-500"/> 6. เบอร์โทรศัพท์ติดต่อ
                   </label>
                   <input 
                     type="tel" 
@@ -266,6 +302,19 @@ const Booking = () => {
                     value={formData.phone}
                     onChange={e => setFormData({...formData, phone: e.target.value})} 
                     required 
+                  />
+                </div>
+
+                {/* ✅ เพิ่มฟิลด์: หมายเหตุ / รายละเอียดสถานที่เพิ่มเติม */}
+                <div className="space-y-2">
+                  <label className="text-sm font-bold text-gray-700 ml-1 flex items-center gap-2">
+                    <FileText size={16} className="text-orange-500"/> 7. หมายเหตุ / รายละเอียดเพิ่มเติม (ถ้ามี)
+                  </label>
+                  <textarea 
+                    placeholder="ระบุรายละเอียดเพิ่มเติม เช่น สถานที่จัดงาน หรือความต้องการพิเศษอื่น ๆ" 
+                    className="w-full p-4 bg-gray-50 border border-gray-100 rounded-2xl outline-none focus:ring-2 focus:ring-orange-500 focus:bg-white transition-all h-24 resize-none" 
+                    value={formData.details}
+                    onChange={e => setFormData({...formData, details: e.target.value})} 
                   />
                 </div>
 
