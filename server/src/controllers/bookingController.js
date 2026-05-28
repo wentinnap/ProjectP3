@@ -591,3 +591,99 @@ exports.getMonthlyStatus = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// ==========================================
+// 🌟 [ส่วนเพิ่มใหม่] ระบบจัดการข้อมูลพระสงฆ์ (Monks Management)
+// ==========================================
+
+// 1. ดึงรายชื่อพระทั้งหมด (สำหรับไปแสดงในตารางหน้า Admin และใช้เป็นตัวเลือก Dropdown)
+exports.getAllMonks = async (req, res) => {
+  try {
+    const [monks] = await db.query('SELECT * FROM monks ORDER BY name ASC');
+
+    res.json({
+      success: true,
+      data: monks
+    });
+  } catch (error) {
+    console.error('Get all monks error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'เกิดข้อผิดพลาดในการดึงข้อมูลรายชื่อพระ'
+    });
+  }
+};
+
+// 2. เพิ่มรายชื่อพระภิกษุสามเณรใหม่
+exports.createMonk = async (req, res) => {
+  try {
+    const { name } = req.body;
+
+    if (!name || name.trim() === '') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'กรุณากรอกชื่อ-ฉายา พระภิกษุสามเณร' 
+      });
+    }
+
+    const [result] = await db.query(
+      'INSERT INTO monks (name) VALUES (?)',
+      [name.trim()]
+    );
+
+    res.status(201).json({
+      success: true,
+      message: 'เพิ่มข้อมูลพระภิกษุสามเณรสำเร็จ',
+      data: { id: result.insertId, name: name.trim() }
+    });
+  } catch (error) {
+    console.error('Create monk error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'เกิดข้อผิดพลาดในการบันทึกข้อมูลพระ' 
+    });
+  }
+};
+
+// 3. ลบรายชื่อพระ (พร้อมระบบเช็คความปลอดภัย)
+exports.deleteMonk = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // ตรวจสอบก่อนว่าพระรูปนี้ถูกนิมนต์ไปผูกกับใบจองไหนในตาราง booking_monks หรือยัง เพื่อป้องกัน Data Error
+    const [usage] = await db.query(
+      'SELECT booking_id FROM booking_monks WHERE monk_id = ? LIMIT 1', 
+      [id]
+    );
+    
+    if (usage.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'ไม่สามารถลบได้ เนื่องจากพระรูปนี้มีประวัติการไปงานนิมนต์ในระบบแล้ว'
+      });
+    }
+
+    // ตรวจสอบว่ามีข้อมูลอยู่จริงไหม
+    const [exists] = await db.query('SELECT id FROM monks WHERE id = ?', [id]);
+    if (exists.length === 0) {
+      return res.status(404).json({ 
+        success: false, 
+        message: 'ไม่พบข้อมูลรายชื่อพระที่ต้องการลบ' 
+      });
+    }
+
+    // ทำการลบจริง
+    await db.query('DELETE FROM monks WHERE id = ?', [id]);
+
+    res.json({
+      success: true,
+      message: 'ลบรายชื่อพระออกจากระบบสำเร็จ'
+    });
+  } catch (error) {
+    console.error('Delete monk error:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'เกิดข้อผิดพลาดในการลบข้อมูลพระ' 
+    });
+  }
+};

@@ -122,6 +122,18 @@ export const bookingAPI = {
     api.get("/bookings/monthly-status", { params: { year, month } }),
 };
 
+// ---------------- 🌟 MONK (เพิ่มใหม่) ----------------
+export const monkAPI = {
+  // ดึงรายชื่อพระทั้งหมดไปแสดงในตารางหน้า Admin หรือใช้เลือกใน Dropdown
+  getAll: () => api.get("/bookings/admin/monks"),
+  
+  // ส่งข้อมูล { name: "ชื่อพระ" } เพื่อบันทึกเพิ่มรูปใหม่
+  create: (data) => api.post("/bookings/admin/monks", data),
+  
+  // ลบรายชื่อพระตาม ID
+  delete: (id) => api.delete(`/bookings/admin/monks/${id}`),
+};
+
 // ---------------- EVENT ----------------
 export const eventAPI = {
   getAll: () => api.get("/events"),

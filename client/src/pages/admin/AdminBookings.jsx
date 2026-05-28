@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
-import { bookingAPI } from '../../services/api';
+// 🌟 ปรับปรุงจุดนี้: Import monkAPI เข้ามาใช้งานร่วมกับ bookingAPI
+import { bookingAPI, monkAPI } from '../../services/api';
 import { toast } from 'react-toastify';
 import { 
   Calendar, Clock, Search, Check, X, Filter, Trash2, Settings, 
@@ -22,13 +23,13 @@ const AdminBookings = () => {
   const [bookingTypes, setBookingTypes] = useState([]);
   const [adminResponse, setAdminResponse] = useState('');
   
-  // 🌟 เพิ่ม States สำหรับระบบเลือกรายชื่อพระสงฆ์
+  // States สำหรับระบบเลือกรายชื่อพระสงฆ์
   const [allMonks, setAllMonks] = useState([]); 
   const [selectedMonkIds, setSelectedMonkIds] = useState([]);
 
   const [newType, setNewType] = useState({ name: '', description: '', duration: 60 });
 
-  // ฟังก์ชันช่วยแปลงเวลาเป็นชื่อรอบ (เพื่อให้ตรงกับหน้าจอง)
+  // ฟังก์ชันช่วยแปลงเวลาเป็นชื่อรอบ
   const getTimeLabel = (time) => {
     if (!time) return { label: "ไม่ระบุเวลา", icon: <Clock size={14} className="text-slate-400" /> };
     if (time.startsWith("07")) return { label: "รอบเช้า", icon: <Sunrise size={14} className="text-orange-500" /> };
@@ -60,11 +61,10 @@ const AdminBookings = () => {
     }
   };
 
-  // 🌟 ดึงข้อมูลรายชื่อพระสงฆ์ทั้งหมดในระบบ
+  // 🌟 ปรับปรุงจุดนี้: เปลี่ยนมาเรียกใช้ monkAPI.getAll() ให้ตรงกับไฟล์เส้นทาง API
   const fetchMonks = async () => {
     try {
-      // 💡 อย่าลืมเช็กเช็คชื่อ Method ใน api.js ของคุณด้วยนะครับ (เช่น bookingAPI.getMonks หรืออื่นๆ)
-      const response = await bookingAPI.getMonks(); 
+      const response = await monkAPI.getAll(); 
       setAllMonks(response.data.data || []);
     } catch (error) {
       console.error('Error fetching monks:', error);
@@ -74,42 +74,37 @@ const AdminBookings = () => {
   useEffect(() => { 
     fetchBookings(); 
     fetchTypes();
-    fetchMonks(); // เรียกโหลดตอนเปิดหน้าแรก
+    fetchMonks(); 
   }, [fetchBookings]);
 
   // --- Handlers ---
   const openBookingDetail = (booking) => {
     setSelectedBooking(booking);
     setAdminResponse(booking.admin_response || '');
-    // 🌟 ดึงรายชื่อพระเดิมที่ถูกมัดไว้ (ถ้ามี) หรือเซ็ตเป็นอาเรย์ว่างรอแอดมินติ๊กเลือกใหม่
     setSelectedMonkIds(booking.monk_ids || []); 
     setShowModal(true);
   };
 
-  // 🌟 ฟังก์ชันจัดการตอนแอดมินคลิกเลือก/ยกเลิกพระสงฆ์
   const handleToggleMonk = (monkId) => {
     setSelectedMonkIds(prev => {
       if (prev.includes(monkId)) {
-        return prev.filter(id => id !== monkId); // เอาออกถ้าติ๊กซ้ำ
+        return prev.filter(id => id !== monkId); 
       } else {
-        // ห้ามติ๊กเลือกเกินจำนวนพระสงฆ์ที่ผู้จองนิมนต์มาในใบจองนี้
         if (prev.length >= selectedBooking.monks_count) {
           toast.warning(`ไม่สามารถเลือกเพิ่มได้เนื่องจากสล็อตเต็มที่ ${selectedBooking.monks_count} รูปแล้ว`);
           return prev;
         }
-        return [...prev, monkId]; // เพิ่มเข้าไป
+        return [...prev, monkId]; 
       }
     });
   };
 
   const handleUpdateStatus = async (id, status) => {
     try {
-      // 🌟 Validation ป้องกันความพ้อต: อนุมัติแต่ลืมระบุหรือระบุรายชื่อพระสงฆ์ไม่ครบตามจำนวนนิมนต์
       if (status === 'approved' && selectedMonkIds.length !== selectedBooking.monks_count) {
         return toast.warning(`กรุณาเลือกพระสงฆ์ให้ครบตามจำนวนที่นิมนต์ไว้ (${selectedBooking.monks_count} รูป / เลือกแล้ว ${selectedMonkIds.length} รูป)`);
       }
 
-      // ส่งข้อมูลชุดใหญ่รวม monk_ids ไปหลังบ้าน
       await bookingAPI.updateStatus(id, { 
         status, 
         admin_response: adminResponse,
@@ -369,7 +364,7 @@ const AdminBookings = () => {
                   </div>
                 )}
 
-                {/* 🌟 [เพิ่มใหม่] UI สำหรับการเลือกรายชื่อพระสงฆ์ (จะเปิดให้เลือกเฉพาะใบคำขอที่รอดำเนินการอยู่เท่านั้น) */}
+                {/* UI สำหรับการเลือกรายชื่อพระสงฆ์ */}
                 {selectedBooking.status === 'pending' && (
                   <div className="space-y-3 pt-2">
                     <div className="flex justify-between items-end px-2">

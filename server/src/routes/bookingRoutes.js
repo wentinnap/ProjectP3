@@ -58,4 +58,10 @@ router.put('/types/:id', authenticate, isAdmin, bookingController.updateBookingT
 router.delete('/types/:id', authenticate, isAdmin, bookingController.deleteBookingType);
 
 
+// เส้นทาง API สำหรับจัดการพระสงฆ์
+router.get('/admin/monks', authenticate, isAdmin, bookingController.getAllMonks);
+router.post('/admin/monks', authenticate, isAdmin, bookingController.createMonk);
+router.delete('/admin/monks/:id', authenticate, isAdmin, bookingController.deleteMonk);
+
+
 module.exports = router;
