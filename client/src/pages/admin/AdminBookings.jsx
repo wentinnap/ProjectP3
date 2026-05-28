@@ -104,7 +104,7 @@ const AdminBookings = () => {
     }
   };
 
-  // ดึงข้อมูลสถานะพระจาก API ทันทีที่เปิดดูรายละเอียดการจอง
+  // 🔥 จุดแก้ไขหลัก: ปรับปรุงการตรวจสอบรายชื่อพระที่ติดคิวให้ครอบคลุมทุกโครงสร้าง API
   const openBookingDetail = async (booking) => {
     setSelectedBooking(booking);
     setAdminResponse(booking.admin_response || '');
@@ -114,12 +114,29 @@ const AdminBookings = () => {
     if (booking.booking_date) {
       try {
         const response = await monkAPI.getAvailableMonks(booking.booking_date);
-        if (response.data?.success && Array.isArray(response.data.data)) {
-          // กรองเอาเฉพาะ ID ของพระสงฆ์ที่มีสถานะ is_busy === true (หรือ property ตามที่ API ส่งมา)
-          const busyIds = response.data.data
-            .filter(monk => monk.is_busy)
-            .map(monk => monk.id);
-          setBusyMonkIds(busyIds);
+        const resData = response.data?.data || response.data;
+
+        if (Array.isArray(resData)) {
+          // ตรวจสอบว่า API ส่งมาเป็น Object ที่มีสถานะ หรือส่งมาเฉพาะคนขยัน/คนว่าง
+          const hasStatusFlag = resData.length > 0 && typeof resData[0] === 'object' && (
+            'is_busy' in resData[0] || 'isBusy' in resData[0] || 'available' in resData[0]
+          );
+
+          if (hasStatusFlag) {
+            // แบบที่ 1: API ส่งมาครบทุกคน แต่มี flag บอกสถานะย่อย
+            const busyIds = resData
+              .filter(monk => monk.is_busy === true || monk.isBusy === true || monk.available === false)
+              .map(monk => monk.id);
+            setBusyMonkIds(busyIds);
+          } else {
+            // แบบที่ 2: API ส่งมาเฉพาะ "รายชื่อพระที่ว่าง" (คนติดคิวจะไม่โผล่มาเลย)
+            // วิธีคิด: พระรูปไหนที่อยู่ในระบบ (allMonks) แต่ "ไม่มีชื่อ" ในลิสต์ที่ได้มา แปลว่า "ติดคิว"
+            const availableIds = resData.map(monk => typeof monk === 'object' ? monk.id : monk);
+            const busyIds = allMonks
+              .filter(monk => !availableIds.includes(monk.id))
+              .map(monk => monk.id);
+            setBusyMonkIds(busyIds);
+          }
         }
       } catch (error) {
         console.error('Error fetching monk availability:', error);
@@ -133,7 +150,6 @@ const AdminBookings = () => {
   const handleToggleMonk = (monkId) => {
     const requiredMonks = selectedBooking?.monks_count ?? selectedBooking?.monksCount ?? 0;
 
-    // ดักจับไม่ให้เลือกพระสงฆ์ที่ติดภารกิจอื่นในวันนั้นแล้ว (ป้องกันการ Bypass)
     if (busyMonkIds.includes(monkId) && !selectedMonkIds.includes(monkId)) {
       toast.error('พระสงฆ์รูปนี้ติดคิวงานนิมนต์อื่นในวันดังกล่าวแล้ว');
       return;
@@ -432,7 +448,7 @@ const AdminBookings = () => {
                   </div>
                 )}
 
-                {/* 🌟 แสดงรายชื่อพระสงฆ์ (อัปเดตล็อคปุ่มแล้ว) */}
+                {/* รายชื่อพระสงฆ์ */}
                 {selectedBooking.status === 'pending' && (
                   <div className="space-y-3 pt-2">
                     <div className="flex justify-between items-end px-2">
@@ -447,19 +463,17 @@ const AdminBookings = () => {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 bg-slate-50 rounded-4xl border border-slate-100 max-h-48 overflow-y-auto no-scrollbar">
                       {allMonks.map((monk) => {
                         const isSelected = selectedMonkIds.includes(monk.id);
-                        
-                        // 🛑 อัปเดต: ถ้าพระติดคิว ให้ประเมินเป็น true เสมอ (ป้องกันการกด)
                         const isBusy = busyMonkIds.includes(monk.id);
                         
                         return (
                           <button
                             key={monk.id}
                             type="button"
-                            disabled={isBusy} // 🛑 ล็อคปุ่ม
+                            disabled={isBusy} 
                             onClick={() => handleToggleMonk(monk.id)}
                             className={`p-3.5 rounded-2xl font-bold text-sm transition-all flex items-center justify-between border ${
                               isBusy
-                                ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60' // 🛑 สีเทา กดไม่ได้
+                                ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60' 
                                 : isSelected 
                                   ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20 active:scale-95' 
                                   : 'bg-white text-slate-700 border-slate-200/60 hover:border-orange-300'
