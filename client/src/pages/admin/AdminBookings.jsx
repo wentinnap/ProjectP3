@@ -17,7 +17,6 @@ const AdminBookings = () => {
   
   const [showModal, setShowModal] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
-  // 🌟 เพิ่ม State สำหรับเปิด-ปิด Modal จัดการพระสงฆ์ และเก็บค่าคีย์ชื่อพระใหม่
   const [showMonkModal, setShowMonkModal] = useState(false);
   const [newMonkName, setNewMonkName] = useState('');
   
@@ -78,21 +77,19 @@ const AdminBookings = () => {
   }, [fetchBookings]);
 
   // --- Handlers ---
-  // 🌟 ฟังก์ชันการเพิ่มรายชื่อพระสงฆ์เข้าฐานข้อมูล
   const handleAddMonk = async () => {
     if (!newMonkName.trim()) return toast.warning('กรุณาระบุชื่อพระสงฆ์');
     try {
       await monkAPI.create({ name: newMonkName });
       toast.success('เพิ่มรายชื่อพระสงฆ์สำเร็จ');
       setNewMonkName('');
-      fetchMonks(); // โหลดข้อมูลพระสงฆ์ใหม่
+      fetchMonks();
     } catch (error) {
       const errorMsg = error.response?.data?.message || 'เพิ่มรายชื่อพระสงฆ์ล้มเหลว';
       toast.error(errorMsg);
     }
   };
 
-  // 🌟 ฟังก์ชันการลบรายชื่อพระสงฆ์ออกจากฐานข้อมูล
   const handleDeleteMonk = async (id) => {
     if (!window.confirm("⚠️ ต้องการลบรายชื่อพระสงฆ์รูปนี้ออกจากระบบฐานข้อมูล?")) return;
     try {
@@ -112,12 +109,15 @@ const AdminBookings = () => {
   };
 
   const handleToggleMonk = (monkId) => {
+    // 🛡️ รองรับทั้ง monks_count และ monksCount ป้องกันค่า undefined
+    const requiredMonks = selectedBooking?.monks_count ?? selectedBooking?.monksCount ?? 0;
+
     setSelectedMonkIds(prev => {
       if (prev.includes(monkId)) {
         return prev.filter(id => id !== monkId); 
       } else {
-        if (prev.length >= selectedBooking.monks_count) {
-          toast.warning(`ไม่สามารถเลือกเพิ่มได้เนื่องจากสล็อตเต็มที่ ${selectedBooking.monks_count} รูปแล้ว`);
+        if (prev.length >= requiredMonks) {
+          toast.warning(`ไม่สามารถเลือกเพิ่มได้เนื่องจากสล็อตเต็มที่ ${requiredMonks} รูปแล้ว`);
           return prev;
         }
         return [...prev, monkId]; 
@@ -126,9 +126,12 @@ const AdminBookings = () => {
   };
 
   const handleUpdateStatus = async (id, status) => {
+    // 🛡️ ดักจับจำนวนพระสงฆ์ที่ต้องนิมนต์
+    const requiredMonks = selectedBooking?.monks_count ?? selectedBooking?.monksCount ?? 0;
+
     try {
-      if (status === 'approved' && selectedMonkIds.length !== selectedBooking.monks_count) {
-        return toast.warning(`กรุณาเลือกพระสงฆ์ให้ครบตามจำนวนที่นิมนต์ไว้ (${selectedBooking.monks_count} รูป / เลือกแล้ว ${selectedMonkIds.length} รูป)`);
+      if (status === 'approved' && selectedMonkIds.length !== requiredMonks) {
+        return toast.warning(`กรุณาเลือกพระสงฆ์ให้ครบตามจำนวนที่นิมนต์ไว้ (${requiredMonks} รูป / เลือกแล้ว ${selectedMonkIds.length} รูป)`);
       }
 
       await bookingAPI.updateStatus(id, { 
@@ -207,7 +210,6 @@ const AdminBookings = () => {
             <p className="text-slate-400 mt-2 font-medium">ระบบบริหารจัดการสำหรับแอดมิน</p>
           </div>
           
-          {/* 🌟 ปรับปรุงปุ่มบน Header ให้รองรับทั้งสองฟังก์ชันการจัดการ */}
           <div className="flex flex-wrap gap-3 w-full md:w-auto">
             <button 
               onClick={() => setShowMonkModal(true)}
@@ -277,6 +279,9 @@ const AdminBookings = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredBookings.map((booking) => {
               const timeInfo = getTimeLabel(booking.booking_time);
+              // 🛡️ ดักจับชื่อคอลัมน์โทรศัพท์ของแต่ละแถว (phone หรือ phone_number)
+              const cardPhone = booking.phone || booking.phone_number || 'ไม่ระบุเบอร์โทร';
+
               return (
                 <motion.div
                   layout
@@ -306,7 +311,7 @@ const AdminBookings = () => {
                     <div>
                       <h4 className="text-xl font-black text-slate-800 line-clamp-1">{booking.full_name}</h4>
                       <p className="text-slate-400 text-sm font-medium flex items-center gap-1.5 mt-1">
-                        <Phone size={14} /> {booking.phone_number || 'ไม่ระบุเบอร์โทร'}
+                        <Phone size={14} /> {cardPhone}
                       </p>
                     </div>
 
@@ -372,7 +377,7 @@ const AdminBookings = () => {
                   </div>
                   <div className="p-6 bg-slate-50 rounded-4xl">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">เบอร์ติดต่อ</p>
-                    <p className="text-lg font-bold text-slate-800">{selectedBooking.phone_number || '-'}</p>
+                    <p className="text-lg font-bold text-slate-800">{selectedBooking.phone ?? selectedBooking.phone_number ?? '-'}</p>
                   </div>
                 </div>
 
@@ -383,7 +388,9 @@ const AdminBookings = () => {
                   </div>
                   <div className="flex justify-between items-center border-t border-slate-50 pt-4">
                     <span className="text-slate-400 font-bold text-xs uppercase">จำนวนพระ</span>
-                    <span className="font-black text-slate-800 text-lg">{selectedBooking.monks_count} รูป</span>
+                    <span className="font-black text-slate-800 text-lg">
+                      {selectedBooking.monks_count ?? selectedBooking.monksCount ?? 0} รูป
+                    </span>
                   </div>
                   <div className="flex justify-between items-center border-t border-slate-50 pt-4">
                     <span className="text-slate-400 font-bold text-xs uppercase">วัน-เวลา</span>
@@ -407,8 +414,8 @@ const AdminBookings = () => {
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
                         <Users size={12} /> จัดรายชื่อพระสงฆ์ไปปฏิบัติงาน
                       </label>
-                      <span className={`text-xs font-black ${selectedMonkIds.length === selectedBooking.monks_count ? 'text-emerald-500' : 'text-slate-400'}`}>
-                        เลือกแล้ว {selectedMonkIds.length} จาก {selectedBooking.monks_count} รูป
+                      <span className={`text-xs font-black ${selectedMonkIds.length === (selectedBooking.monks_count ?? selectedBooking.monksCount ?? 0) ? 'text-emerald-500' : 'text-slate-400'}`}>
+                        เลือกแล้ว {selectedMonkIds.length} จาก {selectedBooking.monks_count ?? selectedBooking.monksCount ?? 0} รูป
                       </span>
                     </div>
                     
@@ -470,7 +477,7 @@ const AdminBookings = () => {
         )}
       </AnimatePresence>
 
-      {/* 🌟 [เพิ่มใหม่] MODAL: MONK MANAGEMENT (สำหรับ เพิ่ม/ลบ พระสงฆ์ในฐานข้อมูล) */}
+      {/* --- MODAL: MONK MANAGEMENT --- */}
       <AnimatePresence>
         {showMonkModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -484,7 +491,6 @@ const AdminBookings = () => {
               </div>
 
               <div className="p-8 overflow-y-auto space-y-8 no-scrollbar">
-                {/* ส่วนฟอร์มเพิ่มชื่อพระใหม่ */}
                 <div className="bg-orange-50 p-8 rounded-[40px] border border-orange-100">
                   <h4 className="text-orange-600 font-black text-xs uppercase tracking-widest mb-4">เพิ่มรายชื่อพระสงฆ์ใหม่</h4>
                   <div className="flex flex-col sm:flex-row gap-3">
@@ -500,7 +506,6 @@ const AdminBookings = () => {
                   </div>
                 </div>
 
-                {/* ส่วนรายการพระสงฆ์ปัจจุบันที่มีปุ่มลบ */}
                 <div className="space-y-4">
                   <h4 className="text-slate-400 font-black text-xs uppercase tracking-widest ml-2">พระสงฆ์ทั้งหมดในระบบ</h4>
                   {allMonks.length === 0 ? (
