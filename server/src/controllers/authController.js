@@ -2,7 +2,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/database');
 const crypto = require('crypto'); // 🔥 เพิ่มบรรทัดนี้
-const nodemailer = require('nodemailer'); // 🔥 เพิ่มบรรทัดนี้
+const { Resend } = require('resend');
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Generate JWT Token
 const generateToken = (user) => {
@@ -261,76 +262,37 @@ exports.changePassword = async (req, res) => {
 };
 
 // Forgot password
+
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-
-    if (!email) {
-      return res.status(400).json({ success: false, message: 'กรุณากรอกอีเมล' });
-    }
-
-    // 1. เช็คว่ามีอีเมลนี้ไหม
+    if (!email) return res.status(400).json({ success: false, message: 'กรุณากรอกอีเมล' });
+    
     const [users] = await db.query('SELECT id FROM users WHERE email = ?', [email]);
-    if (users.length === 0) {
-      return res.status(404).json({ success: false, message: 'ไม่พบที่อยู่อีเมลนี้ในระบบ' });
-    }
+    if (users.length === 0) return res.status(404).json({ success: false, message: 'ไม่พบที่อยู่อีเมลนี้ในระบบ' });
 
-    // 2. สร้าง Token และเวลาหมดอายุ (1 ชั่วโมง)
     const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetExpire = new Date(Date.now() + 3600000); // 1 hour from now
-
-    // 3. บันทึกลงฐานข้อมูล
-    await db.query(
-      'UPDATE users SET reset_token = ?, reset_expire = ? WHERE email = ?',
-      [resetToken, resetExpire, email]
-    );
-
-    // 4. ส่งอีเมล (แก้ไขโดยเพิ่ม family: 4 เพื่อบังคับใช้ IPv4)
-   const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  // ลองเอา family: 4 ออก หากมันยังฟ้อง ENETUNREACH อยู่
-  // แต่เพิ่มการตั้งค่า connectionTimeout
-  connectionTimeout: 10000, // 10 วินาที
-  greetingTimeout: 10000,
-  socketTimeout: 10000,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+    const resetExpire = new Date(Date.now() + 3600000); 
+    await db.query('UPDATE users SET reset_token = ?, reset_expire = ? WHERE email = ?', [resetToken, resetExpire, email]);
 
     const resetUrl = `${process.env.CLIENT_URL}/reset-password?token=${resetToken}`;
 
-    await transporter.sendMail({
+    await resend.emails.send({
+      from: 'onboarding@resend.dev',
       to: email,
       subject: 'รีเซ็ตรหัสผ่าน - ระบบวัดกำแพง',
       html: `
-        <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e1e1e1; border-radius: 10px;">
-          <div style="text-align: center; margin-bottom: 20px;">
-            <h2 style="color: #2c3e50;">ระบบวัดกำแพง</h2>
+        <div style="font-family: sans-serif; line-height: 1.6; color: #333; max-width: 500px; margin: 0 auto; border: 1px solid #eee; border-top: 5px solid #ff9800; border-radius: 8px;">
+          <div style="padding: 30px; text-align: center;">
+            <h2 style="color: #ff9800;">ระบบวัดกำแพง</h2>
+            <p>สวัสดีครับ/ค่ะ, เราได้รับคำขอให้รีเซ็ตรหัสผ่านสำหรับบัญชีของคุณ</p>
+            <a href="${resetUrl}" style="background-color: #ff9800; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; margin: 20px 0;">ตั้งรหัสผ่านใหม่</a>
+            <p style="font-size: 12px; color: #999;">ลิงก์นี้มีอายุ 1 ชั่วโมงเท่านั้น</p>
           </div>
-          <div style="padding: 20px; background-color: #ffffff;">
-            <h3 style="color: #2c3e50; margin-top: 0;">สวัสดีครับ/ค่ะ,</h3>
-            <p>เราได้รับคำขอให้รีเซ็ตรหัสผ่านสำหรับบัญชีของคุณในระบบวัดกำแพง คุณสามารถเริ่มตั้งรหัสผ่านใหม่ได้โดยการคลิกปุ่มด้านล่างนี้:</p>
-            <div style="text-align: center; margin: 30px 0;">
-              <a href="${resetUrl}" 
-                 style="background-color: #007bff; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
-                 ตั้งรหัสผ่านใหม่
-              </a>
-            </div>
-            <p style="font-size: 0.9em; color: #666;">* ลิงก์นี้จะมีอายุการใช้งาน <strong>1 ชั่วโมง</strong> เท่านั้น</p>
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-            <p style="font-size: 0.8em; color: #999;">หากคุณไม่ได้เป็นผู้ส่งคำขอนี้ โปรดละทิ้งอีเมลฉบับนี้ บัญชีของคุณยังคงปลอดภัย</p>
-          </div>
-          <div style="text-align: center; padding-top: 20px; font-size: 0.75em; color: #aaa;">
-            &copy; ${new Date().getFullYear()} ระบบวัดกำแพง. All rights reserved.
-          </div>
+          <div style="background-color: #fff3e0; padding: 15px; text-align: center; font-size: 12px;">&copy; ${new Date().getFullYear()} ระบบวัดกำแพง.</div>
         </div>
       `
     });
-
     res.json({ success: true, message: 'ส่งลิงก์รีเซ็ตรหัสผ่านไปที่อีเมลแล้ว' });
   } catch (error) {
     console.error('Forgot password error:', error);
@@ -338,37 +300,17 @@ exports.forgotPassword = async (req, res) => {
   }
 };
 
-// Reset Password - ยืนยันรหัสใหม่
+// Reset Password
 exports.resetPassword = async (req, res) => {
   try {
     const { token, password } = req.body;
-
-    if (!token || !password) {
-      return res.status(400).json({ success: false, message: 'ข้อมูลไม่ครบถ้วน' });
-    }
-
-    // 1. ตรวจสอบ Token และวันหมดอายุ
-    const [users] = await db.query(
-      'SELECT id FROM users WHERE reset_token = ? AND reset_expire > NOW()',
-      [token]
-    );
-
-    if (users.length === 0) {
-      return res.status(400).json({ success: false, message: 'ลิงก์ไม่ถูกต้องหรือหมดอายุแล้ว' });
-    }
-
-    // 2. Hash รหัสผ่านใหม่
+    const [users] = await db.query('SELECT id FROM users WHERE reset_token = ? AND reset_expire > NOW()', [token]);
+    if (users.length === 0) return res.status(400).json({ success: false, message: 'ลิงก์ไม่ถูกต้องหรือหมดอายุ' });
     const hashedPassword = await bcrypt.hash(password, 10);
-
-    // 3. อัปเดตและล้างค่า Token
-    await db.query(
-      'UPDATE users SET password = ?, reset_token = NULL, reset_expire = NULL WHERE id = ?',
-      [hashedPassword, users[0].id]
-    );
-
+    await db.query('UPDATE users SET password = ?, reset_token = NULL, reset_expire = NULL WHERE id = ?', [hashedPassword, users[0].id]);
     res.json({ success: true, message: 'เปลี่ยนรหัสผ่านใหม่สำเร็จแล้ว' });
   } catch (error) {
     console.error('Reset password error:', error);
-    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการรีเซ็ตรหัสผ่าน' });
+    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาด' });
   }
 };
