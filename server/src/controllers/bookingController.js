@@ -171,12 +171,11 @@ exports.getAllBookings = async (req, res) => {
   }
 };
 
-// ✅ Update booking status (admin) พร้อมส่ง LINE Notify
-
+// ✅ Update booking status (admin) พร้อมบันทึกรายชื่อพระและส่ง LINE Messaging API
 exports.updateBookingStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, admin_response } = req.body;
+    const { status, admin_response, monk_ids } = req.body; // 🌟 รับ monk_ids อาร์เรย์ของไอดีพระเพิ่มเข้ามา
     const admin_id = req.user.id;
 
     if (!['approved', 'rejected'].includes(status)) {
@@ -200,14 +199,14 @@ exports.updateBookingStatus = async (req, res) => {
 
     const booking = bookingData[0];
 
-    // 2. เช็คจำนวนพระว่าง (โค้ดเดิมของคุณ)
+    // 2. เช็คจำนวนพระว่าง
     if (status === 'approved') {
       const [stats] = await db.query(
         `SELECT 
           (SELECT total_monks FROM settings LIMIT 1) as max_monks,
           IFNULL(SUM(monks_count), 0) as used_monks
-        FROM bookings 
-        WHERE booking_date = ? AND booking_time = ? AND status = 'approved' AND id != ?`,
+         FROM bookings 
+         WHERE booking_date = ? AND booking_time = ? AND status = 'approved' AND id != ?`,
         [booking.booking_date, booking.booking_time, id]
       );
 
@@ -228,56 +227,91 @@ exports.updateBookingStatus = async (req, res) => {
       [status, admin_response || null, admin_id, id]
     );
 
+    // 🌟 [ส่วนเพิ่มใหม่] บันทึกรายชื่อพระสงฆ์ลงตารางเชื่อม booking_monks
+    if (status === 'approved' && monk_ids && Array.isArray(monk_ids)) {
+      // ล้างรายชื่อเดิมที่เคยผูกกับใบจองนี้ก่อน (เผื่อมีการอัปเดตแก้ไข)
+      await db.query(`DELETE FROM booking_monks WHERE booking_id = ?`, [id]);
+      
+      // ถ้ามีการเลือกพระส่งมา ให้บันทึกชุดใหม่ลงไปทันทีแบบ Bulk Insert
+      if (monk_ids.length > 0) {
+        const insertValues = monk_ids.map(monkId => [id, monkId]);
+        await db.query(
+          `INSERT INTO booking_monks (booking_id, monk_id) VALUES ?`,
+          [insertValues]
+        );
+      }
+    }
+
     // 4. ถ้าอนุมัติสำเร็จ ให้ส่งข้อความเข้ากลุ่มไลน์ด้วย Messaging API
     if (status === 'approved') {
       try {
-        // แปลงวันที่เป็นฟอร์แมตภาษาไทย
-        const dateObj = new Date(booking.booking_date);
-        const formattedDate = dateObj.toLocaleDateString('th-TH', {
-          year: 'numeric', month: 'long', day: 'numeric'
-        });
+        const lineToken = process.env.LINE_CHANNEL_ACCESS_TOKEN;
+        const lineGroupId = process.env.LINE_GROUP_ID;
 
-        // จัดรูปแบบข้อความข้อความ
-        const messageText = `🔔 มีงานนิมนต์พระ (ได้รับการอนุมัติแล้ว)\n\n` +
-                            `📌 พิธี: ${booking.booking_type_name || 'ไม่ระบุประเภท'}\n` +
-                            `🗓 วันที่: ${formattedDate}\n` +
-                            `⏰ เวลา: ${booking.booking_time.substring(0, 5)} น.\n` +
-                            `🙏 จำนวนพระสงฆ์: ${booking.monks_count} รูป\n` +
-                            `👤 เจ้าภาพ/ผู้จอง: ${booking.full_name}\n` +
-                            `📞 เบอร์โทรติดต่อ: ${booking.phone}\n` +
-                            `📝 รายละเอียดเพิ่มเติม: ${booking.details || '-'}`;
+        if (!lineToken || !lineGroupId) {
+          console.warn('⚠️ LINE Integration Warning: Missing Env Variables.');
+        } else {
+          
+          // 🌟 ดึงข้อมูลรายชื่อพระที่พึ่งบันทึกสด ๆ ร้อน ๆ มาร้อยเป็นข้อความแจ้งเตือน
+          const [monksData] = await db.query(
+            `SELECT m.name FROM booking_monks bm
+             JOIN monks m ON bm.monk_id = m.id
+             WHERE bm.booking_id = ?`,
+            [id]
+          );
 
-        // โครงสร้าง Payload ตามกำหนดของ LINE Messaging API
-        const payload = {
-          to: process.env.LINE_GROUP_ID, // ยิงเข้า Group ID จากไฟล์ .env
-          messages: [
+          const monksListText = monksData.length > 0
+            ? monksData.map((monk, index) => `   ${index + 1}. ${monk.name}`).join('\n')
+            : '   (ยังไม่ได้ระบุรายชื่อพระสงฆ์)';
+
+          // แปลงวันที่เป็นฟอร์แมตภาษาไทย
+          const dateObj = new Date(booking.booking_date);
+          const formattedDate = dateObj.toLocaleDateString('th-TH', {
+            year: 'numeric', month: 'long', day: 'numeric'
+          });
+
+          // จัดรูปแบบข้อความข้อความ
+          const messageText = `🔔 มีงานนิมนต์พระ (ได้รับการอนุมัติแล้ว)\n\n` +
+                              `📌 พิธี: ${booking.booking_type_name || 'ไม่ระบุประเภท'}\n` +
+                              `🗓 วันที่: ${formattedDate}\n` +
+                              `⏰ เวลา: ${booking.booking_time.substring(0, 5)} น.\n` +
+                              `🙏 จำนวนพระสงฆ์: ${booking.monks_count} รูป\n\n` +
+                              `📿 รายชื่อพระสงฆ์ที่นิมนต์:\n${monksListText}\n\n` + // 🌟 พ่นรายชื่อตรงนี้
+                              `👤 เจ้าภาพ/ผู้จอง: ${booking.full_name}\n` +
+                              `📞 เบอร์โทรติดต่อ: ${booking.phone}\n` +
+                              `📝 รายละเอียดเพิ่มเติม: ${booking.details || '-'}`;
+
+          // โครงสร้าง Payload ตามกำหนดของ LINE Messaging API
+          const payload = {
+            to: lineGroupId.trim(),
+            messages: [
+              {
+                type: 'text',
+                text: messageText
+              }
+            ]
+          };
+
+          // ยิง POST Request ไปที่ LINE Server
+          await axios.post(
+            'https://api.line.me/v2/bot/message/push',
+            payload,
             {
-              type: 'text',
-              text: messageText
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${lineToken.trim()}`
+              }
             }
-          ]
-        };
-
-        // ยิง POST Request ไปที่ LINE Server
-        await axios.post(
-          'https://api.line.me/v2/bot/message/push',
-          payload,
-          {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${process.env.LINE_CHANNEL_ACCESS_TOKEN}`
-            }
-          }
-        );
-        console.log('ส่งแจ้งเตือนไลน์กลุ่มสำเร็จ');
+          );
+          console.log('ส่งแจ้งเตือนไลน์กลุ่มสำเร็จพร้อมรายชื่อพระ');
+        }
 
       } catch (lineError) {
-        // ครอบ try-catch แยกไว้เพื่อป้องกันกรณี LINE พัง แต่ระบบจองหลักยังเดินหน้าต่อได้
         console.error('LINE API Error:', lineError.response ? lineError.response.data : lineError.message);
       }
     }
 
-    res.json({ success: true, message: 'อัปเดตสถานะและแจ้งเตือนเรียบร้อย' });
+    res.json({ success: true, message: 'อัปเดตสถานะ บันทึกพระ และแจ้งเตือนเรียบร้อย' });
   } catch (error) {
     console.error('Update booking status error:', error);
     res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการอัปเดต' });

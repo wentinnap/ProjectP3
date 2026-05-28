@@ -22,6 +22,10 @@ const AdminBookings = () => {
   const [bookingTypes, setBookingTypes] = useState([]);
   const [adminResponse, setAdminResponse] = useState('');
   
+  // 🌟 เพิ่ม States สำหรับระบบเลือกรายชื่อพระสงฆ์
+  const [allMonks, setAllMonks] = useState([]); 
+  const [selectedMonkIds, setSelectedMonkIds] = useState([]);
+
   const [newType, setNewType] = useState({ name: '', description: '', duration: 60 });
 
   // ฟังก์ชันช่วยแปลงเวลาเป็นชื่อรอบ (เพื่อให้ตรงกับหน้าจอง)
@@ -56,26 +60,66 @@ const AdminBookings = () => {
     }
   };
 
+  // 🌟 ดึงข้อมูลรายชื่อพระสงฆ์ทั้งหมดในระบบ
+  const fetchMonks = async () => {
+    try {
+      // 💡 อย่าลืมเช็กเช็คชื่อ Method ใน api.js ของคุณด้วยนะครับ (เช่น bookingAPI.getMonks หรืออื่นๆ)
+      const response = await bookingAPI.getMonks(); 
+      setAllMonks(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching monks:', error);
+    }
+  };
+
   useEffect(() => { 
     fetchBookings(); 
     fetchTypes();
+    fetchMonks(); // เรียกโหลดตอนเปิดหน้าแรก
   }, [fetchBookings]);
 
   // --- Handlers ---
   const openBookingDetail = (booking) => {
     setSelectedBooking(booking);
     setAdminResponse(booking.admin_response || '');
+    // 🌟 ดึงรายชื่อพระเดิมที่ถูกมัดไว้ (ถ้ามี) หรือเซ็ตเป็นอาเรย์ว่างรอแอดมินติ๊กเลือกใหม่
+    setSelectedMonkIds(booking.monk_ids || []); 
     setShowModal(true);
+  };
+
+  // 🌟 ฟังก์ชันจัดการตอนแอดมินคลิกเลือก/ยกเลิกพระสงฆ์
+  const handleToggleMonk = (monkId) => {
+    setSelectedMonkIds(prev => {
+      if (prev.includes(monkId)) {
+        return prev.filter(id => id !== monkId); // เอาออกถ้าติ๊กซ้ำ
+      } else {
+        // ห้ามติ๊กเลือกเกินจำนวนพระสงฆ์ที่ผู้จองนิมนต์มาในใบจองนี้
+        if (prev.length >= selectedBooking.monks_count) {
+          toast.warning(`ไม่สามารถเลือกเพิ่มได้เนื่องจากสล็อตเต็มที่ ${selectedBooking.monks_count} รูปแล้ว`);
+          return prev;
+        }
+        return [...prev, monkId]; // เพิ่มเข้าไป
+      }
+    });
   };
 
   const handleUpdateStatus = async (id, status) => {
     try {
-      await bookingAPI.updateStatus(id, { status, admin_response: adminResponse });
-      toast.success(`อัปเดตสถานะเรียบร้อย`);
+      // 🌟 Validation ป้องกันความพ้อต: อนุมัติแต่ลืมระบุหรือระบุรายชื่อพระสงฆ์ไม่ครบตามจำนวนนิมนต์
+      if (status === 'approved' && selectedMonkIds.length !== selectedBooking.monks_count) {
+        return toast.warning(`กรุณาเลือกพระสงฆ์ให้ครบตามจำนวนที่นิมนต์ไว้ (${selectedBooking.monks_count} รูป / เลือกแล้ว ${selectedMonkIds.length} รูป)`);
+      }
+
+      // ส่งข้อมูลชุดใหญ่รวม monk_ids ไปหลังบ้าน
+      await bookingAPI.updateStatus(id, { 
+        status, 
+        admin_response: adminResponse,
+        monk_ids: status === 'approved' ? selectedMonkIds : [] 
+      });
+
+      toast.success(`อัปเดตสถานะและส่งแจ้งเตือนกลุ่มเรียบร้อย`);
       setShowModal(false); 
       fetchBookings();
     } catch (error) { 
-      // ✅ ดึง Error Message ตรงจาก Backend มาโชว์ (เช่น แจ้งเตือนเมื่อพระไม่พอจอง)
       const errorMsg = error.response?.data?.message || 'การอัปเดตล้มเหลว';
       toast.error(errorMsg); 
     }
@@ -289,7 +333,7 @@ const AdminBookings = () => {
                 <button onClick={() => setShowModal(false)} className="p-3 hover:bg-slate-50 rounded-full transition-colors"><X size={28} /></button>
               </div>
 
-              <div className="p-8 overflow-y-auto space-y-6">
+              <div className="p-8 overflow-y-auto space-y-6 no-scrollbar">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-6 bg-slate-50 rounded-4xl">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">ผู้จอง</p>
@@ -325,7 +369,45 @@ const AdminBookings = () => {
                   </div>
                 )}
 
-                <div className="space-y-3 pt-4">
+                {/* 🌟 [เพิ่มใหม่] UI สำหรับการเลือกรายชื่อพระสงฆ์ (จะเปิดให้เลือกเฉพาะใบคำขอที่รอดำเนินการอยู่เท่านั้น) */}
+                {selectedBooking.status === 'pending' && (
+                  <div className="space-y-3 pt-2">
+                    <div className="flex justify-between items-end px-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <Users size={12} /> จัดรายชื่อพระสงฆ์ไปปฏิบัติงาน
+                      </label>
+                      <span className={`text-xs font-black ${selectedMonkIds.length === selectedBooking.monks_count ? 'text-emerald-500' : 'text-slate-400'}`}>
+                        เลือกแล้ว {selectedMonkIds.length} จาก {selectedBooking.monks_count} รูป
+                      </span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 bg-slate-50 rounded-4xl border border-slate-100 max-h-48 overflow-y-auto no-scrollbar">
+                      {allMonks.map((monk) => {
+                        const isSelected = selectedMonkIds.includes(monk.id);
+                        return (
+                          <button
+                            key={monk.id}
+                            type="button"
+                            onClick={() => handleToggleMonk(monk.id)}
+                            className={`p-3.5 rounded-2xl font-bold text-sm transition-all flex items-center justify-between border ${
+                              isSelected 
+                                ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20 active:scale-95' 
+                                : 'bg-white text-slate-700 border-slate-200/60 hover:border-orange-300'
+                            }`}
+                          >
+                            <span className="truncate">{monk.name}</span>
+                            {isSelected && <Check size={16} className="shrink-0 ml-1 text-white" />}
+                          </button>
+                        );
+                      })}
+                      {allMonks.length === 0 && (
+                        <p className="col-span-full text-center text-slate-400 py-6 font-medium italic text-sm">ไม่พบข้อมูลรายชื่อพระสงฆ์ในระบบ</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-3 pt-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">ข้อความตอบกลับแอดมิน</label>
                   <textarea 
                     className="w-full p-6 bg-slate-50 rounded-4xl border-none outline-none focus:ring-2 focus:ring-orange-500/20 h-32 resize-none transition-all font-medium"
