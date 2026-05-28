@@ -8,6 +8,7 @@ import 'react-calendar/dist/Calendar.css';
 import "../../CalendarCustom.css";
 import { Clock, Users, Phone, Info, CheckCircle, MapPin, Sun, Sunrise, User, FileText } from 'lucide-react';
 import Navbar from "../../components/layout/Navbar";
+import Footer from "../../components/layout/Footer";
 import { motion } from 'framer-motion';
 
 const Booking = () => {
@@ -339,6 +340,7 @@ const Booking = () => {
               </form>
             </div>
           </motion.div>
+          <Footer />
         </div>
       </div>
     </div>
