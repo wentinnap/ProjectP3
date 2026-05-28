@@ -29,14 +29,8 @@ const AdminBookings = () => {
 
   const [newType, setNewType] = useState({ name: '', description: '', duration: 60 });
 
-  // --- 🛡️ เช็ครายชื่อพระที่ติดจองในวันเดียวกันแบบ Real-time ---
-  const busyMonkIds = useMemo(() => {
-    if (!selectedBooking) return [];
-    // กรองหาคิวงานจองอื่นที่ "อนุมัติแล้ว" และเป็น "วันเดียวกัน" กับคำขอที่กำลังพิจารณา
-    return bookings
-      .filter(b => b.status === 'approved' && b.booking_date === selectedBooking.booking_date && b.id !== selectedBooking.id)
-      .flatMap(b => b.monk_ids || []);
-  }, [bookings, selectedBooking]);
+  // 🌟 [ปรับแก้] ใช้ useState เก็บ ID พระที่ติดงาน แทนการใช้ useMemo กรองหน้าบ้าน
+  const [busyMonkIds, setBusyMonkIds] = useState([]);
 
   // ฟังก์ชันช่วยแปลงเวลาเป็นชื่อรอบ
   const getTimeLabel = (time) => {
@@ -110,17 +104,36 @@ const AdminBookings = () => {
     }
   };
 
-  const openBookingDetail = (booking) => {
+  // 🌟 [ปรับแก้] ดึงข้อมูลสถานะพระจาก API ทันทีที่เปิดดูรายละเอียดการจอง
+  const openBookingDetail = async (booking) => {
     setSelectedBooking(booking);
     setAdminResponse(booking.admin_response || '');
     setSelectedMonkIds(booking.monk_ids || []); 
     setShowModal(true);
+
+    if (booking.booking_date) {
+      try {
+        const response = await monkAPI.getAvailableMonks(booking.booking_date);
+        if (response.data?.success && Array.isArray(response.data.data)) {
+          // กรองเอาเฉพาะ ID ของพระสงฆ์ที่มีสถานะ is_busy === true (หรือ property ตามที่ API ส่งมา)
+          const busyIds = response.data.data
+            .filter(monk => monk.is_busy)
+            .map(monk => monk.id);
+          setBusyMonkIds(busyIds);
+        }
+      } catch (error) {
+        console.error('Error fetching monk availability:', error);
+        setBusyMonkIds([]);
+      }
+    } else {
+      setBusyMonkIds([]);
+    }
   };
 
   const handleToggleMonk = (monkId) => {
     const requiredMonks = selectedBooking?.monks_count ?? selectedBooking?.monksCount ?? 0;
 
-    // 🛡️ ดักจับไม่ให้เลือกพระสงฆ์ที่ติดภารกิจอื่นในวันนั้นแล้ว (ยกเว้นกดเพื่อเอารูปเดิมออก)
+    // 🛡️ ดักจับไม่ให้เลือกพระสงฆ์ที่ติดภารกิจอื่นในวันนั้นแล้ว
     if (busyMonkIds.includes(monkId) && !selectedMonkIds.includes(monkId)) {
       toast.error('พระสงฆ์รูปนี้ติดคิวงานนิมนต์อื่นในวันดังกล่าวแล้ว');
       return;
@@ -419,7 +432,7 @@ const AdminBookings = () => {
                   </div>
                 )}
 
-                {/* 🌟 ปรับปรุง UI การจัดรายชื่อพระสงฆ์เพื่อป้องกันการเลือกซ้ำในวันเดียวกัน 🌟 */}
+                {/* 🌟 แสดงรายชื่อพระสงฆ์ */}
                 {selectedBooking.status === 'pending' && (
                   <div className="space-y-3 pt-2">
                     <div className="flex justify-between items-end px-2">
@@ -434,7 +447,7 @@ const AdminBookings = () => {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 bg-slate-50 rounded-4xl border border-slate-100 max-h-48 overflow-y-auto no-scrollbar">
                       {allMonks.map((monk) => {
                         const isSelected = selectedMonkIds.includes(monk.id);
-                        // ถ้าติดจองคิวงานอื่นในวันเดียวกัน และ ตัวมันเองไม่ได้กำลังถูกเลือกอยู่ ให้มีสถานะเป็น busy
+                        // เปลี่ยนมาใช้ State busyMonkIds
                         const isBusy = busyMonkIds.includes(monk.id) && !isSelected;
                         
                         return (
@@ -596,18 +609,14 @@ const AdminBookings = () => {
                     <p className="text-center py-4 text-slate-300 italic">ไม่มีข้อมูลประเภทพิธี</p>
                   ) : (
                     bookingTypes.map(t => (
-                      <div key={t.id} className="p-6 rounded-4xl bg-slate-50 border border-slate-100 flex justify-between items-center group">
-                        <div>
-                          <p className="font-black text-slate-800 text-lg">{t.name}</p>
-                          <p className="text-orange-500 font-bold text-xs flex items-center gap-1 mt-1">
-                            <Clock size={14} /> {t.duration_minutes} นาที
-                          </p>
+                      <div key={t.id} className="p-5 rounded-3xl bg-slate-50 border border-slate-100 flex justify-between items-center group">
+                        <div className="flex-1">
+                           <h5 className="font-bold text-slate-800 text-base">{t.name}</h5>
+                           <p className="text-xs font-medium text-slate-500 mt-1 flex items-center gap-1"><Clock size={12}/> {t.duration_minutes || 60} นาที</p>
                         </div>
-                        <div className="flex gap-2">
-                          <button onClick={() => handleDeleteType(t.id)} className="w-12 h-12 flex items-center justify-center bg-white text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm">
-                            <Trash2 size={20} />
-                          </button>
-                        </div>
+                        <button onClick={() => handleDeleteType(t.id)} className="w-10 h-10 shrink-0 flex items-center justify-center bg-white text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm border border-slate-100 ml-4">
+                          <Trash2 size={16} />
+                        </button>
                       </div>
                     ))
                   )}
