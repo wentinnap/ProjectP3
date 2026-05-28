@@ -46,22 +46,28 @@ exports.createBookingType = async (req, res) => {
   }
 };
 
-// Get user's bookings
+// 🛠️ แก้ไข: เปลี่ยนจากดึง VIEW (booking_details) มาดึงตารางจริง (bookings) เพื่อเอาค่า monks_count
 exports.getUserBookings = async (req, res) => {
   try {
     const user_id = req.user.id;
     const { status, page = 1, limit = 10 } = req.query;
     const offset = (page - 1) * limit;
 
-    let query = 'SELECT * FROM booking_details WHERE user_id = ?';
+    // ✨ ปรับ Query มาใช้ตารางจริงและ JOIN ดึงชื่อประเภทพิธี
+    let query = `
+      SELECT b.*, bt.name as booking_type_name 
+      FROM bookings b
+      LEFT JOIN booking_types bt ON b.booking_type_id = bt.id
+      WHERE b.user_id = ?
+    `;
     const queryParams = [user_id];
 
     if (status) {
-      query += ' AND status = ?';
+      query += ' AND b.status = ?';
       queryParams.push(status);
     }
 
-    query += ' ORDER BY booking_date DESC, booking_time DESC LIMIT ? OFFSET ?';
+    query += ' ORDER BY b.booking_date DESC, b.booking_time DESC LIMIT ? OFFSET ?';
     queryParams.push(parseInt(limit), parseInt(offset));
 
     const [bookings] = await db.query(query, queryParams);
@@ -99,31 +105,37 @@ exports.getUserBookings = async (req, res) => {
   }
 };
 
-// Get all bookings (admin)
+// 🛠️ แก้ไข: เปลี่ยนจากดึง VIEW (booking_details) มาดึงตารางจริงสำหรับหน้า Admin ด้วยเช่นกัน
 exports.getAllBookings = async (req, res) => {
   try {
     const { status, page = 1, limit = 10, date_from, date_to } = req.query;
     const offset = (page - 1) * limit;
 
-    let query = 'SELECT * FROM booking_details WHERE 1=1';
+    // ✨ ปรับ Query ดึงตรงจากตารางหลัก มั่นใจได้ว่ามี monks_count ครบถ้วน
+    let query = `
+      SELECT b.*, bt.name as booking_type_name 
+      FROM bookings b
+      LEFT JOIN booking_types bt ON b.booking_type_id = bt.id
+      WHERE 1=1
+    `;
     const queryParams = [];
 
     if (status) {
-      query += ' AND status = ?';
+      query += ' AND b.status = ?';
       queryParams.push(status);
     }
 
     if (date_from) {
-      query += ' AND booking_date >= ?';
+      query += ' AND b.booking_date >= ?';
       queryParams.push(date_from);
     }
 
     if (date_to) {
-      query += ' AND booking_date <= ?';
+      query += ' AND b.booking_date <= ?';
       queryParams.push(date_to);
     }
 
-    query += ' ORDER BY booking_date DESC, booking_time DESC LIMIT ? OFFSET ?';
+    query += ' ORDER BY b.booking_date DESC, b.booking_time DESC LIMIT ? OFFSET ?';
     queryParams.push(parseInt(limit), parseInt(offset));
 
     const [bookings] = await db.query(query, queryParams);
@@ -175,7 +187,7 @@ exports.getAllBookings = async (req, res) => {
 exports.updateBookingStatus = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, admin_response, monk_ids } = req.body; // 🌟 รับ monk_ids อาร์เรย์ของไอดีพระเพิ่มเข้ามา
+    const { status, admin_response, monk_ids } = req.body; 
     const admin_id = req.user.id;
 
     if (!['approved', 'rejected'].includes(status)) {
@@ -227,12 +239,10 @@ exports.updateBookingStatus = async (req, res) => {
       [status, admin_response || null, admin_id, id]
     );
 
-    // 🌟 [ส่วนเพิ่มใหม่] บันทึกรายชื่อพระสงฆ์ลงตารางเชื่อม booking_monks
+    // บันทึกรายชื่อพระสงฆ์ลงตารางเชื่อม booking_monks
     if (status === 'approved' && monk_ids && Array.isArray(monk_ids)) {
-      // ล้างรายชื่อเดิมที่เคยผูกกับใบจองนี้ก่อน (เผื่อมีการอัปเดตแก้ไข)
       await db.query(`DELETE FROM booking_monks WHERE booking_id = ?`, [id]);
       
-      // ถ้ามีการเลือกพระส่งมา ให้บันทึกชุดใหม่ลงไปทันทีแบบ Bulk Insert
       if (monk_ids.length > 0) {
         const insertValues = monk_ids.map(monkId => [id, monkId]);
         await db.query(
@@ -252,7 +262,6 @@ exports.updateBookingStatus = async (req, res) => {
           console.warn('⚠️ LINE Integration Warning: Missing Env Variables.');
         } else {
           
-          // 🌟 ดึงข้อมูลรายชื่อพระที่พึ่งบันทึกสด ๆ ร้อน ๆ มาร้อยเป็นข้อความแจ้งเตือน
           const [monksData] = await db.query(
             `SELECT m.name FROM booking_monks bm
              JOIN monks m ON bm.monk_id = m.id
@@ -264,24 +273,21 @@ exports.updateBookingStatus = async (req, res) => {
             ? monksData.map((monk, index) => `   ${index + 1}. ${monk.name}`).join('\n')
             : '   (ยังไม่ได้ระบุรายชื่อพระสงฆ์)';
 
-          // แปลงวันที่เป็นฟอร์แมตภาษาไทย
           const dateObj = new Date(booking.booking_date);
           const formattedDate = dateObj.toLocaleDateString('th-TH', {
             year: 'numeric', month: 'long', day: 'numeric'
           });
 
-          // จัดรูปแบบข้อความข้อความ
           const messageText = `🔔 มีงานนิมนต์พระ (ได้รับการอนุมัติแล้ว)\n\n` +
                               `📌 พิธี: ${booking.booking_type_name || 'ไม่ระบุประเภท'}\n` +
                               `🗓 วันที่: ${formattedDate}\n` +
                               `⏰ เวลา: ${booking.booking_time.substring(0, 5)} น.\n` +
                               `🙏 จำนวนพระสงฆ์: ${booking.monks_count} รูป\n\n` +
-                              `📿 รายชื่อพระสงฆ์ที่นิมนต์:\n${monksListText}\n\n` + // 🌟 พ่นรายชื่อตรงนี้
+                              `📿 รายชื่อพระสงฆ์ที่นิมนต์:\n${monksListText}\n\n` + 
                               `👤 เจ้าภาพ/ผู้จอง: ${booking.full_name}\n` +
                               `📞 เบอร์โทรติดต่อ: ${booking.phone}\n` +
                               `📝 รายละเอียดเพิ่มเติม: ${booking.details || '-'}`;
 
-          // โครงสร้าง Payload ตามกำหนดของ LINE Messaging API
           const payload = {
             to: lineGroupId.trim(),
             messages: [
@@ -292,7 +298,6 @@ exports.updateBookingStatus = async (req, res) => {
             ]
           };
 
-          // ยิง POST Request ไปที่ LINE Server
           await axios.post(
             'https://api.line.me/v2/bot/message/push',
             payload,
@@ -472,11 +477,9 @@ exports.deleteBookingType = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // ตรวจสอบว่ามีการใช้งานประเภทนี้อยู่ในตาราง bookings หรือไม่ก่อนลบ
     const [usage] = await db.query('SELECT id FROM bookings WHERE booking_type_id = ? LIMIT 1', [id]);
     
     if (usage.length > 0) {
-      // หากมีการใช้งานแล้ว แนะนำให้ใช้วิธีปิดการใช้งาน (is_active = FALSE) แทนการลบจริง
       await db.query('UPDATE booking_types SET is_active = FALSE WHERE id = ?', [id]);
       return res.json({ success: true, message: 'ปิดการใช้งานประเภทพิธีเรียบร้อย (เนื่องจากมีการใช้งานในประวัติแล้ว)' });
     }
@@ -495,13 +498,11 @@ exports.updateBookingType = async (req, res) => {
     const { id } = req.params;
     const { name, description, duration_minutes, is_active } = req.body;
 
-    // ตรวจสอบว่ามี ID นี้อยู่จริงไหม
     const [exists] = await db.query('SELECT id FROM booking_types WHERE id = ?', [id]);
     if (exists.length === 0) {
       return res.status(404).json({ success: false, message: 'ไม่พบประเภทพิธีที่ต้องการแก้ไข' });
     }
 
-    // อัปเดตข้อมูล (รองรับการแก้ไขทั้ง ชื่อ, รายละเอียด, และเวลา)
     await db.query(
       `UPDATE booking_types 
        SET name = ?, description = ?, duration_minutes = ?, is_active = ? 
@@ -527,11 +528,9 @@ exports.checkAvailableMonks = async (req, res) => {
   try {
     const { date, time } = req.query;
     
-    // 1. ดึงยอดพระสูงสุด
     const [settings] = await db.query('SELECT total_monks FROM settings LIMIT 1');
     const maxMonks = settings[0]?.total_monks || 20;
 
-    // 2. ต้องเช็คยอดการใช้ "เฉพาะวันที่และเวลา" ที่เลือกเท่านั้น
     const [booked] = await db.query(
       `SELECT SUM(monks_count) as used 
        FROM bookings 
@@ -558,11 +557,9 @@ exports.getMonthlyStatus = async (req, res) => {
   try {
     const { year, month } = req.query;
     
-    // ดึงค่าจำนวนพระสูงสุดต่อวัน (ถ้าไม่มี Table settings ให้ Default ที่ 20)
     const [settings] = await db.query('SELECT total_monks FROM settings LIMIT 1');
     const maxMonks = settings[0]?.total_monks || 20;
 
-    // ดึงยอดรวมการใช้พระในแต่ละวันของเดือนนั้นๆ
     const [rows] = await db.query(
       `SELECT 
           DATE_FORMAT(booking_date, '%Y-%m-%d') as date, 
@@ -574,7 +571,6 @@ exports.getMonthlyStatus = async (req, res) => {
       [month, year]
     );
 
-    // ปั้นข้อมูลให้ Frontend ใช้ง่าย
     const busyDates = {};
     rows.forEach(row => {
       busyDates[row.date] = {
@@ -593,10 +589,10 @@ exports.getMonthlyStatus = async (req, res) => {
 };
 
 // ==========================================
-// 🌟 [ส่วนเพิ่มใหม่] ระบบจัดการข้อมูลพระสงฆ์ (Monks Management)
+// ระบบจัดการข้อมูลพระสงฆ์ (Monks Management)
 // ==========================================
 
-// 1. ดึงรายชื่อพระทั้งหมด (สำหรับไปแสดงในตารางหน้า Admin และใช้เป็นตัวเลือก Dropdown)
+// 1. ดึงรายชื่อพระทั้งหมด
 exports.getAllMonks = async (req, res) => {
   try {
     const [monks] = await db.query('SELECT * FROM monks ORDER BY name ASC');
@@ -645,12 +641,11 @@ exports.createMonk = async (req, res) => {
   }
 };
 
-// 3. ลบรายชื่อพระ (พร้อมระบบเช็คความปลอดภัย)
+// 3. ลบรายชื่อพระ
 exports.deleteMonk = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // ตรวจสอบก่อนว่าพระรูปนี้ถูกนิมนต์ไปผูกกับใบจองไหนในตาราง booking_monks หรือยัง เพื่อป้องกัน Data Error
     const [usage] = await db.query(
       'SELECT booking_id FROM booking_monks WHERE monk_id = ? LIMIT 1', 
       [id]
@@ -663,7 +658,6 @@ exports.deleteMonk = async (req, res) => {
       });
     }
 
-    // ตรวจสอบว่ามีข้อมูลอยู่จริงไหม
     const [exists] = await db.query('SELECT id FROM monks WHERE id = ?', [id]);
     if (exists.length === 0) {
       return res.status(404).json({ 
@@ -672,7 +666,6 @@ exports.deleteMonk = async (req, res) => {
       });
     }
 
-    // ทำการลบจริง
     await db.query('DELETE FROM monks WHERE id = ?', [id]);
 
     res.json({
