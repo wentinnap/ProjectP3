@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from 'react';
-// 🌟 ปรับปรุงจุดนี้: Import monkAPI เข้ามาใช้งานร่วมกับ bookingAPI
 import { bookingAPI, monkAPI } from '../../services/api';
 import { toast } from 'react-toastify';
 import { 
@@ -18,12 +17,14 @@ const AdminBookings = () => {
   
   const [showModal, setShowModal] = useState(false);
   const [showTypeModal, setShowTypeModal] = useState(false);
+  // 🌟 เพิ่ม State สำหรับเปิด-ปิด Modal จัดการพระสงฆ์ และเก็บค่าคีย์ชื่อพระใหม่
+  const [showMonkModal, setShowMonkModal] = useState(false);
+  const [newMonkName, setNewMonkName] = useState('');
   
   const [selectedBooking, setSelectedBooking] = useState(null);
   const [bookingTypes, setBookingTypes] = useState([]);
   const [adminResponse, setAdminResponse] = useState('');
   
-  // States สำหรับระบบเลือกรายชื่อพระสงฆ์
   const [allMonks, setAllMonks] = useState([]); 
   const [selectedMonkIds, setSelectedMonkIds] = useState([]);
 
@@ -61,7 +62,6 @@ const AdminBookings = () => {
     }
   };
 
-  // 🌟 ปรับปรุงจุดนี้: เปลี่ยนมาเรียกใช้ monkAPI.getAll() ให้ตรงกับไฟล์เส้นทาง API
   const fetchMonks = async () => {
     try {
       const response = await monkAPI.getAll(); 
@@ -78,6 +78,32 @@ const AdminBookings = () => {
   }, [fetchBookings]);
 
   // --- Handlers ---
+  // 🌟 ฟังก์ชันการเพิ่มรายชื่อพระสงฆ์เข้าฐานข้อมูล
+  const handleAddMonk = async () => {
+    if (!newMonkName.trim()) return toast.warning('กรุณาระบุชื่อพระสงฆ์');
+    try {
+      await monkAPI.create({ name: newMonkName });
+      toast.success('เพิ่มรายชื่อพระสงฆ์สำเร็จ');
+      setNewMonkName('');
+      fetchMonks(); // โหลดข้อมูลพระสงฆ์ใหม่
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || 'เพิ่มรายชื่อพระสงฆ์ล้มเหลว';
+      toast.error(errorMsg);
+    }
+  };
+
+  // 🌟 ฟังก์ชันการลบรายชื่อพระสงฆ์ออกจากฐานข้อมูล
+  const handleDeleteMonk = async (id) => {
+    if (!window.confirm("⚠️ ต้องการลบรายชื่อพระสงฆ์รูปนี้ออกจากระบบฐานข้อมูล?")) return;
+    try {
+      await monkAPI.delete(id);
+      toast.success('ลบรายชื่อพระสงฆ์เรียบร้อย');
+      fetchMonks();
+    } catch (error) {
+      toast.error('ไม่สามารถลบได้ เนื่องจากข้อมูลถูกใช้งานอยู่ในระบบ');
+    }
+  };
+
   const openBookingDetail = (booking) => {
     setSelectedBooking(booking);
     setAdminResponse(booking.admin_response || '');
@@ -181,13 +207,23 @@ const AdminBookings = () => {
             <p className="text-slate-400 mt-2 font-medium">ระบบบริหารจัดการสำหรับแอดมิน</p>
           </div>
           
-          <button 
-            onClick={() => setShowTypeModal(true)}
-            className="flex items-center gap-2 px-8 py-4 bg-white/10 hover:bg-white text-white hover:text-slate-900 rounded-2xl font-bold transition-all border border-white/20 active:scale-95"
-          >
-            <Settings size={20} />
-            ตั้งค่าประเภทพิธี
-          </button>
+          {/* 🌟 ปรับปรุงปุ่มบน Header ให้รองรับทั้งสองฟังก์ชันการจัดการ */}
+          <div className="flex flex-wrap gap-3 w-full md:w-auto">
+            <button 
+              onClick={() => setShowMonkModal(true)}
+              className="flex-1 md:flex-initial flex items-center justify-center gap-2 px-6 py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-2xl font-bold transition-all active:scale-95 shadow-lg shadow-orange-500/20"
+            >
+              <Plus size={20} />
+              จัดการรายชื่อพระสงฆ์
+            </button>
+            <button 
+              onClick={() => setShowTypeModal(true)}
+              className="flex-1 md:flex-initial flex items-center justify-center gap-2 px-6 py-4 bg-white/10 hover:bg-white text-white hover:text-slate-900 rounded-2xl font-bold transition-all border border-white/20 active:scale-95"
+            >
+              <Settings size={20} />
+              ตั้งค่าประเภทพิธี
+            </button>
+          </div>
         </div>
       </div>
 
@@ -428,6 +464,60 @@ const AdminBookings = () => {
                     <RotateCcw size={24} /> ย้ายกลับไปรอดำเนินการ
                   </button>
                 )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 🌟 [เพิ่มใหม่] MODAL: MONK MANAGEMENT (สำหรับ เพิ่ม/ลบ พระสงฆ์ในฐานข้อมูล) */}
+      <AnimatePresence>
+        {showMonkModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowMonkModal(false)} className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" />
+            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} className="bg-white rounded-[48px] w-full max-w-2xl shadow-2xl relative z-10 overflow-hidden max-h-[90vh] flex flex-col">
+              <div className="p-8 border-b border-slate-50 flex justify-between items-center">
+                <h3 className="text-2xl font-black text-slate-800 flex items-center gap-2">
+                  <Users className="text-orange-500" size={26} /> จัดการรายชื่อพระสงฆ์
+                </h3>
+                <button onClick={() => setShowMonkModal(false)} className="p-3 hover:bg-slate-50 rounded-full transition-colors"><X size={28} /></button>
+              </div>
+
+              <div className="p-8 overflow-y-auto space-y-8 no-scrollbar">
+                {/* ส่วนฟอร์มเพิ่มชื่อพระใหม่ */}
+                <div className="bg-orange-50 p-8 rounded-[40px] border border-orange-100">
+                  <h4 className="text-orange-600 font-black text-xs uppercase tracking-widest mb-4">เพิ่มรายชื่อพระสงฆ์ใหม่</h4>
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <input 
+                      placeholder="ระบุชื่อพระสงฆ์ (เช่น พระสมชาย ชินวํโส)" 
+                      className="flex-1 px-6 py-4 rounded-2xl bg-white border-none outline-none focus:ring-2 focus:ring-orange-500/20 font-bold shadow-sm"
+                      value={newMonkName}
+                      onChange={(e) => setNewMonkName(e.target.value)}
+                    />
+                    <button onClick={handleAddMonk} className="py-4 px-8 bg-orange-500 text-white rounded-2xl font-black shadow-lg shadow-orange-500/30 hover:bg-orange-600 transition-all flex items-center justify-center gap-2 whitespace-nowrap">
+                      <Plus size={20} /> เพิ่มรายชื่อ
+                    </button>
+                  </div>
+                </div>
+
+                {/* ส่วนรายการพระสงฆ์ปัจจุบันที่มีปุ่มลบ */}
+                <div className="space-y-4">
+                  <h4 className="text-slate-400 font-black text-xs uppercase tracking-widest ml-2">พระสงฆ์ทั้งหมดในระบบ</h4>
+                  {allMonks.length === 0 ? (
+                    <p className="text-center py-4 text-slate-300 italic">ไม่มีข้อมูลรายชื่อพระสงฆ์</p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      {allMonks.map(monk => (
+                        <div key={monk.id} className="p-5 rounded-3xl bg-slate-50 border border-slate-100 flex justify-between items-center group">
+                          <span className="font-bold text-slate-800 text-base truncate pr-2">{monk.name}</span>
+                          <button onClick={() => handleDeleteMonk(monk.id)} className="w-10 h-10 shrink-0 flex items-center justify-center bg-white text-red-400 rounded-xl hover:bg-red-500 hover:text-white transition-all shadow-sm border border-slate-100">
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </motion.div>
           </div>
