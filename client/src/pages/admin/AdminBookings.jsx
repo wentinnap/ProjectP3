@@ -5,7 +5,7 @@ import {
   Calendar, Clock, Search, Check, X, Filter, Trash2, Settings, 
   Plus, User, Phone, Info, Edit3, Save, RotateCcw, ChevronRight, 
   MapPin, Loader2, CalendarRange, Users, Hash, FileText, Sun, Sunrise,
-  AlertTriangle 
+  AlertTriangle, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -30,6 +30,9 @@ const AdminBookings = () => {
 
   const [newType, setNewType] = useState({ name: '', description: '', duration: 60 });
   const [busyMonkIds, setBusyMonkIds] = useState([]);
+  
+  // สถานะเปิด-ปิด สำหรับ Dropdown รายชื่อพระสงฆ์
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   const getTimeLabel = (time) => {
     if (!time) return { label: "ไม่ระบุเวลา", icon: <Clock size={14} className="text-slate-400" /> };
@@ -102,6 +105,7 @@ const AdminBookings = () => {
     
     const initialSelectedIds = (booking.monk_ids || []).map(id => String(id));
     setSelectedMonkIds(initialSelectedIds); 
+    setIsDropdownOpen(false); // ปิดดรอปดาวน์ไว้ก่อนในตอนเริ่มต้นเปิดโมดอล
     setShowModal(true);
 
     if (booking.booking_date) {
@@ -339,7 +343,7 @@ const AdminBookings = () => {
                 <button onClick={() => setShowModal(false)} className="p-3 hover:bg-slate-50 rounded-full transition-colors"><X size={28} /></button>
               </div>
 
-              <div className="p-8 overflow-y-auto space-y-6 no-scrollbar">
+              <div className="p-8 overflow-y-auto space-y-6 no-scrollbar relative">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="p-6 bg-slate-50 rounded-4xl">
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">ผู้จอง</p>
@@ -365,7 +369,7 @@ const AdminBookings = () => {
 
                 {selectedBooking.note && <div className="p-6 bg-orange-50/50 rounded-3xl border border-orange-100/50 italic text-slate-600 text-sm">"{selectedBooking.note}"</div>}
 
-                {/* --- CUSTOM MULTI-SELECT DROPDOWN --- */}
+                {/* --- COLLAPSIBLE CUSTOM MULTI-SELECT DROPDOWN --- */}
                 {selectedBooking.status === 'pending' && (
                   <div className="space-y-3 pt-2">
                     <div className="flex justify-between items-end px-2">
@@ -377,8 +381,17 @@ const AdminBookings = () => {
                       </span>
                     </div>
 
-                    <div className="relative">
-                      <div className="w-full p-4 bg-slate-50 border border-slate-200/60 rounded-3xl flex flex-wrap gap-2 items-center min-h-14">
+                    {/* ม่านโปร่งแสงเลเยอร์หลังสำหรับปิดดรอปดาวน์เมื่อคลิกนอกพื้นที่ */}
+                    {isDropdownOpen && (
+                      <div className="fixed inset-0 z-20" onClick={() => setIsDropdownOpen(false)} />
+                    )}
+
+                    <div className="relative z-30">
+                      {/* แถบกล่องหลักแสดงสถานะ / รายชื่อที่เลือก (Click เพื่อพับ เปิด-ปิด) */}
+                      <div 
+                        onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                        className="w-full p-4 pr-12 bg-slate-50 border border-slate-200/60 rounded-3xl flex flex-wrap gap-2 items-center min-h-14 cursor-pointer hover:bg-slate-100/50 transition-colors select-none"
+                      >
                         {selectedMonkIds.length === 0 ? (
                           <span className="text-slate-400 text-sm font-medium pl-2">เลือกรายชื่อพระสงฆ์...</span>
                         ) : (
@@ -398,7 +411,10 @@ const AdminBookings = () => {
                                 {monk.name} {isBusy && '(คิวซ้อน!)'}
                                 <button 
                                   type="button" 
-                                  onClick={(e) => { e.stopPropagation(); handleToggleMonk(monk.id); }}
+                                  onClick={(e) => { 
+                                    e.stopPropagation(); // กันไม่ให้ดรอปดาวน์ปิดตอนกดเอาป้ายชื่อออก
+                                    handleToggleMonk(monk.id); 
+                                  }}
                                   className={`p-0.5 rounded-full transition-colors ${isBusy ? 'hover:bg-red-100 text-red-500' : 'hover:bg-orange-600 text-white'}`}
                                 >
                                   <X size={12} />
@@ -407,56 +423,71 @@ const AdminBookings = () => {
                             );
                           })
                         )}
+
+                        {/* ไอคอนแสดงการ พับเปิด/พับปิด */}
+                        <div className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+                          {isDropdownOpen ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+                        </div>
                       </div>
 
-                      <div className="mt-2 w-full bg-white border border-slate-200/80 rounded-3xl shadow-xl shadow-slate-200/80 max-h-56 overflow-y-auto p-2 space-y-1 z-30 relative no-scrollbar">
-                        {allMonks.map((monk) => {
-                          const monkIdStr = String(monk.id);
-                          const isSelected = selectedMonkIds.includes(monkIdStr);
-                          const isBusy = busyMonkIds.includes(monkIdStr);
-                          
-                          const hasConflict = isBusy && isSelected; 
-                          const shouldDisable = isBusy && !isSelected; 
+                      {/* รายการตัวเลือกที่แสดงและซ่อนตาม State */}
+                      <AnimatePresence>
+                        {isDropdownOpen && (
+                          <motion.div 
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="absolute left-0 mt-2 w-full bg-white border border-slate-200/80 rounded-3xl shadow-2xl shadow-slate-300/60 max-h-56 overflow-y-auto p-2 space-y-1 z-30 no-scrollbar"
+                          >
+                            {allMonks.map((monk) => {
+                              const monkIdStr = String(monk.id);
+                              const isSelected = selectedMonkIds.includes(monkIdStr);
+                              const isBusy = busyMonkIds.includes(monkIdStr);
+                              
+                              const hasConflict = isBusy && isSelected; 
+                              const shouldDisable = isBusy && !isSelected; 
 
-                          return (
-                            <button
-                              key={monk.id}
-                              type="button"
-                              disabled={shouldDisable}
-                              onClick={() => handleToggleMonk(monk.id)}
-                              className={`w-full p-3.5 rounded-2xl font-bold text-sm transition-all flex items-center justify-between border ${
-                                hasConflict
-                                  ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100/50'
-                                  : isSelected
-                                    ? 'bg-orange-50 text-orange-600 border-orange-200 shadow-sm'
-                                    : shouldDisable
-                                      ? 'bg-slate-50 text-slate-300 border-transparent cursor-not-allowed opacity-50'
-                                      : 'bg-white text-slate-700 border-transparent hover:bg-slate-50 hover:border-slate-100'
-                              }`}
-                            >
-                              <div className="flex items-center gap-3 truncate">
-                                <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 transition-all ${
-                                  hasConflict
-                                    ? 'border-red-400 bg-white'
-                                    : isSelected 
-                                      ? 'bg-orange-500 border-orange-500 text-white' 
-                                      : 'border-slate-300 bg-white'
-                                }`}>
-                                  {isSelected && !hasConflict && <Check size={12} strokeWidth={3} />}
-                                  {hasConflict && <div className="w-2 h-2 rounded-full bg-red-500" />}
-                                </div>
-                                
-                                <span className="truncate">
-                                  {monk.name} <span className="text-xs font-normal text-slate-400 pl-1">{hasConflict ? '(คิวซ้อนกับงานอื่น)' : isBusy ? '(ติดคิวปฏิบัติงาน)' : ''}</span>
-                                </span>
-                              </div>
+                              return (
+                                <button
+                                  key={monk.id}
+                                  type="button"
+                                  disabled={shouldDisable}
+                                  onClick={() => handleToggleMonk(monk.id)}
+                                  className={`w-full p-3.5 rounded-2xl font-bold text-sm transition-all flex items-center justify-between border ${
+                                    hasConflict
+                                      ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100/50'
+                                      : isSelected
+                                        ? 'bg-orange-50 text-orange-600 border-orange-200 shadow-sm'
+                                        : shouldDisable
+                                          ? 'bg-slate-50 text-slate-300 border-transparent cursor-not-allowed opacity-50'
+                                          : 'bg-white text-slate-700 border-transparent hover:bg-slate-50 hover:border-slate-100'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-3 truncate">
+                                    <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 transition-all ${
+                                      hasConflict
+                                        ? 'border-red-400 bg-white'
+                                        : isSelected 
+                                          ? 'bg-orange-500 border-orange-500 text-white' 
+                                          : 'border-slate-300 bg-white'
+                                    }`}>
+                                      {isSelected && !hasConflict && <Check size={12} strokeWidth={3} />}
+                                      {hasConflict && <div className="w-2 h-2 rounded-full bg-red-500" />}
+                                    </div>
+                                    
+                                    <span className="truncate">
+                                      {monk.name} <span className="text-xs font-normal text-slate-400 pl-1">{hasConflict ? '(คิวซ้อนกับงานอื่น)' : isBusy ? '(ติดคิวปฏิบัติงาน)' : ''}</span>
+                                    </span>
+                                  </div>
 
-                              {hasConflict && <AlertTriangle size={15} className="text-red-500 animate-bounce" />}
-                              {shouldDisable && <X size={14} className="text-slate-300" />}
-                            </button>
-                          );
-                        })}
-                      </div>
+                                  {hasConflict && <AlertTriangle size={15} className="text-red-500 animate-bounce" />}
+                                  {shouldDisable && <X size={14} className="text-slate-300" />}
+                                </button>
+                              );
+                            })}
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   </div>
                 )}
