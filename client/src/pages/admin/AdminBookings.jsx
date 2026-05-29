@@ -5,7 +5,7 @@ import {
   Calendar, Clock, Search, Check, X, Filter, Trash2, Settings, 
   Plus, User, Phone, Info, Edit3, Save, RotateCcw, ChevronRight, 
   MapPin, Loader2, CalendarRange, Users, Hash, FileText, Sun, Sunrise,
-  AlertTriangle // 🔥 เพิ่มไอคอนแจ้งเตือนคิวซ้อน
+  AlertTriangle 
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -96,7 +96,6 @@ const AdminBookings = () => {
     }
   };
 
-  // 🔥 จุดแก้ไขหลักที่ 1: ดึงวันที่แบบปลอดภัยจาก Timezone Shift (Local Time)
   const openBookingDetail = async (booking) => {
     setSelectedBooking(booking);
     setAdminResponse(booking.admin_response || '');
@@ -107,12 +106,11 @@ const AdminBookings = () => {
 
     if (booking.booking_date) {
       try {
-        // ดึงค่า วัน/เดือน/ปี ตามเวลา Local ของเบราว์เซอร์แทนการ split ตัวอักษรตรงๆ
         const d = new Date(booking.booking_date);
         const year = d.getFullYear();
         const month = String(d.getMonth() + 1).padStart(2, '0');
         const day = String(d.getDate()).padStart(2, '0');
-        const cleanDate = `${year}-${month}-${day}`; // จะได้ "2026-05-28" แม่นยำ 100%
+        const cleanDate = `${year}-${month}-${day}`;
         
         const response = await monkAPI.getAvailableMonks(cleanDate);
         let resData = response.data?.data || response.data;
@@ -150,12 +148,10 @@ const AdminBookings = () => {
     }
   };
 
-  // 🔥 จุดแก้ไขหลักที่ 2: ปรับเงื่อนไขการห้ามกดเลือกคิวซ้อน
   const handleToggleMonk = (monkId) => {
     const requiredMonks = selectedBooking?.monks_count ?? selectedBooking?.monksCount ?? 0;
     const monkIdStr = String(monkId);
 
-    // ถ้าพระติดคิวงานอื่นอยู่ และ ไม่ได้ถูกเลือกไว้อยู่แล้วตั้งแต่แรก -> ห้ามแอดเพิ่มเข้ามาเด็ดขาด
     if (busyMonkIds.includes(monkIdStr) && !selectedMonkIds.includes(monkIdStr)) {
       toast.error('พระสงฆ์รูปนี้ติดคิวงานนิมนต์อื่นในวันดังกล่าวแล้ว');
       return;
@@ -369,48 +365,98 @@ const AdminBookings = () => {
 
                 {selectedBooking.note && <div className="p-6 bg-orange-50/50 rounded-3xl border border-orange-100/50 italic text-slate-600 text-sm">"{selectedBooking.note}"</div>}
 
-                {/* 🔥 จุดแก้ไขหลักที่ 3: ปรับปรุงโครงสร้าง UI คัดเลือกพระสงฆ์เพื่อป้องกัน UX ล็อคตัวเอง */}
+                {/* --- CUSTOM MULTI-SELECT DROPDOWN --- */}
                 {selectedBooking.status === 'pending' && (
                   <div className="space-y-3 pt-2">
                     <div className="flex justify-between items-end px-2">
-                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5"><Users size={12} /> จัดรายชื่อพระสงฆ์ไปปฏิบัติงาน</label>
-                      <span className={`text-xs font-black ${selectedMonkIds.length === (selectedBooking.monks_count ?? selectedBooking.monksCount ?? 0) ? 'text-emerald-500' : 'text-slate-400'}`}>เลือกแล้ว {selectedMonkIds.length} จาก {(selectedBooking.monks_count ?? selectedBooking.monksCount ?? 0)} รูป</span>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                        <Users size={12} /> จัดรายชื่อพระสงฆ์ไปปฏิบัติงาน
+                      </label>
+                      <span className={`text-xs font-black ${selectedMonkIds.length === (selectedBooking.monks_count ?? selectedBooking.monksCount ?? 0) ? 'text-emerald-500' : 'text-slate-400'}`}>
+                        เลือกแล้ว {selectedMonkIds.length} จาก {(selectedBooking.monks_count ?? selectedBooking.monksCount ?? 0)} รูป
+                      </span>
                     </div>
-                    
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 p-3 bg-slate-50 rounded-4xl border border-slate-100 max-h-48 overflow-y-auto no-scrollbar">
-                      {allMonks.map((monk) => {
-                        const monkIdStr = String(monk.id);
-                        const isSelected = selectedMonkIds.includes(monkIdStr);
-                        const isBusy = busyMonkIds.includes(monkIdStr);
-                        
-                        // เคสคิวซ้อน: มีรายชื่อค้างอยู่ในบิลนี้ แต่ดันไม่ว่างในระบบ ณ วันนั้นจริง ๆ
-                        const hasConflict = isBusy && isSelected; 
-                        // ดีสเอเบิ้ลเฉพาะคนไม่ว่าง และไม่ได้ถูกเลือกไว้แต่แรกเท่านั้น (เพื่อให้แอดมินกดคลิกเอาคนคิวซ้อนออกได้)
-                        const shouldDisable = isBusy && !isSelected; 
 
-                        return (
-                          <button
-                            key={monk.id}
-                            type="button"
-                            disabled={shouldDisable} 
-                            onClick={() => handleToggleMonk(monk.id)}
-                            className={`p-3.5 rounded-2xl font-bold text-sm transition-all flex items-center justify-between border ${
-                              shouldDisable
-                                ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-60' 
-                                : hasConflict
-                                  ? 'bg-red-50 text-red-600 border-red-300 animate-pulse shadow-sm shadow-red-100' // แจ้งเตือนกระพริบเมื่อคิวชนกัน
-                                  : isSelected 
-                                    ? 'bg-orange-500 text-white border-orange-500 shadow-md shadow-orange-500/20 active:scale-95' 
-                                    : 'bg-white text-slate-700 border-slate-200/60 hover:border-orange-300'
-                            }`}
-                          >
-                            <span className="truncate">{monk.name} {hasConflict ? '(คิวซ้อน!)' : isBusy ? '(ติดคิว)' : ''}</span>
-                            {isSelected && !hasConflict && <Check size={16} className="shrink-0 ml-1 text-white" />}
-                            {hasConflict && <AlertTriangle size={15} className="shrink-0 ml-1 text-red-500 animate-bounce" />}
-                            {shouldDisable && <X size={14} className="shrink-0 ml-1 text-slate-400" />}
-                          </button>
-                        );
-                      })}
+                    <div className="relative">
+                      <div className="w-full p-4 bg-slate-50 border border-slate-200/60 rounded-3xl flex flex-wrap gap-2 items-center min-h-14">
+                        {selectedMonkIds.length === 0 ? (
+                          <span className="text-slate-400 text-sm font-medium pl-2">เลือกรายชื่อพระสงฆ์...</span>
+                        ) : (
+                          selectedMonkIds.map(id => {
+                            const monk = allMonks.find(m => String(m.id) === id);
+                            const isBusy = busyMonkIds.includes(id);
+                            if (!monk) return null;
+                            return (
+                              <span 
+                                key={id} 
+                                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm ${
+                                  isBusy 
+                                    ? 'bg-red-50 text-red-600 border border-red-200 animate-pulse' 
+                                    : 'bg-orange-500 text-white'
+                                }`}
+                              >
+                                {monk.name} {isBusy && '(คิวซ้อน!)'}
+                                <button 
+                                  type="button" 
+                                  onClick={(e) => { e.stopPropagation(); handleToggleMonk(monk.id); }}
+                                  className={`p-0.5 rounded-full transition-colors ${isBusy ? 'hover:bg-red-100 text-red-500' : 'hover:bg-orange-600 text-white'}`}
+                                >
+                                  <X size={12} />
+                                </button>
+                              </span>
+                            );
+                          })
+                        )}
+                      </div>
+
+                      <div className="mt-2 w-full bg-white border border-slate-200/80 rounded-3xl shadow-xl shadow-slate-200/80 max-h-56 overflow-y-auto p-2 space-y-1 z-30 relative no-scrollbar">
+                        {allMonks.map((monk) => {
+                          const monkIdStr = String(monk.id);
+                          const isSelected = selectedMonkIds.includes(monkIdStr);
+                          const isBusy = busyMonkIds.includes(monkIdStr);
+                          
+                          const hasConflict = isBusy && isSelected; 
+                          const shouldDisable = isBusy && !isSelected; 
+
+                          return (
+                            <button
+                              key={monk.id}
+                              type="button"
+                              disabled={shouldDisable}
+                              onClick={() => handleToggleMonk(monk.id)}
+                              className={`w-full p-3.5 rounded-2xl font-bold text-sm transition-all flex items-center justify-between border ${
+                                hasConflict
+                                  ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100/50'
+                                  : isSelected
+                                    ? 'bg-orange-50 text-orange-600 border-orange-200 shadow-sm'
+                                    : shouldDisable
+                                      ? 'bg-slate-50 text-slate-300 border-transparent cursor-not-allowed opacity-50'
+                                      : 'bg-white text-slate-700 border-transparent hover:bg-slate-50 hover:border-slate-100'
+                              }`}
+                            >
+                              <div className="flex items-center gap-3 truncate">
+                                <div className={`w-5 h-5 rounded-lg border flex items-center justify-center shrink-0 transition-all ${
+                                  hasConflict
+                                    ? 'border-red-400 bg-white'
+                                    : isSelected 
+                                      ? 'bg-orange-500 border-orange-500 text-white' 
+                                      : 'border-slate-300 bg-white'
+                                }`}>
+                                  {isSelected && !hasConflict && <Check size={12} strokeWidth={3} />}
+                                  {hasConflict && <div className="w-2 h-2 rounded-full bg-red-500" />}
+                                </div>
+                                
+                                <span className="truncate">
+                                  {monk.name} <span className="text-xs font-normal text-slate-400 pl-1">{hasConflict ? '(คิวซ้อนกับงานอื่น)' : isBusy ? '(ติดคิวปฏิบัติงาน)' : ''}</span>
+                                </span>
+                              </div>
+
+                              {hasConflict && <AlertTriangle size={15} className="text-red-500 animate-bounce" />}
+                              {shouldDisable && <X size={14} className="text-slate-300" />}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
                 )}
