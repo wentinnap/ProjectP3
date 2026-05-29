@@ -84,7 +84,7 @@
 /* สภาพ 2: มีจองบ้าง (date-partial) -> โทนส้มละมุน */
 .react-calendar__tile.date-partial {
   background-color: #fff7ed !important; /* สีส้มอ่อนคลาสสิก */
-  color: #c2410c !important; /* ตัวเลขสีส้มอิฐเข้ม */
+  color: #fffc4e !important; /* ตัวเลขสีส้มอิฐเข้ม */
   border-color: #fed7aa !important;
 }
 .react-calendar__tile.date-partial:hover {
