@@ -185,11 +185,11 @@ const Booking = () => {
                 <div className="mt-8 grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
                   <div className="flex flex-col items-center gap-1">
                     <span className="w-8 h-2 bg-green-400 rounded-full"></span>
-                    <span className="text-xs font-bold text-gray-500">ว่างมาก</span>
+                    <span className="text-xs font-bold text-gray-500">ว่าง</span>
                   </div>
                   <div className="flex flex-col items-center gap-1">
                     <span className="w-8 h-2 bg-orange-400 rounded-full"></span>
-                    <span className="text-xs font-bold text-gray-500">มีจองบ้าง</span>
+                    <span className="text-xs font-bold text-gray-500">มีจอง/ยังไม่เต็ม</span>
                   </div>
                   <div className="flex flex-col items-center gap-1">
                     <span className="w-8 h-2 bg-red-400 rounded-full"></span>
