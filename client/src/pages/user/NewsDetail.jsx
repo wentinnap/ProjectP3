@@ -1,25 +1,17 @@
 import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-// ✅ 1. นำเข้า toAssetUrl จากไฟล์ api
 import { newsAPI, toAssetUrl } from "../../services/api";
-import { Clock, Eye, User, ArrowLeft, Share2, Sparkles } from "lucide-react";
+import { Clock, Eye, User, ArrowLeft, Share2, Sparkles, CalendarDays } from "lucide-react";
 import Navbar from "../../components/layout/Navbar";
+import Footer from "../../components/layout/Footer"; // นำเข้า Footer เรียบร้อย
+import { motion } from "framer-motion";
+import { toast } from "react-toastify";
 
 const NewsDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [news, setNews] = useState(null);
   const [loading, setLoading] = useState(true);
-
-  // ❌ ลบส่วนที่เขียนเองออกให้หมดเลยครับ เพราะเราจะใช้ toAssetUrl แทน
-  /*
-  const SERVER_URL = import.meta.env.VITE_SERVER_URL || "http://localhost:5000";
-  const getImageSrc = (url) => {
-    if (!url) return "";
-    if (url.startsWith("http://") || url.startsWith("https://")) return url;
-    return `${SERVER_URL}${url}`;
-  };
-  */
 
   useEffect(() => {
     fetchNewsDetail();
@@ -46,18 +38,24 @@ const NewsDetail = () => {
       year: "numeric",
       month: "long",
       day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
     });
+  };
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success("คัดลอกลิงก์ไปยังคลิปบอร์ดแล้ว!");
   };
 
   if (loading) {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-          <div className="w-16 h-16 border-4 border-orange-200 border-t-orange-500 rounded-full animate-spin mb-4"></div>
-          <p className="text-gray-500 animate-pulse">กำลังโหลดเนื้อหา...</p>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-[#FDFBF7]">
+          <div className="relative flex items-center justify-center">
+            <div className="w-16 h-16 border-4 border-orange-100 border-t-orange-500 rounded-full animate-spin"></div>
+            <div className="absolute w-8 h-8 bg-orange-500/10 rounded-full animate-pulse"></div>
+          </div>
+          <p className="text-orange-800/60 font-medium mt-4 animate-pulse tracking-wide text-sm">กำลังเปิดอ่านข่าวสาร...</p>
         </div>
       </>
     );
@@ -65,119 +63,147 @@ const NewsDetail = () => {
 
   if (!news) return null;
 
-  // ✅ 2. เรียกใช้ toAssetUrl แทน
   const heroImg = toAssetUrl(news.image_url);
 
   return (
-    <>
+    <div className="min-h-screen flex flex-col bg-[#FAF8F5]">
       <Navbar />
-      <div className="min-h-screen bg-gray-50 font-sans pb-20 pt-24">
-        {/* Hero / Header Image Section */}
-        <div className="relative h-[400px] md:h-[500px] w-full overflow-hidden">
-          {heroImg ? (
-            <img src={heroImg} alt={news.title} className="w-full h-full object-cover" />
-          ) : (
-            <div className="w-full h-full bg-linear-to-br from-orange-100 to-amber-50 flex items-center justify-center">
-              <div className="text-center opacity-20">
-                <div className="text-9xl font-bold text-orange-900">ว</div>
-              </div>
+      
+      {/* Main Content Area */}
+      <main className="grow pt-24 pb-24">
+        {/* Breadcrumb Navigation */}
+        <div className="container mx-auto px-4 max-w-4xl mb-6">
+          <Link
+            to="/news"
+            className="inline-flex items-center gap-2 text-gray-500 hover:text-orange-600 transition-colors group text-sm font-semibold"
+          >
+            <div className="w-8 h-8 rounded-full bg-white border border-gray-100 shadow-xs group-hover:bg-orange-50 group-hover:border-orange-100 flex items-center justify-center transition-colors">
+              <ArrowLeft size={15} className="group-hover:-translate-x-0.5 transition-transform" />
             </div>
-          )}
+            <span>กลับไปหน้าข่าวสาร</span>
+          </Link>
+        </div>
 
-          {/* Gradient Overlay */}
-          <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/30 to-transparent"></div>
+        <div className="container mx-auto px-4 max-w-4xl">
+          {/* Header Card (Title & Meta) */}
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-3xl border border-gray-100/80 p-6 md:p-8 shadow-xs mb-8"
+          >
+            <div className="inline-flex items-center gap-1.5 bg-orange-50 border border-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold mb-4 shadow-2xs">
+              <Sparkles size={12} className="animate-pulse" />
+              <span>ข่าวประชาสัมพันธ์</span>
+            </div>
 
-          {/* Content Over Image (Mobile/Tablet) */}
-          <div className="absolute bottom-0 left-0 w-full p-6 md:p-12 text-white z-10">
-            <div className="container mx-auto max-w-4xl">
-              <div className="inline-flex items-center gap-2 bg-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold mb-4 shadow-lg shadow-orange-500/30">
-                <Sparkles size={12} />
-                <span>ข่าวประชาสัมพันธ์</span>
-              </div>
-              <h1 className="text-3xl md:text-5xl font-bold leading-tight mb-4 drop-shadow-md">
-                {news.title}
-              </h1>
-              <div className="flex flex-wrap items-center gap-4 text-sm md:text-base text-gray-200 font-medium">
+            <h1 className="text-2xl md:text-4xl font-black text-gray-800 leading-tight mb-6">
+              {news.title}
+            </h1>
+
+            {/* Meta Information Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-gray-50 text-sm text-gray-500">
+              <div className="flex flex-wrap items-center gap-y-2 gap-x-4">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30">
+                  <div className="w-7 h-7 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center">
                     <User size={14} />
                   </div>
-                  <span>{news.author_name}</span>
+                  <span className="font-semibold text-gray-700">{news.author_name || "ผู้ดูแลระบบ"}</span>
                 </div>
-                <div className="w-1 h-1 bg-white/50 rounded-full"></div>
-                <div className="flex items-center gap-2">
-                  <Clock size={16} />
+                <div className="flex items-center gap-1.5 text-gray-400">
+                  <CalendarDays size={15} />
                   <span>{formatDate(news.created_at)}</span>
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Main Content Container */}
-        <div className="container mx-auto px-4 -mt-10 relative z-20">
-          <div className="max-w-4xl mx-auto">
-            {/* Content Card */}
-            <article className="bg-white rounded-4xl shadow-xl p-8 md:p-12">
-              {/* Meta Bar */}
-              <div className="flex justify-between items-center border-b border-gray-100 pb-6 mb-8">
-                <Link
-                  to="/news"
-                  className="inline-flex items-center gap-2 text-gray-500 hover:text-orange-600 transition-colors group"
-                >
-                  <div className="w-8 h-8 rounded-full bg-gray-100 group-hover:bg-orange-50 flex items-center justify-center transition-colors">
-                    <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" />
-                  </div>
-                  <span className="font-medium text-sm">กลับไปหน้าข่าวสาร</span>
-                </Link>
-
-                <div className="flex items-center gap-4 text-gray-400 text-sm">
-                  <div className="flex items-center gap-1.5" title="จำนวนผู้เข้าชม">
-                    <Eye size={16} />
-                    <span>{Number(news.view_count || 0).toLocaleString()}</span>
-                  </div>
-                  <button className="flex items-center gap-1.5 hover:text-orange-500 transition-colors" title="แชร์">
-                    <Share2 size={16} />
-                  </button>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-xl text-gray-500" title="จำนวนผู้เข้าชม">
+                  <Eye size={15} />
+                  <span className="font-bold text-xs">{Number(news.view_count || 0).toLocaleString()}</span>
                 </div>
-              </div>
-
-              {/* Body Content */}
-              <div className="prose prose-lg max-w-none prose-headings:text-gray-800 prose-p:text-gray-600 prose-a:text-orange-600 hover:prose-a:text-orange-700 prose-img:rounded-2xl">
-                <div className="whitespace-pre-wrap leading-relaxed">{news.content}</div>
-              </div>
-
-              {/* Footer / Last Updated */}
-              {news.updated_at !== news.created_at && (
-                <div className="mt-12 pt-6 border-t border-gray-100 flex items-center gap-2 text-sm text-gray-400 italic">
-                  <Clock size={14} />
-                  <span>แก้ไขล่าสุดเมื่อ: {formatDate(news.updated_at)}</span>
-                </div>
-              )}
-            </article>
-
-            {/* Bottom Navigation */}
-            <div className="mt-12 text-center">
-              <p className="text-gray-500 mb-6 text-sm">สนใจเข้าร่วมกิจกรรมหรือมีข้อสงสัย?</p>
-              <div className="flex justify-center gap-4">
-                <Link
-                  to="/contact"
-                  className="px-6 py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm"
+                <button 
+                  onClick={handleShare}
+                  className="flex items-center justify-center w-8 h-8 rounded-xl bg-gray-50 border border-gray-100 hover:bg-orange-50 hover:border-orange-100 hover:text-orange-600 transition-colors cursor-pointer" 
+                  title="คัดลอกลิงก์แชร์ข่าว"
                 >
-                  ติดต่อสอบถาม
-                </Link>
-                <Link
-                  to="/booking"
-                  className="px-6 py-3 bg-linear-to-r from-orange-500 to-amber-500 text-white font-bold rounded-xl hover:shadow-lg hover:shadow-orange-500/30 hover:-translate-y-0.5 transition-all"
-                >
-                  จองพิธีกรรม
-                </Link>
+                  <Share2 size={15} />
+                </button>
               </div>
             </div>
-          </div>
+          </motion.div>
+
+          {/* Hero Banner Image */}
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1 }}
+            className="w-full h-[260px] sm:h-[380px] md:h-[460px] rounded-3xl overflow-hidden shadow-md shadow-orange-900/5 mb-8 border border-white"
+          >
+            {heroImg ? (
+              <img src={heroImg} alt={news.title} className="w-full h-full object-cover object-center hover:scale-102 transition-transform duration-700" />
+            ) : (
+              <div className="w-full h-full bg-linear-to-br from-orange-100 to-amber-50 flex items-center justify-center">
+                <span className="text-8xl font-black text-orange-900/10">ข่าวสาร</span>
+              </div>
+            )}
+          </motion.div>
+
+          {/* Content Body */}
+          <motion.article 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-3xl border border-gray-100/80 shadow-xs p-8 md:p-12 mb-12"
+          >
+            <div className="prose prose-orange max-w-none">
+              <p className="whitespace-pre-wrap leading-loose text-gray-600 text-base md:text-lg tracking-wide font-normal">
+                {news.content}
+              </p>
+            </div>
+
+            {/* Last Updated Label */}
+            {news.updated_at !== news.created_at && (
+              <div className="mt-12 pt-6 border-t border-gray-100 flex items-center gap-2 text-xs text-gray-400 font-medium italic">
+                <Clock size={13} />
+                <span>แก้ไขข้อมูลล่าสุดเมื่อ: {formatDate(news.updated_at)}</span>
+              </div>
+            )}
+          </motion.article>
+
+          {/* Bottom Action Cards (CTA) */}
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="bg-linear-to-br from-orange-900 to-amber-950 rounded-3xl p-8 text-center shadow-lg shadow-orange-950/20 relative overflow-hidden text-white"
+          >
+            {/* Background Decorative Circles */}
+            <div className="absolute -top-12 -right-12 w-40 h-40 bg-white/5 rounded-full blur-xl pointer-events-none"></div>
+            <div className="absolute -bottom-12 -left-12 w-40 h-40 bg-orange-500/10 rounded-full blur-xl pointer-events-none"></div>
+
+            <p className="text-orange-200/90 text-sm font-semibold tracking-wider uppercase mb-2">สนใจเข้าร่วมกิจกรรมหรือมีข้อสงสัย?</p>
+            <h3 className="text-xl md:text-2xl font-black mb-6 text-amber-100">ติดต่อสอบถาม หรือ จองคิวล่วงหน้าได้ทันที</h3>
+            
+            <div className="flex flex-wrap justify-center gap-3">
+              <Link
+                to="/contact"
+                className="px-6 py-3 bg-white/10 hover:bg-white/15 border border-white/20 text-white font-bold rounded-xl transition-all shadow-2xs text-sm"
+              >
+                ติดต่อสอบถาม
+              </Link>
+              <Link
+                to="/booking"
+                className="px-6 py-3 bg-linear-to-r from-orange-500 to-amber-500 text-white font-black rounded-xl hover:shadow-lg hover:shadow-orange-500/20 hover:-translate-y-0.5 transition-all text-sm"
+              >
+                จองคิวพิธีสงฆ์
+              </Link>
+            </div>
+          </motion.div>
         </div>
-      </div>
-    </>
+      </main>
+
+      {/* 🌟 วาง Footer ไว้ด้านล่างสุดของเว็บเรียบร้อยครับ */}
+      <Footer />
+    </div>
   );
 };
 
