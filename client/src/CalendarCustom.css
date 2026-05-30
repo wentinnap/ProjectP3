@@ -1,5 +1,5 @@
 /* ==========================================================================
-   CalendarCustom.css (ฉบับปรับปรุงความคมชัดระดับ Premium Luxury)
+   CalendarCustom.css (ฉบับเน้นความต่างของสีชัดเจน อ่านง่าย 100%)
    ========================================================================== */
 
 /* 1. โครงสร้างหลักของปฏิทิน */
@@ -23,14 +23,14 @@
   background: none !important;
   font-size: 1.1rem !important;
   font-weight: 900 !important;
-  color: #1e293b !important; /* สี slate-800 เข้มชัดเจน */
+  color: #1e293b !important;
   border-radius: 16px !important;
   transition: all 0.2s ease !important;
 }
 
 .react-calendar__navigation button:enabled:hover,
 .react-calendar__navigation button:enabled:focus {
-  background-color: #f1f5f9 !important; /* ไฮไลท์ตอนชี้ */
+  background-color: #f1f5f9 !important;
 }
 
 /* 3. แถบชื่อวัน (จันทร์ - อาทิตย์) */
@@ -41,9 +41,8 @@
   padding-bottom: 0.75rem !important;
 }
 
-/* ปรับสีตัวอักษรวันหยุดและวันธรรมดาให้สอดคล้องกับธีมส้ม */
 .react-calendar__month-view__weekdays__weekday {
-  color: #ea580c !important; /* สีส้มเข้มเพื่อให้เห็นชัด */
+  color: #ea580c !important; /* สีส้มหัวข้อวัน */
 }
 
 .react-calendar__month-view__weekdays__weekday abbr {
@@ -55,11 +54,11 @@
 .react-calendar__tile {
   max-width: 100% !important;
   padding: 16px 10px !important;
-  background: none !important;
+  background: #f8fafc !important; /* ปรับพื้นหลังตั้งต้นเป็นสีเทาอ่อนมาก เพื่อให้สีสถานะเด้งเด่นออกมา */
   text-align: center !important;
-  font-weight: 800 !important; /* ปรับฟอนต์หนาให้ตัวเลขชัดเจน */
+  font-weight: 800 !important;
   font-size: 1rem !important;
-  color: #1e293b !important; /* บังคับตัวอักษรสีเข้มเสมอกันจาง */
+  color: #334155 !important;
   border-radius: 20px !important;
   margin: 6px 0 !important;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -67,68 +66,75 @@
 }
 
 /* ==========================================================================
-   แยกสีตามสถานะคิวงาน (Custom Classes จากเจตจำนงในตัวโค้ด)
+   แยกสีตามสถานะคิวงาน (ปรับปรุงเฉดสีให้ Contrast สูงขึ้น)
    ========================================================================== */
 
-/* สภาพ 1: ว่างมาก (date-available) -> โทนเขียวคมชัด */
+/* สภาพ 1: ว่างมาก (date-available) -> เขียวชัดเจนเข้มข้น */
 .react-calendar__tile.date-available {
-  background-color: #f0fdf4 !important; /* สีเขียวอ่อนสะอาด */
-  color: #15803d !important; /* ตัวเลขสีเขียวเข้มอ่านง่ายมาก */
-  border-color: #bbf7d0 !important;
+  background-color: #e6f4ea !important; /* เขียวพาสเทลเข้มขึ้นเล็กน้อย */
+  color: #137333 !important; /* สีตัวเลขเขียวเข้มอ่านง่าย */
+  border-color: #c4eed0 !important;
 }
 .react-calendar__tile.date-available:hover {
-  background-color: #dcfce7 !important;
+  background-color: #34a853 !important;
+  color: #ffffff !important;
   transform: translateY(-2px);
 }
 
-/* สภาพ 2: มีจองบ้าง (date-partial) -> โทนส้มละมุน */
+/* สภาพ 2: มีจองบ้าง (date-partial) -> แก้ไขสีตัวอักษรจากเหลืองเป็นส้มเข้ม */
 .react-calendar__tile.date-partial {
-  background-color: #fff7ed !important; /* สีส้มอ่อนคลาสสิก */
-  color: #fffc4e !important; /* ตัวเลขสีส้มอิฐเข้ม */
-  border-color: #fed7aa !important;
+  background-color: #feeed6 !important; /* พื้นหลังส้มครีม */
+  color: #b06000 !important; /* เปลี่ยนเป็นสีน้ำตาล/ส้มอิฐเข้ม (อ่านออกแน่นอน) */
+  border-color: #fad291 !important;
 }
 .react-calendar__tile.date-partial:hover {
-  background-color: #ffedd5 !important;
+  background-color: #f9ab26 !important;
+  color: #ffffff !important;
   transform: translateY(-2px);
 }
 
-/* สภาพ 3: เต็ม/งดรับ (date-full) -> โทนแดงห้ามจอง */
+/* สภาพ 3: เต็ม/งดรับ (date-full) -> แดงเด่นชัด */
 .react-calendar__tile.date-full {
-  background-color: #fef2f2 !important; /* สีแดงอ่อนแจ้งเตือน */
-  color: #b91c1c !important; /* ตัวเลขสีแดงเข้มดุดัน */
-  border-color: #fecaca !important;
-  cursor: not-allowed !important;
+  background-color: #fce8e6 !important; /* พื้นแดงอ่อน */
+  color: #c5221f !important; /* ตัวเลขแดงเข้ม */
+  border-color: #fad2cf !important;
+}
+.react-calendar__tile.date-full:hover {
+  background-color: #ea4335 !important;
+  color: #ffffff !important;
+  transform: translateY(-2px);
 }
 
-/* สภาพ 4: วันในอดีต หรือ วันที่ Disabled */
-.react-calendar__tile.past-date,
+/* สภาพ 4: วันที่ปิดใช้งานจริงๆ (เช่น วันที่ระบบไม่เอาเลย) */
 .react-calendar__tile:disabled {
-  background-color: #f8fafc !important;
-  color: #cbd5e1 !important; /* สีเทาจางสำหรับอดีตที่เลือกไม่ได้ */
+  background-color: #f1f5f9 !important;
+  color: #94a3b8 !important;
   border-color: transparent !important;
   cursor: not-allowed !important;
   pointer-events: none !important;
-  opacity: 0.4;
+}
+
+/* วันต่างเดือน (Neighboring Month) ให้จางลงไป */
+.react-calendar__month-view__days__day--neighboringMonth {
+  color: #cbd5e1 !important;
+  opacity: 0.2 !important;
+  background: none !important;
+  border-color: transparent !important;
 }
 
 /* ==========================================================================
-   สถานะ ACTIVE (วันที่ยูสเซอร์กำลังคลิกเลือกอยู่ปัจจุบัน) -> ต้องเด่นที่สุด!
+   สถานะ ACTIVE (วันที่ยูสเซอร์กำลังเลือก)
    ========================================================================== */
 .react-calendar__tile--active,
 .react-calendar__tile--active:enabled:hover,
 .react-calendar__tile--active:enabled:focus {
-  background: linear-gradient(135deg, #f97316, #ea580c) !important; /* ส้ม Gradient ประจำแบรนด์ */
-  color: #ffffff !important; /* ตัวอักษรสีขาวตัดกับพื้นหลัง */
+  background: linear-gradient(135deg, #f97316, #ea580c) !important;
+  color: #ffffff !important;
   border-color: #ea580c !important;
-  box-shadow: 0 12px 20px -4px rgba(234, 88, 12, 0.35) !important;
+  box-shadow: 0 8px 16px -4px rgba(234, 88, 12, 0.4) !important;
   transform: scale(1.05) translateY(-2px) !important;
 }
 
-/* ซ่อนสไตล์ขอบประหลาดๆ ของ Default Calendar */
 .react-calendar__tile:enabled:focus {
   background-color: transparent;
-}
-.react-calendar__month-view__days__day--neighboringMonth {
-  color: #cbd5e1 !important;
-  opacity: 0.3 !important;
 }
