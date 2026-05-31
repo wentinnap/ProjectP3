@@ -20,6 +20,9 @@ const Profile = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
+  
+  // ✨ 1. เพิ่ม State สำหรับจัดการ Loading เฉพาะปุ่มที่ถูกกดยกเลิก
+  const [cancelLoadingId, setCancelLoadingId] = useState(null);
 
   /* =========================
      FETCH WHEN USER READY
@@ -42,16 +45,37 @@ const Profile = () => {
         response?.data ||
         [];
 
-      const safeBookings = Array.isArray(rawBookings)
-        ? rawBookings.filter((b) => b.status !== "cancelled")
-        : [];
-
-      setBookings(safeBookings);
+      // ✨ 2. เอา filter('cancelled') ออก เพื่อให้แสดงสถานะยกเลิกได้
+      setBookings(Array.isArray(rawBookings) ? rawBookings : []);
     } catch (error) {
       console.error("Failed to fetch bookings:", error);
       setBookings([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  /* =========================
+     HANDLE CANCEL BOOKING (เพิ่มใหม่)
+  ========================= */
+  const handleCancelBooking = async (bookingId) => {
+    const isConfirm = window.confirm("คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการจองนี้?");
+    if (!isConfirm) return;
+
+    try {
+      setCancelLoadingId(bookingId);
+      
+      const response = await bookingAPI.cancelBooking(bookingId);
+      
+      if (response.data.success) {
+        alert("ยกเลิกการจองสำเร็จ");
+        fetchUserBookings(); // โหลดข้อมูลใหม่
+      }
+    } catch (error) {
+      console.error("Cancel booking error:", error);
+      alert(error.response?.data?.message || "เกิดข้อผิดพลาดในการยกเลิกการจอง");
+    } finally {
+      setCancelLoadingId(null);
     }
   };
 
@@ -101,6 +125,12 @@ const Profile = () => {
         bg: "bg-red-50 text-red-700 border-red-200",
         icon: XCircle,
         label: "ถูกปฏิเสธ",
+      },
+      // ✨ 3. เพิ่มรูปแบบ Badge สำหรับสถานะยกเลิก
+      cancelled: { 
+        bg: "bg-gray-50 text-gray-500 border-gray-200",
+        icon: XCircle,
+        label: "ยกเลิกแล้ว",
       },
     };
 
@@ -184,6 +214,7 @@ const Profile = () => {
                 { id: "pending", label: "รอตอบรับ" },
                 { id: "approved", label: "อนุมัติแล้ว" },
                 { id: "rejected", label: "ปฏิเสธ" },
+                { id: "cancelled", label: "ยกเลิกแล้ว" }, // ✨ 4. เพิ่มแท็บยกเลิกแล้ว
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -214,7 +245,7 @@ const Profile = () => {
                     >
                       <div className="flex justify-between flex-wrap gap-4">
                         <div>
-                          <h3 className="text-lg font-black">
+                          <h3 className="text-lg font-black mb-2">
                             {booking.booking_type_name}
                           </h3>
                           {getStatusBadge(booking.status)}
@@ -222,15 +253,35 @@ const Profile = () => {
 
                         <div className="text-right text-sm">
                           <div>{formatDate(booking.booking_date)}</div>
-                          <div className="text-orange-600 font-bold">
+                          <div className="text-orange-600 font-bold mt-1">
                             {formatTime(booking.booking_time)} น.
                           </div>
                         </div>
                       </div>
 
                       {booking.admin_response && (
-                        <div className="mt-4 text-sm text-gray-600">
-                          "{booking.admin_response}"
+                        <div className="mt-4 p-3 bg-gray-50 rounded-lg text-sm text-gray-600 border border-gray-100">
+                          <span className="font-bold text-gray-700">หมายเหตุจากวัด:</span> {booking.admin_response}
+                        </div>
+                      )}
+
+                      {/* ✨ 5. ปุ่มยกเลิกการจอง (แสดงเฉพาะตอนรอตอบรับ) */}
+                      {booking.status === "pending" && (
+                        <div className="flex justify-end border-t border-gray-50 pt-4 mt-4">
+                          <button
+                            onClick={() => handleCancelBooking(booking.id)}
+                            disabled={cancelLoadingId === booking.id}
+                            className="inline-flex items-center gap-2 px-4 py-2 border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-50 rounded-xl text-xs font-bold transition cursor-pointer"
+                          >
+                            {cancelLoadingId === booking.id ? (
+                              <>
+                                <div className="w-3 h-3 border-2 border-red-200 border-t-red-600 rounded-full animate-spin"></div>
+                                กำลังยกเลิก...
+                              </>
+                            ) : (
+                              "ยกเลิกการจอง"
+                            )}
+                          </button>
                         </div>
                       )}
                     </div>
@@ -245,7 +296,7 @@ const Profile = () => {
 
                   <Link
                     to="/booking"
-                    className="inline-block mt-6 bg-orange-500 text-white px-6 py-3 rounded-xl font-bold"
+                    className="inline-block mt-6 bg-orange-500 text-white px-6 py-3 rounded-xl font-bold transition hover:bg-orange-600 hover:shadow-md"
                   >
                     จองพิธีใหม่
                   </Link>
