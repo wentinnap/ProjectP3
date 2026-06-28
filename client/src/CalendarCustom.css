@@ -54,7 +54,7 @@
 /* ========== สถานะ: มีจอง/ยังไม่เต็ม (ส้ม) ========== */
 .react-calendar__tile.date-partial {
   background: #fff7ed !important;
-  border-color: #fdba74 !important;
+  border-color: #ffee00 !important;
   color: #9a3412 !important;
 }
 
@@ -64,7 +64,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #f97316;
+  background: #ffee00;
   margin: 3px auto 0;
 }
 
