@@ -106,6 +106,21 @@ const Booking = () => {
     }
   };
 
+  // ✅ จุดสถานะใต้ตัวเลขวันที่ แทนพื้นหลังทึบ
+  const getTileContent = ({ date, view }) => {
+    if (view !== 'month') return null;
+    const dateStr = date.toLocaleDateString('sv-SE');
+    const today = new Date().setHours(0,0,0,0);
+    if (date < today) return null;
+
+    const used = busyDates[dateStr]?.used || 0;
+    let dotClass = 'tile-dot-available';
+    if (used >= maxMonks) dotClass = 'tile-dot-full';
+    else if (used > 0) dotClass = 'tile-dot-partial';
+
+    return <span className={`tile-dot ${dotClass}`}></span>;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (parseInt(formData.monks_count) > availableCount) return toast.error('จำนวนพระไม่พอสำหรับช่วงเวลานี้');
@@ -176,23 +191,24 @@ const Booking = () => {
                   <Calendar 
                     onChange={handleDateChange} 
                     tileClassName={getTileClassName} 
+                    tileContent={getTileContent}
                     onActiveStartDateChange={({ activeStartDate }) => fetchMonthlyStatus(activeStartDate)} 
                     minDate={new Date()}
                     className="border-none w-full"
                   />
                 </div>
 
-                <div className="mt-8 grid grid-cols-3 gap-4 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="w-8 h-2 bg-green-400 rounded-full"></span>
+                <div className="mt-8 flex justify-center gap-6 p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
                     <span className="text-xs font-bold text-gray-500">ว่าง</span>
                   </div>
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="w-8 h-2 bg-orange-400 rounded-full"></span>
-                    <span className="text-xs font-bold text-gray-500">มีจอง/ยังไม่เต็ม</span>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+                    <span className="text-xs font-bold text-gray-500">มีจองบางส่วน</span>
                   </div>
-                  <div className="flex flex-col items-center gap-1">
-                    <span className="w-8 h-2 bg-red-400 rounded-full"></span>
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-red-400"></span>
                     <span className="text-xs font-bold text-gray-500">เต็ม/งดรับ</span>
                   </div>
                 </div>
