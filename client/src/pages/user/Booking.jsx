@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import "../../CalendarCustom.css";
-import { Clock, Users, Phone, Info, CheckCircle, MapPin, Sun, Sunrise, User, FileText } from 'lucide-react';
+import { Clock, Users, Phone, Info, CheckCircle, MapPin, Sun, Sunrise, User, FileText, Lock, Sparkles } from 'lucide-react';
 import Navbar from "../../components/layout/Navbar";
 import Footer from "../../components/layout/Footer"; // นำเข้า Footer เรียบร้อย
 import { motion } from 'framer-motion';
@@ -82,6 +82,12 @@ const Booking = () => {
     fetchMonthlyStatus(new Date());
   }, []);
 
+  const isDateFull = (date) => {
+    const dateStr = date.toLocaleDateString('sv-SE');
+    const used = busyDates[dateStr]?.used || 0;
+    return used >= maxMonks;
+  };
+
   const handleDateChange = (date) => {
     const dateStr = date.toLocaleDateString('sv-SE');
     setSelectedPeriod('');
@@ -106,19 +112,11 @@ const Booking = () => {
     }
   };
 
-  // ✅ จุดสถานะใต้ตัวเลขวันที่ แทนพื้นหลังทึบ
-  const getTileContent = ({ date, view }) => {
-    if (view !== 'month') return null;
-    const dateStr = date.toLocaleDateString('sv-SE');
-    const today = new Date().setHours(0,0,0,0);
-    if (date < today) return null;
-
-    const used = busyDates[dateStr]?.used || 0;
-    let dotClass = 'tile-dot-available';
-    if (used >= maxMonks) dotClass = 'tile-dot-full';
-    else if (used > 0) dotClass = 'tile-dot-partial';
-
-    return <span className={`tile-dot ${dotClass}`}></span>;
+  const getTileDisabled = ({ date, view }) => {
+    if (view !== 'month') return false;
+    const today = new Date().setHours(0, 0, 0, 0);
+    if (date < today) return true;
+    return isDateFull(date);
   };
 
   const handleSubmit = async (e) => {
@@ -146,6 +144,9 @@ const Booking = () => {
   };
 
   const currentSubSlots = timeSlots.find(p => p.id === selectedPeriod)?.slots || [];
+
+  const selectedDateUsed = formData.booking_date ? (busyDates[formData.booking_date]?.used || 0) : 0;
+  const selectedDateIsFull = formData.booking_date ? selectedDateUsed >= maxMonks : false;
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FDFBF7]">
@@ -191,25 +192,25 @@ const Booking = () => {
                   <Calendar 
                     onChange={handleDateChange} 
                     tileClassName={getTileClassName} 
-                    tileContent={getTileContent}
+                    tileDisabled={getTileDisabled}
                     onActiveStartDateChange={({ activeStartDate }) => fetchMonthlyStatus(activeStartDate)} 
                     minDate={new Date()}
                     className="border-none w-full"
                   />
                 </div>
 
-                <div className="mt-8 flex justify-center gap-6 p-4 bg-gray-50 rounded-2xl border border-gray-100">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                    <span className="text-xs font-bold text-gray-500">ว่าง</span>
+                <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span className="text-xs font-bold text-emerald-700">ว่าง</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
-                    <span className="text-xs font-bold text-gray-500">มีจองบางส่วน</span>
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50 border border-amber-100">
+                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                    <span className="text-xs font-bold text-amber-700">มีจองบางส่วน</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-400"></span>
-                    <span className="text-xs font-bold text-gray-500">เต็ม/งดรับ</span>
+                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-rose-50 border border-rose-100">
+                    <Lock size={11} className="text-rose-600" />
+                    <span className="text-xs font-bold text-rose-700">เต็ม/กดไม่ได้</span>
                   </div>
                 </div>
               </div>
@@ -225,20 +226,34 @@ const Booking = () => {
                 <form onSubmit={handleSubmit} className="space-y-5">
                   
                   {/* สถานะการเลือกปัจจุบัน */}
-                  <div className="bg-linear-to-r from-orange-50 to-orange-100 p-5 rounded-3xl border border-orange-200">
-                    <div className="flex justify-between items-start mb-2">
-                      <p className="text-xs font-bold text-orange-600 uppercase tracking-wider">ข้อมูลที่เลือก</p>
-                      <Info size={16} className="text-orange-400" />
+                  <div className="relative overflow-hidden bg-linear-to-br from-orange-500 via-orange-500 to-amber-600 p-6 rounded-3xl shadow-lg shadow-orange-300/40">
+                    <Sparkles size={80} className="absolute -right-4 -top-4 text-white/10" />
+                    <div className="relative flex justify-between items-start mb-2">
+                      <p className="text-xs font-bold text-orange-100 uppercase tracking-wider">ข้อมูลที่เลือก</p>
+                      <Info size={16} className="text-orange-200" />
                     </div>
-                    <h3 className="text-xl font-black text-gray-800">
+                    <h3 className="relative text-xl font-black text-white">
                       {formData.booking_date ? new Date(formData.booking_date).toLocaleDateString('th-TH', { dateStyle: 'long' }) : 'โปรดเลือกวันที่'}
                     </h3>
+
+                    {/* สถานะระดับวัน: ว่าง / เต็มแล้ว */}
+                    {formData.booking_date && (
+                      <div className="relative mt-3">
+                        <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold backdrop-blur-sm ${
+                          selectedDateIsFull ? 'bg-rose-900/30 text-rose-50 ring-1 ring-white/20' : 'bg-white/20 text-white ring-1 ring-white/30'
+                        }`}>
+                          {selectedDateIsFull ? <Lock size={12} /> : <CheckCircle size={12} />}
+                          {selectedDateIsFull ? 'วันนี้เต็มแล้ว' : `วันนี้ว่าง · จองแล้ว ${selectedDateUsed}/${maxMonks} รูป`}
+                        </div>
+                      </div>
+                    )}
+
                     {formData.booking_time && availableCount !== null && (
-                      <div className="mt-3 flex items-center gap-2">
-                        <div className={`px-3 py-1 rounded-full text-xs font-bold ${availableCount > 0 ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+                      <div className="relative mt-3 flex items-center gap-2 flex-wrap">
+                        <div className={`px-3 py-1.5 rounded-full text-xs font-bold ${availableCount > 0 ? 'bg-white text-emerald-600' : 'bg-rose-900/40 text-rose-50 ring-1 ring-white/20'}`}>
                           {availableCount > 0 ? `พระว่าง ${availableCount} รูป` : 'เวลานี้เต็มแล้ว'}
                         </div>
-                        <span className="text-xs text-gray-500 font-bold">
+                        <span className="text-xs text-orange-50 font-bold">
                           เวลา {formData.booking_time} น. ({selectedPeriod === 'morning' ? 'รอบเช้า' : 'รอบเพล/บ่าย'})
                         </span>
                       </div>
