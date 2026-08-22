@@ -107,7 +107,6 @@ const Booking = () => {
       if (date < today) return 'past-date';
       const used = busyDates[dateStr]?.used || 0;
       if (used >= maxMonks) return 'date-full';
-      if (used > 0) return 'date-partial';
       return 'date-available';
     }
   };
@@ -199,17 +198,13 @@ const Booking = () => {
                   />
                 </div>
 
-                <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-50 border border-emerald-100">
+                <div className="mt-8 flex items-center justify-center gap-4">
+                  <div className="flex items-center gap-2 px-5 py-2 rounded-full bg-emerald-50 border border-emerald-200">
                     <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
                     <span className="text-xs font-bold text-emerald-700">ว่าง</span>
                   </div>
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-amber-50 border border-amber-100">
-                    <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                    <span className="text-xs font-bold text-amber-700">มีจองบางส่วน</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-rose-50 border border-rose-100">
-                    <Lock size={11} className="text-rose-600" />
+                  <div className="flex items-center gap-2 px-5 py-2 rounded-full bg-rose-50 border border-rose-200">
+                    <Lock size={11} className="text-rose-500" />
                     <span className="text-xs font-bold text-rose-700">เต็ม/กดไม่ได้</span>
                   </div>
                 </div>

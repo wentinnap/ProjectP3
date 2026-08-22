@@ -1,42 +1,76 @@
-/* --- Booking calendar: โทนส้ม/ทอง ให้เข้ากับธีมพิธีสงฆ์ --- */
-.booking-calendar-container .react-calendar {
-  font-family: inherit;
+/* --- Booking calendar: ธีมหรู ทอง-ส้มเข้ม --- */
+.booking-calendar-container {
+  background: linear-gradient(160deg, #fffaf3 0%, #fff5e9 100%);
+  border-radius: 28px;
+  padding: 1.75rem 1.25rem;
+  border: 1px solid #f3d9b1;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
 }
 
+.booking-calendar-container .react-calendar {
+  font-family: inherit;
+  background: transparent;
+}
+
+/* --- Navigation: เดือน/ปี --- */
 .booking-calendar-container .react-calendar__navigation {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
+  height: auto;
+}
+
+.booking-calendar-container .react-calendar__navigation__label {
+  font-weight: 900;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+  background: linear-gradient(135deg, #b45309, #ea580c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  pointer-events: none;
 }
 
 .booking-calendar-container .react-calendar__navigation button {
-  font-weight: 800;
-  font-size: 1rem;
-  color: #c2410c; /* orange-700 */
+  min-width: 36px;
   border-radius: 9999px;
-  transition: all 0.15s ease;
+  color: #c2762e;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.booking-calendar-container .react-calendar__navigation__arrow {
+  background: #fff !important;
+  box-shadow: 0 2px 6px rgba(180, 83, 9, 0.12);
+  border: 1px solid #f3d9b1;
 }
 
 .booking-calendar-container .react-calendar__navigation button:enabled:hover,
 .booking-calendar-container .react-calendar__navigation button:enabled:focus {
-  background-color: #fff7ed; /* orange-50 */
+  background-color: #fef3e2 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(180, 83, 9, 0.18);
 }
 
 .booking-calendar-container .react-calendar__navigation button:disabled {
-  color: #fdba74;
+  color: #f0d3ab;
+  box-shadow: none;
 }
 
+/* --- หัววันในสัปดาห์ --- */
 .booking-calendar-container .react-calendar__month-view__weekdays {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 800;
-  color: #fb923c; /* orange-400 */
+  color: #d18a3d;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
+  margin-bottom: 0.5rem;
 }
 
 .booking-calendar-container .react-calendar__month-view__weekdays abbr {
   text-decoration: none;
+  border: none;
 }
 
-/* วันที่ทั่วไป */
+/* --- วันที่ทั่วไป --- */
 .booking-calendar-container .react-calendar__tile {
   position: relative;
   border-radius: 9999px;
@@ -45,89 +79,87 @@
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 0.9rem;
-  color: #44403c;
+  font-size: 0.92rem;
+  color: #57534e;
   background: none;
-  transition: all 0.18s ease;
-  margin: 2px 0;
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  margin: 3px 0;
 }
 
 .booking-calendar-container .react-calendar__tile:enabled:hover,
 .booking-calendar-container .react-calendar__tile:enabled:focus {
-  background: linear-gradient(135deg, #fff7ed, #ffedd5);
-  color: #c2410c;
-  transform: scale(1.08);
+  background: linear-gradient(135deg, #fef3e2, #fde8c8);
+  color: #b45309;
+  transform: scale(1.12);
+  box-shadow: 0 4px 10px rgba(217, 119, 6, 0.18);
 }
 
-/* วันที่ถูกเลือก */
+/* --- วันที่ถูกเลือก: ทอง-ส้มเข้มหรู พร้อมเงาลอยชัด --- */
 .booking-calendar-container .react-calendar__tile--active {
-  background: linear-gradient(135deg, #f97316, #ea580c) !important;
+  background: linear-gradient(145deg, #f59e0b, #ea580c) !important;
   color: #fff !important;
   font-weight: 800;
-  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.45);
-  transform: scale(1.06);
+  box-shadow: 0 8px 20px rgba(234, 88, 12, 0.45), inset 0 1px 1px rgba(255,255,255,0.4);
+  transform: scale(1.1);
 }
 
-/* วันนี้ */
+/* --- วันนี้ --- */
 .booking-calendar-container .react-calendar__tile--now {
-  background: #ffedd5;
-  color: #c2410c;
-  box-shadow: inset 0 0 0 2px #fdba74;
+  color: #b45309;
+  box-shadow: inset 0 0 0 1.5px #f3ba6a;
+  font-weight: 800;
 }
 
 .booking-calendar-container .react-calendar__tile--now.react-calendar__tile--active {
-  box-shadow: 0 6px 16px rgba(249, 115, 22, 0.45);
+  box-shadow: 0 8px 20px rgba(234, 88, 12, 0.45);
 }
 
-/* วันในอดีต */
+/* --- วันในอดีต --- */
 .booking-calendar-container .past-date {
-  color: #e7e5e4 !important;
+  color: #e7dcc9 !important;
 }
 
-/* ✅ วันที่เต็ม/ผ่านมาแล้ว — ใช้ disabled ของ react-calendar */
 .booking-calendar-container .react-calendar__tile:disabled {
   cursor: not-allowed;
   transform: none !important;
+  box-shadow: none !important;
 }
 
-/* วันเต็มโดยเฉพาะ (มีจองอยู่แล้ว ไม่ใช่แค่วันเก่า) — ไล่เฉดแดง/ส้มนุ่มๆ ให้เข้าธีม ไม่ใช่แดงจัด */
+/* --- วันเต็ม: กุหลาบอ่อนหรูๆ พร้อมจุดจางแทนขีดฆ่า --- */
 .booking-calendar-container .date-full:disabled {
-  background: linear-gradient(135deg, #fff1f2, #ffe4e6) !important; /* rose-50 → rose-100 */
-  color: #fda4af !important; /* rose-300 */
+  background: linear-gradient(135deg, #fdf2f4, #fce7ea) !important;
+  color: #e5a5ae !important;
 }
 
 .booking-calendar-container .date-full:disabled::after {
   content: '';
   position: absolute;
-  bottom: 5px;
-  width: 4px;
-  height: 4px;
+  top: 4px;
+  right: 4px;
+  width: 5px;
+  height: 5px;
   border-radius: 9999px;
-  background-color: #fb7185; /* rose-400 */
+  background: #f5a3ae;
+  box-shadow: 0 0 0 2px #fdf2f4;
 }
 
-/* วันในอดีตที่ disabled — จางเรียบๆ ไม่ต้องมีจุด */
 .booking-calendar-container .past-date:disabled {
   background: transparent !important;
-  color: #e7e5e4 !important;
 }
 
-/* วันที่มีจองบางส่วน — จุดอำพันใต้ตัวเลข ให้กดได้ตามปกติ */
-.booking-calendar-container .date-partial {
-  color: #78350f;
-}
-
-.booking-calendar-container .date-partial::after {
+/* --- วันว่าง: จุดทองเล็กๆ ใต้ตัวเลข ให้ดูมีดีเทลหรู --- */
+.booking-calendar-container .date-available:not(:disabled)::after {
   content: '';
   position: absolute;
-  bottom: 5px;
-  width: 4px;
-  height: 4px;
+  bottom: 4px;
+  width: 3px;
+  height: 3px;
   border-radius: 9999px;
-  background-color: #f59e0b; /* amber-500 */
+  background: #d9a441;
+  opacity: 0.55;
 }
 
-.booking-calendar-container .react-calendar__tile--active.date-partial::after,
-.booking-calendar-container .react-calendar__tile--active.date-full::after {
-  background-color: #fff !important;
+.booking-calendar-container .react-calendar__tile--active.date-available::after {
+  background: #fff;
+  opacity: 0.9;
 }
